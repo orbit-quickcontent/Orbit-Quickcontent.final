@@ -1,61 +1,92 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import path from 'path';
+import { createServer } from 'http';
+import rateLimit from 'express-rate-limit';
+import { logger } from './lib/logger';
+import { initSocketService } from './services/socket.service';
+import { initWorkers } from './worker';
 import apiRouter from './routes/api.router';
-import { initWebSocketService } from './services/websocket.service';
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS
+// ── CORS ────────────────────────────────────────────────────────────────────
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001')
+  .split(',')
+  .map(o => o.trim());
+
 app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'api-key', 'accept']
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS blocked: ${origin}`));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Idempotency-Key'],
 }));
 
-import { validatePresignedToken } from './lib/security';
+// ── Body Parsing ──────────────────────────────────────────────────────────────
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Request logger middleware
-app.use((req, res, next) => {
-  console.log(`[API-Request] ${req.method} ${req.url}`);
-  const originalJson = res.json;
-  res.json = function (body) {
-    console.log(`[API-Response] ${req.method} ${req.url} -> Status ${res.statusCode} (Body: ${JSON.stringify(body).slice(0, 200)})`);
-    return originalJson.apply(this, arguments as any);
-  };
+// ── Global Rate Limit ─────────────────────────────────────────────────────────
+app.use(rateLimit({
+  windowMs: 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+}));
+
+// ── Request Logging ───────────────────────────────────────────────────────────
+app.use((req, _res, next) => {
+  logger.info({ method: req.method, url: req.url, ip: req.ip }, 'Incoming request');
   next();
 });
 
-// Secure uploads middleware enforcing 15-minute presigned tokens for video streams/downloads
-const secureUploadsMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const token = (req.query.token as string) || null;
-  const expires = (req.query.expires as string) || null;
-  
-  // Clean url path (remove query params) and build canonical path relative to /upload/reels
-  const cleanPath = req.path;
-  const fullUrlPath = `/upload/reels${cleanPath}`;
+// ── Health Check ──────────────────────────────────────────────────────────────
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), service: 'orbit-backend' });
+});
 
-  if (!validatePresignedToken(fullUrlPath, token, expires)) {
-    return res.status(403).json({ error: "Access Denied: Invalid or Expired Presigned URL Token." });
-  }
-  next();
-};
-
-app.use('/upload/reels', secureUploadsMiddleware, express.static(path.join(__dirname, '../../dashboard-web-app/public/upload/reels')));
-app.use('/upload', express.static(path.join(__dirname, '../../dashboard-web-app/public/upload')));
-
-// Mount main unified API routes
+// ── API Routes ────────────────────────────────────────────────────────────────
 app.use('/api', apiRouter);
 
-// Start WebSocket server on port 3003
-const wsService = initWebSocketService();
+// ── Webhook Routes (raw body for signature verification) ──────────────────────
+import webhookRouter from './routes/webhook.router';
+app.use('/webhook', express.raw({ type: 'application/json' }), webhookRouter);
 
-// Start HTTP REST server on port 5000
-app.listen(PORT, () => {
-  console.log(`[API] Standalone REST API server running on port ${PORT}`);
+// ── 404 Handler ────────────────────────────────────────────────────────────────
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Route not found' });
 });
+
+// ── Error Handler ─────────────────────────────────────────────────────────────
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  logger.error(err, 'Unhandled error');
+  res.status(err.status || 500).json({
+    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+  });
+});
+
+// ── Start Socket.IO ───────────────────────────────────────────────────────────
+initSocketService(httpServer);
+
+// ── Start BullMQ Workers ──────────────────────────────────────────────────────
+if (process.env.NODE_ENV !== 'test') {
+  initWorkers();
+}
+
+// ── Start HTTP Server ─────────────────────────────────────────────────────────
+httpServer.listen(PORT, () => {
+  logger.info(`🚀 ORBIT Backend running on port ${PORT}`);
+});
+
+export { app, httpServer };

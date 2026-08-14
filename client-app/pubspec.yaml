@@ -1,66 +1,104 @@
-name: orbit_client
-description: "ORBIT Client — Production Flutter WebView wrapper for the Orbit client web app."
-publish_to: 'none'
+name: client_app
+description: ORBIT Client App — Hyperlocal Professional Video Marketplace
 
+publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.3.0 <4.0.0'
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.10.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.8
 
-  # ── Core WebView (production-grade) ──────────────────────────────────────────
-  flutter_inappwebview: ^6.1.5
+  # Navigation
+  go_router: ^13.2.0
 
-  # ── Permissions ──────────────────────────────────────────────────────────────
-  permission_handler: ^11.3.1
+  # State Management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
 
-  # ── GPS / Location ───────────────────────────────────────────────────────────
+  # HTTP & API
+  dio: ^5.6.0
+  dio_smart_retry: ^6.0.1
+
+  # Socket.IO
+  socket_io_client: ^2.0.3+1
+
+  # Secure Storage (JWT)
+  flutter_secure_storage: ^9.2.2
+
+  # Maps
+  maplibre_gl: ^0.21.0
+
+  # Location
   geolocator: ^12.0.0
+  geocoding: ^3.0.0
 
-  # ── Connectivity ─────────────────────────────────────────────────────────────
-  connectivity_plus: ^6.1.3
+  # Payments
+  razorpay_flutter: ^1.3.6
 
-  # ── File / Camera ────────────────────────────────────────────────────────────
-  file_picker: ^8.1.7
+  # Firebase (FCM)
+  firebase_core: ^3.4.0
+  firebase_messaging: ^15.1.0
+
+  # Local Notifications
+  flutter_local_notifications: ^17.2.2
+
+  # UI
+  google_fonts: ^6.2.1
+  cached_network_image: ^3.3.1
+  flutter_animate: ^4.5.0
+  flutter_svg: ^2.0.10+1
+  shimmer: ^3.0.0
+  lottie: ^3.1.2
+  pin_code_fields: ^8.0.1
+
+  # Image
   image_picker: ^1.1.2
 
-  # ── Biometrics ───────────────────────────────────────────────────────────────
-  local_auth: ^2.3.0
-
-  # ── Share ────────────────────────────────────────────────────────────────────
-  share_plus: ^10.1.4
-
-  # ── URL Launcher ─────────────────────────────────────────────────────────────
-  url_launcher: ^6.3.1
-
-  # ── Persistence ──────────────────────────────────────────────────────────────
-  shared_preferences: ^2.3.5
-
-  # ── Splash / SystemUI ────────────────────────────────────────────────────────
-  flutter_native_splash: ^2.4.3
-
-  # ── Package Info ─────────────────────────────────────────────────────────────
-  package_info_plus: ^8.3.0
+  # Utilities
+  intl: ^0.19.0
+  uuid: ^4.4.0
+  url_launcher: ^6.3.0
+  package_info_plus: ^8.1.2
+  shared_preferences: ^2.3.2
+  connectivity_plus: ^6.0.5
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
-  flutter_launcher_icons: ^0.13.1
-
-flutter_launcher_icons:
-  android: "ic_launcher"
-  ios: false
-  image_path: "assets/icon/app_icon.png"
-  remove_alpha_ios: true
+  build_runner: ^2.4.11
+  riverpod_generator: ^2.4.3
+  custom_lint: ^0.6.7
 
 flutter:
   uses-material-design: true
-
   assets:
-    - assets/splash/
-    - assets/icon/
+    - assets/images/
+    - assets/icons/
+    - assets/animations/
+
+  fonts:
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/Montserrat-Regular.ttf
+        - asset: assets/fonts/Montserrat-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Montserrat-ExtraBold.ttf
+          weight: 800
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans-Regular.ttf
+        - asset: assets/fonts/PlusJakartaSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/PlusJakartaSans-SemiBold.ttf
+          weight: 600
+    - family: SpaceGrotesk
+      fonts:
+        - asset: assets/fonts/SpaceGrotesk-Regular.ttf
+        - asset: assets/fonts/SpaceGrotesk-Bold.ttf
+          weight: 700
