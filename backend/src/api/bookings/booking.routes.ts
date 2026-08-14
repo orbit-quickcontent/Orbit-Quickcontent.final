@@ -137,6 +137,28 @@ router.post('/:id/accept', authenticate, authorize('PARTNER'), async (req, res) 
   res.json(result);
 });
 
+// ── POST /api/bookings/:id/en-route — Partner is heading to client ────────────
+router.post('/:id/en-route', authenticate, authorize('PARTNER'), async (req, res) => {
+  const booking = await prisma.booking.findUnique({
+    where: { id: req.params.id, partnerId: req.user!.partnerId },
+  });
+  if (!booking || booking.status !== 'PARTNER_ASSIGNED') {
+    res.status(400).json({ error: 'Invalid state for en-route transition. Booking must be in PARTNER_ASSIGNED status.' });
+    return;
+  }
+
+  await prisma.booking.update({
+    where: { id: req.params.id },
+    data: { status: 'EN_ROUTE' },
+  });
+  await recordStatusChange(req.params.id, 'PARTNER_ASSIGNED', 'EN_ROUTE', req.user!.partnerId!);
+  emitToBooking(req.params.id, SOCKET_EVENTS.BOOKING_STATUS_UPDATE, { bookingId: req.params.id, status: 'EN_ROUTE' });
+  emitToClient(booking.userId, SOCKET_EVENTS.BOOKING_STATUS_UPDATE, { bookingId: req.params.id, status: 'EN_ROUTE' });
+  await sendBookingNotification(booking.userId, 'Partner En Route', 'Your partner is heading to your location!', req.params.id);
+
+  res.json({ success: true });
+});
+
 // ── POST /api/bookings/:id/decline ────────────────────────────────────────────
 router.post('/:id/decline', authenticate, authorize('PARTNER'), async (req, res) => {
   const bookingId = req.params.id;

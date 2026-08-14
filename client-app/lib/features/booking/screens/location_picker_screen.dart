@@ -115,7 +115,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         children: [
           // ── Map ──────────────────────────────────────────────────────────
           MapLibreMap(
-            styleString: 'https://api.maptiler.com/maps/streets-v2-dark/style.json?key=get_your_own_key',
+            styleString: 'https://tiles.openfreemap.org/styles/liberty',
             initialCameraPosition: CameraPosition(target: _selectedLocation, zoom: 14),
             onMapCreated: (controller) {
               _mapController = controller;

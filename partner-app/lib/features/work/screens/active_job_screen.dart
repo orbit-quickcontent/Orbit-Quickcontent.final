@@ -101,7 +101,20 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
           const SizedBox(height: 32),
 
           // Action Workflow based on state
-          if (status == 'PARTNER_ASSIGNED' || status == 'EN_ROUTE') ...[
+          if (status == 'PARTNER_ASSIGNED') ...[
+            PartnerButton(
+              label: 'Start Navigating to Client',
+              color: OrbitPartnerTheme.primary,
+              isLoading: _isActionRunning,
+              onPressed: () => _updateStatus('en-route'),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Navigate to the client location then confirm arrival',
+              style: OrbitPartnerTheme.textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+          ] else if (status == 'EN_ROUTE') ...[
             PartnerButton(
               label: 'I Have Arrived at Location',
               color: OrbitPartnerTheme.primary,

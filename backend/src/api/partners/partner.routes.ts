@@ -144,4 +144,68 @@ router.post('/offline', authenticate, authorize('PARTNER'), async (req, res) => 
   res.json({ success: true, message: 'You are now offline' });
 });
 
+// PATCH /api/partner/status — Toggle online/offline (convenience endpoint for Flutter)
+router.patch('/status', authenticate, authorize('PARTNER'), async (req, res) => {
+  const schema = z.object({
+    isOnline: z.boolean(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: 'Invalid data' }); return; }
+
+  const partner = await prisma.partner.findUnique({ where: { userId: req.user!.id } });
+  if (!partner) { res.status(404).json({ error: 'Partner not found' }); return; }
+
+  if (parsed.data.isOnline && (partner.status !== 'ACTIVE' || !partner.canAcceptBookings)) {
+    res.status(403).json({ error: 'Complete verification to go online' }); return;
+  }
+
+  await prisma.partner.update({
+    where: { id: partner.id },
+    data: {
+      isOnline: parsed.data.isOnline,
+      isAvailable: parsed.data.isOnline,
+      ...(parsed.data.latitude !== undefined && parsed.data.longitude !== undefined
+        ? { latitude: parsed.data.latitude, longitude: parsed.data.longitude }
+        : {}),
+      lastSeenAt: new Date(),
+    },
+  });
+
+  if (parsed.data.isOnline) {
+    if (parsed.data.latitude !== undefined && parsed.data.longitude !== undefined) {
+      await setPartnerOnline(partner.id, parsed.data.latitude, parsed.data.longitude);
+    }
+    emitToAdmin('partner:online', { partnerId: partner.id });
+  } else {
+    await setPartnerOffline(partner.id);
+    emitToAdmin('partner:offline', { partnerId: partner.id });
+  }
+
+  res.json({ success: true, isOnline: parsed.data.isOnline });
+});
+
+// GET /api/partner/dispatches/pending — Get pending dispatch offers for this partner
+router.get('/dispatches/pending', authenticate, authorize('PARTNER'), async (req, res) => {
+  const partner = await prisma.partner.findUnique({ where: { userId: req.user!.id } });
+  if (!partner) { res.status(404).json({ error: 'Partner not found' }); return; }
+
+  const dispatches = await prisma.workDispatch.findMany({
+    where: { partnerId: partner.id, status: 'PENDING' },
+    include: {
+      booking: {
+        include: {
+          package: true,
+          user: { select: { name: true, avatar: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 10,
+  });
+
+  res.json(dispatches);
+});
+
 export default router;

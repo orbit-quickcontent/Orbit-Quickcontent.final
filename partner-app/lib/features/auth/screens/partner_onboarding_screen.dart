@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -50,8 +51,10 @@ class _PartnerOnboardingScreenState extends ConsumerState<PartnerOnboardingScree
       } else {
         setState(() => _error = res.data['error'] ?? 'Verification failed');
       }
-    } catch (e: any) {
+    } on DioException catch (e) {
       setState(() => _error = e.response?.data['error'] ?? 'Invalid verification code');
+    } catch (e) {
+      setState(() => _error = 'Verification failed. Please try again.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

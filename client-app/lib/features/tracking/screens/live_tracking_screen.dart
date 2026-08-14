@@ -125,7 +125,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
         children: [
           // Map
           MapLibreMap(
-            styleString: 'https://api.maptiler.com/maps/streets-v2-dark/style.json?key=get_your_own_key',
+            styleString: 'https://tiles.openfreemap.org/styles/liberty',
             initialCameraPosition: CameraPosition(
               target: _clientLocation ?? const LatLng(28.6139, 77.2090),
               zoom: 14,
