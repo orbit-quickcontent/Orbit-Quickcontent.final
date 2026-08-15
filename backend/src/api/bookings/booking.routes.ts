@@ -4,7 +4,7 @@ import Razorpay from 'razorpay';
 import prisma from '../../lib/prisma';
 import { authenticate, authorize, rateLimits } from '../../middleware/auth.middleware';
 import { acceptBooking, recordStatusChange } from '../../services/dispatch.service';
-import { emitToBooking, emitToClient, SOCKET_EVENTS } from '../../services/socket.service';
+import { emitToBooking, emitToClient, emitToPartner, SOCKET_EVENTS } from '../../services/socket.service';
 import { setPartnerAvailable } from '../../services/redis.service';
 import { sendBookingNotification } from '../../services/fcm.service';
 import { reverseGeocode } from '../../services/maps.service';

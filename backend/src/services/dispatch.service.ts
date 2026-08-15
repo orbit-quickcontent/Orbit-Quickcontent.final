@@ -257,10 +257,10 @@ export async function acceptBooking(bookingId: string, partnerId: string): Promi
         data: { isAvailable: false },
       });
 
-      return { success: true, clientId: booking.userId };
+      return { success: true, clientId: booking.userId, message: 'Booking accepted' };
     });
 
-    if (!result.success) return result;
+    if (!result.success) return { success: false, message: result.message || 'Failed to accept booking' };
 
     // Mark partner busy in Redis
     await setPartnerBusy(partnerId, bookingId);

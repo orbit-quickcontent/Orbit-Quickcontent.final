@@ -50,7 +50,7 @@ router.post('/verify-code', authenticate, rateLimits.verifyCode, async (req, res
 router.get('/profile', authenticate, async (req, res) => {
   const partner = await prisma.partner.findUnique({
     where: { userId: req.user!.id },
-    include: { wallet: true, bankAccount: { where: { isDefault: true, isActive: true }, take: 1 } },
+    include: { wallet: true, bankAccount: true },
   });
   if (!partner) { res.status(404).json({ error: 'Partner profile not found' }); return; }
   res.json(partner);

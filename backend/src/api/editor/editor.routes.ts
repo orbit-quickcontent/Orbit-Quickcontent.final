@@ -26,7 +26,7 @@ router.get('/jobs/:id', authenticate, authorize('EDITOR'), async (req, res) => {
     include: {
       package: true,
       mediaAssets: true,
-      user: { select: { name: true, brandColor: true, brandFont: true, brandLogo: true, editorRequirements: true } },
+      user: { select: { id: true, name: true, email: true, phone: true, avatar: true } },
     },
   });
   if (!booking) { res.status(404).json({ error: 'Job not found' }); return; }

@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { exec } from "child_process";
-import { firestoreDb } from "../lib/db";
+import prisma from "../lib/prisma";
 
 /**
  * Check if FFmpeg is installed and accessible in the system path.
@@ -121,11 +121,11 @@ export async function startTranscoding(bookingId: string, reelUrl: string): Prom
     // 2. Update booking in Firestore with masterReelUrl and hlsPlaylistUrl
     const relativeHlsPath = `/upload/${cleanKey.split("/").slice(0, -1).join("/")}/hls/master.m3u8`;
     
-    await firestoreDb.bookings.update({
+    await prisma.booking.update({
       where: { id: bookingId },
       data: {
         masterReelUrl: reelUrl,
-        hlsPlaylistUrl: relativeHlsPath,
+        hlsUrl: relativeHlsPath,
       },
     });
 

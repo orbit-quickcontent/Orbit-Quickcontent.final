@@ -16,5 +16,21 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/client/**/*",
+    "src/partner/**/*",
+    "src/shared/**/*",
+    "src/lib/auth-server.ts",
+    "src/lib/db.ts",
+    "src/lib/firebase.ts",
+    "src/services/audit.service.ts",
+    "src/services/db.service.ts",
+    "src/services/firebase.ts",
+    "src/services/firestore-db.ts",
+    "src/test_direct.ts",
+    "src/**/route.ts"
+  ]
 }
