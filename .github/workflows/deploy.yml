@@ -113,3 +113,39 @@ jobs:
           name: orbit-partner-apk
           path: partner-app/build/app/outputs/flutter-apk/app-release.apk
 
+  build-web-apps:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Editor Web App
+        run: |
+          cd editor-web-app
+          npm run build
+
+      - name: Build Dashboard Web App
+        run: |
+          cd dashboard-web-app
+          npm run build
+
+      - name: Upload Editor Web App Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbit-editor-web-build
+          path: editor-web-app/.next
+
+      - name: Upload Dashboard Web App Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbit-dashboard-web-build
+          path: dashboard-web-app/.next
