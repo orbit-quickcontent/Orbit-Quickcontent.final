@@ -7,8 +7,7 @@ import mapsRouter from '../api/maps/maps.routes';
 import mediaRouter from '../api/media/media.routes';
 import editorRouter from '../api/editor/editor.routes';
 import adminRouter from '../api/admin/admin.routes';
-import { authenticate, authorize } from '../middleware/auth.middleware';
-import { rateLimits } from '../middleware/auth.middleware';
+import { authenticate } from '../middleware/auth.middleware';
 import prisma from '../lib/prisma';
 
 const router = Router();

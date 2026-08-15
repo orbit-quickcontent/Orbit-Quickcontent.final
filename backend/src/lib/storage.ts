@@ -1,4 +1,7 @@
-export async function getPresignedUploadUrl(key: string, contentType: string): Promise<string> {
+import { promises as fs } from 'fs';
+import path from 'path';
+
+export async function getPresignedUploadUrl(key: string, _contentType?: string): Promise<string> {
   // Direct local mock upload fallback URL
   return `/api/upload/mock-s3?key=${encodeURIComponent(key)}`;
 }
@@ -8,9 +11,7 @@ export async function getPresignedDownloadUrl(key: string): Promise<string> {
   return `/upload/${key}`;
 }
 
-export async function uploadFileToStorage(key: string, buffer: Buffer, contentType: string): Promise<string> {
-  const fs = require("fs").promises;
-  const path = require("path");
+export async function uploadFileToStorage(key: string, buffer: Buffer, _contentType?: string): Promise<string> {
   const targetFilePath = path.join(process.cwd(), "..", "dashboard-web-app", "public", "upload", key);
   const targetDir = path.dirname(targetFilePath);
 

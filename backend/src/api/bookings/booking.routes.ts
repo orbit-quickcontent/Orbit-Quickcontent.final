@@ -1,17 +1,13 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import Razorpay from 'razorpay';
-import crypto from 'crypto';
 import prisma from '../../lib/prisma';
 import { authenticate, authorize, rateLimits } from '../../middleware/auth.middleware';
 import { acceptBooking, recordStatusChange } from '../../services/dispatch.service';
-import { dispatchQueue } from '../../services/queue.service';
-import { emitToBooking, emitToClient, emitToPartner, SOCKET_EVENTS } from '../../services/socket.service';
+import { emitToBooking, emitToClient, SOCKET_EVENTS } from '../../services/socket.service';
 import { setPartnerAvailable } from '../../services/redis.service';
-import { creditPartnerEarning } from '../../services/wallet.service';
 import { sendBookingNotification } from '../../services/fcm.service';
 import { reverseGeocode } from '../../services/maps.service';
-import { logger } from '../../lib/logger';
 
 const router = Router();
 

@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { logger } from '../lib/logger';
-import prisma from '../lib/prisma';
 
 const OSRM_BASE = process.env.OSRM_BASE_URL || 'https://router.project-osrm.org';
 

@@ -4,10 +4,8 @@ import prisma from '../../lib/prisma';
 import { authenticate, authorize, rateLimits, issueTokens } from '../../middleware/auth.middleware';
 import { verifyPartnerCode } from '../../services/verification.service';
 import {
-  updatePartnerLocation,
   setPartnerOnline,
   setPartnerOffline,
-  setPartnerAvailable,
 } from '../../services/redis.service';
 import { emitToAdmin } from '../../services/socket.service';
 import { logger } from '../../lib/logger';

@@ -2,12 +2,10 @@ import prisma from '../lib/prisma';
 import {
   findNearbyPartners,
   setPartnerBusy,
-  setPartnerAvailable,
-  removePartnerFromGeo,
   REDIS_KEYS,
   redis,
 } from './redis.service';
-import { emitToPartner, emitToBooking, emitToClient, emitToAdmin, SOCKET_EVENTS } from './socket.service';
+import { emitToPartner, emitToBooking, emitToClient, SOCKET_EVENTS } from './socket.service';
 import { sendBookingNotification } from './fcm.service';
 import { logger } from '../lib/logger';
 import { BookingStatus } from '@prisma/client';
@@ -94,7 +92,7 @@ export async function dispatchBooking(bookingId: string): Promise<boolean> {
 
     // Create dispatch offers for all eligible partners in this round
     const offerExpiresAt = new Date(Date.now() + OFFER_TIMEOUT * 1000);
-    const dispatches = await Promise.all(
+    await Promise.all(
       eligiblePartners.map(({ partnerId, distanceKm }) =>
         prisma.workDispatch.create({
           data: {

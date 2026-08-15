@@ -1,4 +1,4 @@
-import { Queue, Worker, QueueEvents } from 'bullmq';
+import { Queue, Worker } from 'bullmq';
 import { redisForBull } from './redis.service';
 import { logger } from '../lib/logger';
 

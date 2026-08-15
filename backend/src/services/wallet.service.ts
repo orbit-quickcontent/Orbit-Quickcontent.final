@@ -1,7 +1,6 @@
 import prisma from '../lib/prisma';
-import { emitToPartner, emitToBooking, SOCKET_EVENTS } from './socket.service';
+import { emitToPartner, SOCKET_EVENTS } from './socket.service';
 import { sendBookingNotification } from './fcm.service';
-import { setPartnerAvailable } from './redis.service';
 import { logger } from '../lib/logger';
 
 const PARTNER_EARNING_PAISE = parseInt(process.env.PARTNER_EARNING_AMOUNT || '500', 10) * 100;
