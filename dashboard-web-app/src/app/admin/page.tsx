@@ -30,7 +30,8 @@ import {
   HardDrive,
   UserCheck,
   RefreshCw,
-  Plus
+  Plus,
+  KeyRound
 } from "lucide-react";
 
 // Mock SaaS Analytics charts data
@@ -66,18 +67,42 @@ export default function AdminDashboard() {
   const fetchLogsAndData = async () => {
     setLoading(true);
     try {
-      const dirRes = await fetch("/api/admin/onboarded-directory");
-      if (dirRes.ok) {
-        const data = await dirRes.json();
-        setMetrics(data.metrics || metrics);
-        setPartners(data.partners || []);
-        setClients(data.clients || []);
-        setBookings(data.bookings || []);
+      const authHeaders = {
+        Authorization: `Bearer ${localStorage.getItem("admin_token") || ""}`
+      };
+
+      const [overviewRes, partnersRes, bookingsRes, logsRes] = await Promise.all([
+        fetch("http://localhost:5000/api/admin/overview", { headers: authHeaders }),
+        fetch("http://localhost:5000/api/admin/partners?status=ACTIVE", { headers: authHeaders }),
+        fetch("http://localhost:5000/api/admin/bookings", { headers: authHeaders }),
+        fetch("http://localhost:5000/api/admin/audit-logs", { headers: authHeaders })
+      ]);
+
+      if (overviewRes.ok) {
+        const overview = await overviewRes.json();
+        setMetrics((prev: any) => ({
+          ...prev,
+          totalBookings: overview.totalBookings || 0,
+          totalPartners: overview.totalPartners || 0,
+          onlinePartners: overview.onlinePartners || 0,
+          totalClients: overview.totalClients || 0,
+          verifiedPartners: overview.verifiedPartners || 0
+        }));
       }
-      const logsRes = await fetch("/api/admin/audit-logs");
+
+      if (partnersRes.ok) {
+        const pData = await partnersRes.json();
+        setPartners(pData.partners || []);
+      }
+
+      if (bookingsRes.ok) {
+        const bData = await bookingsRes.json();
+        setBookings(bData.bookings || []);
+      }
+
       if (logsRes.ok) {
-        const data = await logsRes.json();
-        setLogs(data.logs || []);
+        const lData = await logsRes.json();
+        setLogs(lData || []);
       }
     } catch {
       toast.error("Failed to load operations logs");
@@ -87,21 +112,7 @@ export default function AdminDashboard() {
   };
 
   const handleSeedDatabase = async () => {
-    setSeeding(true);
-    try {
-      const res = await fetch("/api/admin/seed", { method: "POST" });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        toast.success("Firestore Database seeded successfully!");
-        await fetchLogsAndData();
-      } else {
-        toast.error(data.error || "Failed to seed database. Verify Firestore write rules.");
-      }
-    } catch {
-      toast.error("Failed to connect to seeder API endpoint");
-    } finally {
-      setSeeding(false);
-    }
+    toast.info("Database seeding is handled via backend scripts directly.");
   };
 
   useEffect(() => {
@@ -111,21 +122,18 @@ export default function AdminDashboard() {
   const handleToggleVerification = async (partnerId: string, currentStatus: boolean) => {
     setTogglingVerify(partnerId);
     try {
-      const res = await fetch("/api/admin/verify-partner", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ partnerId, isVerified: !currentStatus }),
+      const res = await fetch(`http://localhost:5000/api/admin/partners/${partnerId}/status`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("admin_token") || ""}`
+        },
+        body: JSON.stringify({ status: currentStatus ? "SUSPENDED" : "ACTIVE" }),
       });
 
       if (res.ok) {
-        toast.success(currentStatus ? "Partner unverified" : "Partner verified successfully");
-        setPartners((prev) =>
-          prev.map((p) => (p.id === partnerId ? { ...p, isVerified: !currentStatus } : p))
-        );
-        setMetrics((prev: any) => ({
-          ...prev,
-          verifiedPartners: currentStatus ? prev.verifiedPartners - 1 : prev.verifiedPartners + 1,
-        }));
+        toast.success(currentStatus ? "Partner suspended" : "Partner activated successfully");
+        fetchLogsAndData();
       } else {
         toast.error("Failed to update status");
       }
@@ -196,6 +204,7 @@ export default function AdminDashboard() {
             { id: "analytics", label: "Live Analytics", icon: TrendingUp },
             { id: "settings", label: "Settings", icon: Settings },
             { id: "logs", label: "Audit Logs", icon: FileText },
+            { id: "partner-codes", label: "Partner Codes", icon: KeyRound },
           ].map((item) => {
             const Icon = item.icon;
             const isActive = activeModule === item.id;
@@ -824,6 +833,38 @@ export default function AdminDashboard() {
                         </tbody>
                       </table>
                     </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* 🟢 PARTNER CODES MODULE ──────────────────────────── */}
+              {activeModule === "partner-codes" && (
+                <Card className="bg-[#111217] border-gray-800 text-white shadow-xl">
+                  <CardHeader className="border-b border-gray-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <CardTitle>Partner Codes Management</CardTitle>
+                      <CardDescription className="text-gray-400">Manage 2-tier verification codes for partner onboarding</CardDescription>
+                    </div>
+                    <Button onClick={async () => {
+                      try {
+                        const res = await fetch("http://localhost:5000/api/admin/partner-codes", {
+                          method: "POST",
+                          headers: { Authorization: `Bearer ${localStorage.getItem("admin_token") || ""}` }
+                        });
+                        if (res.ok) {
+                          toast.success("Code generated!");
+                          fetchLogsAndData();
+                        }
+                      } catch {
+                        toast.error("Failed to generate code");
+                      }
+                    }} className="bg-orbit-cyan text-black hover:bg-orbit-cyan/90 font-bold">
+                      <Plus className="w-4 h-4 mr-2" /> Generate New Code
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-gray-400 mb-4">Please navigate to the dedicated Partner Codes page for full functionality.</p>
+                    <a href="/admin/partner-codes" className="text-orbit-cyan hover:underline">Go to /admin/partner-codes &rarr;</a>
                   </CardContent>
                 </Card>
               )}

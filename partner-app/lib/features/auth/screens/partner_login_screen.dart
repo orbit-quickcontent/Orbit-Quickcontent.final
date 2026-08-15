@@ -61,7 +61,17 @@ class _PartnerLoginScreenState extends State<PartnerLoginScreen> {
                     gradient: OrbitPartnerTheme.partnerGradient,
                     boxShadow: [BoxShadow(color: OrbitPartnerTheme.primary.withOpacity(0.3), blurRadius: 12)],
                   ),
-                  child: const Icon(Icons.radio_button_checked, color: Colors.black, size: 20),
+                  child: ClipOval(
+                    child: Padding(
+                      padding: const EdgeInsets.all(6),
+                      child: Image.asset(
+                        'assets/icon/orbit_logo.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.radio_button_checked, color: Colors.black, size: 20),
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Text('ORBIT', style: TextStyle(

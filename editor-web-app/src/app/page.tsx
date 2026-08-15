@@ -55,7 +55,14 @@ export default function EditorLogin() {
       >
         {/* Brand logo / header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-extrabold tracking-tight text-gradient-orbit mb-2">
+          <div className="flex justify-center mb-4">
+            <img
+              src="/orbit-logo.png"
+              alt="Orbit"
+              className="w-20 h-20 object-contain rounded-2xl"
+            />
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-gradient-orbit mb-2">
             ORBIT
           </h1>
           <p className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">

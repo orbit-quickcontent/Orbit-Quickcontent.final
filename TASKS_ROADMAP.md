@@ -68,9 +68,16 @@ This roadmap outlines all completed items and pending tasks for your coding part
   flutter pub get
   flutter run
   ```
-- [ ] **Editor Web Portal (`editor-web-app`):**
-  - Verify Next.js portal connects to `/api/editor/jobs` to preview raw footage and upload finished reels.
-- [ ] **Admin Dashboard (`dashboard-web-app`):**
-  - Verify Next.js admin dashboard connects to `/api/admin` for real-time dispatch monitoring and partner code generation.
+- [x] **Phase 5: Admin Dashboard (Next.js)**
+  - [x] Replace Firebase with PostgreSQL/Prisma API calls
+  - [x] Add Partner Codes management page (`/admin/partner-codes`)
+  - [x] Add proper booking state machine display
+  - [x] Add dispatch monitoring
+  - [x] Add wallet/withdrawal management
+- [x] **Phase 6: Editor Web App (Next.js)**
+  - [x] Job pool view (EDITOR_AVAILABLE bookings)
+  - [x] Atomic job claim via API
+  - [x] Footage download + final reel upload
+  - [x] QC and delivery flow
 - [ ] **End-to-End Golden Loop Testing:**
   - Complete a test booking from Client app -> Accept on Partner app -> Finalize in Editor -> Validate ₹500 wallet credit.

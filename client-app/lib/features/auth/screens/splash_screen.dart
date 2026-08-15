@@ -41,8 +41,8 @@ class _SplashScreenState extends State<SplashScreen> {
             children: [
               // Glowing ORBIT logo container
               Container(
-                width: 100,
-                height: 100,
+                width: 120,
+                height: 120,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: OrbitClientTheme.primaryGradient,
@@ -59,7 +59,17 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.radio_button_checked, color: Colors.white, size: 50),
+                child: ClipOval(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Image.asset(
+                      'assets/icon/orbit_logo.png',
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.radio_button_checked, color: Colors.white, size: 50),
+                    ),
+                  ),
+                ),
               )
               .animate()
               .scale(begin: const Offset(0.3, 0.3), duration: 600.ms, curve: Curves.elasticOut)

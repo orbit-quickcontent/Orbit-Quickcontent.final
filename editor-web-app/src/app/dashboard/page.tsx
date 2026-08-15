@@ -100,9 +100,11 @@ export default function EditorDashboard() {
       {/* Navbar */}
       <nav className="flex justify-between items-center max-w-7xl mx-auto mb-10 pb-6 border-b border-orbit-border">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orbit-cyan to-orbit-purple flex items-center justify-center font-black text-black">
-            O
-          </div>
+          <img
+            src="/orbit-logo.png"
+            alt="Orbit"
+            className="w-10 h-10 rounded-xl object-contain"
+          />
           <div>
             <h1 className="text-xl font-bold tracking-tight">ORBIT EDITOR</h1>
             <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">

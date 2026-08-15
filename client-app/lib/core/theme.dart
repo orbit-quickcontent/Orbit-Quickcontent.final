@@ -39,21 +39,26 @@ class OrbitClientTheme {
   static const Color errorContainer = Color(0xFF93000A);
   static const Color success = Color(0xFF4ADE80);
 
+  // ── Brand Colors (from Orbit Brand Guide) ─────────────────────────────────
+  static const Color spaceNavy = Color(0xFF081C43);
+  static const Color brandCyan = Color(0xFF00BFFF);
+  static const Color brandPurple = Color(0xFFA020F0);
+
   // ── Gradient: The signature Blue → Purple gradient ─────────────────────────
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF00C2FF), Color(0xFF9D50FF)],
+    colors: [Color(0xFF00BFFF), Color(0xFFA020F0)],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
 
   static const LinearGradient primaryGradientVertical = LinearGradient(
-    colors: [Color(0xFF00C2FF), Color(0xFF9D50FF)],
+    colors: [Color(0xFF00BFFF), Color(0xFFA020F0)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
   static const LinearGradient glowGradient = LinearGradient(
-    colors: [Color(0x2000C2FF), Color(0x209D50FF)],
+    colors: [Color(0x2000BFFF), Color(0x20A020F0)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
