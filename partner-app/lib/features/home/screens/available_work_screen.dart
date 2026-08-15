@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:socket_io_client/socket_io_client.dart' as io;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/theme.dart';
 import '../../../core/api_client.dart';
 import '../../auth/providers/partner_auth_provider.dart';
+
+const String _kSocketUrl = String.fromEnvironment('SOCKET_URL', defaultValue: 'http://10.0.2.2:5000');
 
 class AvailableWorkScreen extends ConsumerStatefulWidget {
   const AvailableWorkScreen({super.key});
@@ -16,12 +20,38 @@ class _AvailableWorkScreenState extends ConsumerState<AvailableWorkScreen> {
   bool _isOnline = false;
   List<Map<String, dynamic>> _dispatches = [];
   bool _isLoading = true;
+  io.Socket? _socket;
 
   @override
   void initState() {
     super.initState();
     _loadStatus();
     _fetchDispatches();
+    _initSocket();
+  }
+
+  @override
+  void dispose() {
+    _socket?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initSocket() async {
+    const storage = FlutterSecureStorage();
+    final token = await storage.read(key: 'orbit_partner_token');
+    _socket = io.io(_kSocketUrl, io.OptionBuilder()
+      .setTransports(['websocket'])
+      .setAuth({'token': token})
+      .build());
+    _socket!.connect();
+    // Listen for real-time dispatch offers
+    _socket!.on('booking:offered', (data) {
+      if (mounted && data is Map) {
+        context.push('/incoming', extra: Map<String, dynamic>.from(data));
+      }
+    });
+    // Refresh list on any booking state change
+    _socket!.on('booking:status-update', (_) => _fetchDispatches());
   }
 
   Future<void> _loadStatus() async {
@@ -187,8 +217,9 @@ class _AvailableWorkScreenState extends ConsumerState<AvailableWorkScreen> {
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () async {
+                                final router = GoRouter.of(context);
                                 await partnerApiClient.post('/bookings/${booking['id']}/accept');
-                                if (mounted) context.push('/job/${booking['id']}');
+                                if (mounted) router.push('/job/${booking['id']}');
                               },
                               style: ElevatedButton.styleFrom(backgroundColor: OrbitPartnerTheme.primary, foregroundColor: Colors.black),
                               child: const Text('Accept Shoot'),

@@ -5,6 +5,7 @@ import '../features/auth/screens/partner_otp_screen.dart';
 import '../features/auth/screens/partner_onboarding_screen.dart';
 import '../features/home/screens/available_work_screen.dart';
 import '../features/work/screens/active_job_screen.dart';
+import '../features/work/screens/incoming_booking_screen.dart';
 import '../features/earnings/screens/earnings_screen.dart';
 import '../features/profile/screens/partner_profile_screen.dart';
 import '../features/auth/providers/partner_auth_provider.dart';
@@ -38,6 +39,12 @@ final partnerRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(path: '/job/:id', builder: (ctx, state) => ActiveJobScreen(bookingId: state.pathParameters['id']!)),
+      GoRoute(
+        path: '/incoming',
+        builder: (ctx, state) => IncomingBookingScreen(
+          dispatch: state.extra as Map<String, dynamic>,
+        ),
+      ),
     ],
   );
 });

@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:http/http.dart' as http;
 import '../../../core/theme.dart';
 import '../../../core/api_client.dart';
@@ -98,7 +99,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     }
   }
 
-  void _onMapClick(Point<double> point, LatLng coordinates) async {
+  void _onMapClick(math.Point<double> point, LatLng coordinates) async {
     setState(() {
       _selectedLocation = coordinates;
       _address = 'Updating address...';
@@ -125,7 +126,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             },
             onMapClick: _onMapClick,
             myLocationEnabled: true,
-            myLocationTrackingMode: MyLocationTrackingMode.None,
+            myLocationTrackingMode: MyLocationTrackingMode.none,
           ),
 
           // ── Top: Back button + Search ─────────────────────────────────────

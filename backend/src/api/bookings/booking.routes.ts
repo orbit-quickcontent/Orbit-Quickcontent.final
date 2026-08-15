@@ -154,7 +154,16 @@ router.post('/:id/en-route', authenticate, authorize('PARTNER'), async (req, res
   await recordStatusChange(req.params.id, 'PARTNER_ASSIGNED', 'EN_ROUTE', req.user!.partnerId!);
   emitToBooking(req.params.id, SOCKET_EVENTS.BOOKING_STATUS_UPDATE, { bookingId: req.params.id, status: 'EN_ROUTE' });
   emitToClient(booking.userId, SOCKET_EVENTS.BOOKING_STATUS_UPDATE, { bookingId: req.params.id, status: 'EN_ROUTE' });
-  await sendBookingNotification(booking.userId, 'Partner En Route', 'Your partner is heading to your location!', req.params.id);
+
+  // Send push notification to client
+  const clientUser = await prisma.user.findUnique({ where: { id: booking.userId }, select: { fcmToken: true } });
+  if (clientUser?.fcmToken) {
+    await sendBookingNotification(clientUser.fcmToken, {
+      title: '🚗 Partner En Route',
+      body: 'Your partner is heading to your location!',
+      data: { type: 'BOOKING_UPDATE', bookingId: req.params.id, status: 'EN_ROUTE' },
+    });
+  }
 
   res.json({ success: true });
 });
