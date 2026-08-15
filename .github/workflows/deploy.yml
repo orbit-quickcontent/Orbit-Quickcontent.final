@@ -71,3 +71,45 @@ jobs:
             cd /opt/orbit/production
             git pull origin main
             docker-compose up -d --build backend worker
+
+  build-flutter-apks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Build Client APK
+        run: |
+          cd client-app
+          flutter pub get
+          flutter build apk --release
+
+      - name: Build Partner APK
+        run: |
+          cd partner-app
+          flutter pub get
+          flutter build apk --release
+
+      - name: Upload Client APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbit-client-apk
+          path: client-app/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload Partner APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbit-partner-apk
+          path: partner-app/build/app/outputs/flutter-apk/app-release.apk
+
