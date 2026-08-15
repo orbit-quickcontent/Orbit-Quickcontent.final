@@ -5,7 +5,7 @@ import { createServer } from 'http';
 import rateLimit from 'express-rate-limit';
 import { logger } from './lib/logger';
 import { initSocketService } from './services/socket.service';
-import { initWorkers } from './worker';
+import { initWorkers } from './services/queue.service';
 import apiRouter from './routes/api.router';
 
 dotenv.config();

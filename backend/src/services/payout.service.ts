@@ -260,3 +260,23 @@ export async function executePayout(
     };
   }
 }
+
+/**
+ * Process a payout / withdrawal job from BullMQ queue
+ */
+export async function processCashfreePayout(jobData: {
+  withdrawalId: string;
+  partnerId: string;
+  amountPaise: number;
+  bankAccountId: string;
+}): Promise<PayoutResult> {
+  const amountINR = jobData.amountPaise / 100;
+  return executePayout(
+    jobData.partnerId,
+    amountINR,
+    "",
+    "",
+    "Partner",
+    jobData.withdrawalId
+  );
+}
