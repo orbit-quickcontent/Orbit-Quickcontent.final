@@ -57,6 +57,8 @@ app.get('/health', (_req, res) => {
 });
 
 // ── API Routes ────────────────────────────────────────────────────────────────
+import { setupSwagger } from './lib/swagger';
+setupSwagger(app);
 app.use('/api', apiRouter);
 
 // ── Webhook Routes (raw body for signature verification) ──────────────────────

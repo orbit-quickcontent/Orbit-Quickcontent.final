@@ -1,151 +1,90 @@
-name: Orbit CI/CD
+name: Deploy
 
 on:
   push:
-    branches: [ main, staging ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, staging ]
+    branches: [main]
 
 jobs:
-  test-and-build:
+  verify:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run lint
+      - run: npm run type-check
+      - run: npm run test
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-        
-      - name: Type Check
-        run: npm run type-check
-
-      - name: Test Backend
+  build:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker images
         run: |
-          cd backend
-          npm test
+          docker-compose build backend socket worker frontend editor
+      - name: Push to registry
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker-compose push backend socket worker frontend editor
 
   deploy-staging:
-    needs: test-and-build
-    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to staging VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.STAGING_VPS_HOST }}
+          username: ${{ secrets.STAGING_VPS_USER }}
+          key: ${{ secrets.STAGING_VPS_SSH_KEY }}
+          script: |
+            cd /opt/orbit-staging
+            git pull origin develop
+            docker-compose -f docker-compose.staging.yml down
+            docker-compose -f docker-compose.staging.yml up -d
+            docker system prune -f
+
+  run-e2e-staging:
+    needs: deploy-staging
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Deploy to Staging via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.STAGING_HOST }}
-          username: ${{ secrets.STAGING_USER }}
-          key: ${{ secrets.STAGING_SSH_KEY }}
-          script: |
-            cd /opt/orbit/staging
-            git pull origin staging
-            docker-compose -f docker-compose.staging.yml up -d --build backend worker
+      - uses: actions/checkout@v4
+      - name: Run E2E tests on staging
+        run: |
+          npm run test:e2e:staging
+        env:
+          STAGING_URL: https://staging.orbit-quickcontent.com
 
   deploy-production:
-    needs: test-and-build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [build, run-e2e-staging]
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: production
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Deploy to Production via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - uses: actions/checkout@v4
+      - name: Deploy to production VPS
+        uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.PROD_HOST }}
-          username: ${{ secrets.PROD_USER }}
-          key: ${{ secrets.PROD_SSH_KEY }}
+          host: ${{ secrets.PRODUCTION_VPS_HOST }}
+          username: ${{ secrets.PRODUCTION_VPS_USER }}
+          key: ${{ secrets.PRODUCTION_VPS_SSH_KEY }}
           script: |
-            cd /opt/orbit/production
+            cd /opt/orbit-production
             git pull origin main
-            docker-compose up -d --build backend worker
-
-  build-flutter-apks:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-
-      - name: Build Client APK
+            docker-compose down
+            docker-compose up -d
+            docker system prune -f
+      - name: Health check
         run: |
-          cd client-app
-          flutter pub get
-          flutter build apk --release
-
-      - name: Build Partner APK
-        run: |
-          cd partner-app
-          flutter pub get
-          flutter build apk --release
-
-      - name: Upload Client APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: orbit-client-apk
-          path: client-app/build/app/outputs/flutter-apk/app-release.apk
-
-      - name: Upload Partner APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: orbit-partner-apk
-          path: partner-app/build/app/outputs/flutter-apk/app-release.apk
-
-  build-web-apps:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Build Editor Web App
-        run: |
-          cd editor-web-app
-          npm run build
-
-      - name: Build Dashboard Web App
-        run: |
-          cd dashboard-web-app
-          npm run build
-
-      - name: Upload Editor Web App Build
-        uses: actions/upload-artifact@v4
-        with:
-          name: orbit-editor-web-build
-          path: editor-web-app/.next
-
-      - name: Upload Dashboard Web App Build
-        uses: actions/upload-artifact@v4
-        with:
-          name: orbit-dashboard-web-build
-          path: dashboard-web-app/.next
+          curl -f https://api.orbit-quickcontent.com/health || exit 1
