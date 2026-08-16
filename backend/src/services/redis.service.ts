@@ -4,7 +4,7 @@ import { logger } from '../lib/logger';
 const redisUrl = process.env.REDIS_URL;
 const isRedisConfigured = !!redisUrl && redisUrl !== '';
 
-let redis: Redis | null = null;
+export let redis: Redis | null = null;
 
 // Only initialize Redis if explicitly configured (for serverless compatibility)
 if (isRedisConfigured) {

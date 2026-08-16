@@ -24,9 +24,11 @@ const transporter = nodemailer.createTransport({
 export async function sendOTP(email: string, ipAddress?: string): Promise<{ success: boolean; message: string }> {
   // Check resend cooldown via Redis
   const cooldownKey = `orbit:otp:cooldown:${email}`;
-  const cooldownTtl = await redis.ttl(cooldownKey);
-  if (cooldownTtl > 0) {
-    return { success: false, message: `Wait ${cooldownTtl}s before requesting another OTP` };
+  if (redis) {
+    const cooldownTtl = await redis.ttl(cooldownKey);
+    if (cooldownTtl > 0) {
+      return { success: false, message: `Wait ${cooldownTtl}s before requesting another OTP` };
+    }
   }
 
   // Find or create user
@@ -60,7 +62,9 @@ export async function sendOTP(email: string, ipAddress?: string): Promise<{ succ
   });
 
   // Set resend cooldown
-  await redis.setex(cooldownKey, OTP_RESEND_COOLDOWN_SECONDS, '1');
+  if (redis) {
+    await redis.setex(cooldownKey, OTP_RESEND_COOLDOWN_SECONDS, '1');
+  }
 
   // Send email (NEVER log the OTP itself)
   if (process.env.NODE_ENV !== 'test') {
