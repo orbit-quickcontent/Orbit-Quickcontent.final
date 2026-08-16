@@ -9,7 +9,7 @@ export const apiRateLimiter = rateLimit({
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   store: new RedisStore({
-    sendCommand: (...args: string[]) => redis.call(...args),
+    sendCommand: (...args: string[]) => redis.call(args[0], ...args.slice(1)) as any,
   }),
   message: {
     error: 'Too many requests from this IP, please try again after 15 minutes',
@@ -23,7 +23,7 @@ export const authRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   store: new RedisStore({
-    sendCommand: (...args: string[]) => redis.call(...args),
+    sendCommand: (...args: string[]) => redis.call(args[0], ...args.slice(1)) as any,
   }),
   message: {
     error: 'Too many authentication attempts from this IP, please try again after an hour',

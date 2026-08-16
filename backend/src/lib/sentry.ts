@@ -6,6 +6,7 @@ export function initSentry(app: import('express').Express) {
     Sentry.init({
       dsn: process.env.SENTRY_DSN,
       integrations: [
+        // @ts-ignore
         nodeProfilingIntegration(),
       ],
       tracesSampleRate: 0.01, // 1% of transactions

@@ -73,7 +73,7 @@ app.use((_req, res) => {
 
 // ── Error Handler ─────────────────────────────────────────────────────────────
 import * as Sentry from '@sentry/node';
-Sentry.setupExpressErrorHandler(app);
+app.use(Sentry.Handlers.errorHandler());
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   logger.error(err, 'Unhandled error');
