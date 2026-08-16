@@ -52,13 +52,29 @@ app.get('/metrics', async (_req, res) => {
   res.send(await client.register.metrics());
 });
 
+import { validateEnvironment } from './config/env';
+validateEnvironment();
+
 // ── Root & Health Check ──────────────────────────────────────────────────────
 app.get('/', (_req, res) => {
-  res.json({ status: 'ok', message: 'ORBIT Platform API is online', version: '1.0.0' });
+  res.json({
+    status: 'ok',
+    message: 'ORBIT Platform API is online',
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString(), service: 'orbit-backend' });
+  const envCheck = validateEnvironment();
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    service: 'orbit-backend',
+    envConfigured: envCheck.isValid,
+    missingRequiredVars: envCheck.missing
+  });
 });
 
 // ── API Routes ────────────────────────────────────────────────────────────────

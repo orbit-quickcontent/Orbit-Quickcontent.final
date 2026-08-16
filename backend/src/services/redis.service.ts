@@ -11,7 +11,7 @@ export const redis = new Redis(redisUrl, {
     logger.warn({ err: err.message }, 'Redis reconnect on error');
     return true;
   },
-  lazyConnect: false,
+  lazyConnect: true,
 });
 
 redis.on('connect', () => logger.info('✅ Redis connected'));
