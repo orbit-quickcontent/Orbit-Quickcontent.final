@@ -488,13 +488,14 @@ export default function AdminDashboard() {
                             <Plus className="w-3.5 h-3.5 mr-1" /> Add Partner
                           </Button>
                           <div className="relative w-48 hidden sm:block">
-                          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
-                          <Input
-                            placeholder="Filter list..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-8 h-8 text-xs bg-[#16171d] border-gray-800 text-white focus-visible:ring-orbit-cyan"
-                          />
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+                            <Input
+                              placeholder="Filter list..."
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="pl-8 h-8 text-xs bg-[#16171d] border-gray-800 text-white focus-visible:ring-orbit-cyan"
+                            />
+                          </div>
                         </div>
                       </CardHeader>
                       <CardContent className="p-0">
