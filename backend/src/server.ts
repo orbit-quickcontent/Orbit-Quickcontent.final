@@ -74,12 +74,25 @@ app.get('/', (_req, res) => {
   });
 });
 
-app.get('/health', (_req, res) => {
+app.get('/health', async (_req, res) => {
   const envCheck = validateEnvironment();
+  let firestoreConnected = false;
+  try {
+    const { firestore } = await import('./services/firebase-admin');
+    await firestore.collection('system_health').doc('ping').set({
+      lastPing: new Date().toISOString(),
+      service: 'orbit-backend'
+    }, { merge: true });
+    firestoreConnected = true;
+  } catch (err: any) {
+    logger.warn({ err: err.message }, 'Firestore ping check failed');
+  }
+
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     service: 'orbit-backend',
+    firestore: firestoreConnected ? 'connected' : 'unreachable',
     envConfigured: envCheck.isValid,
     missingRequiredVars: envCheck.missing
   });
