@@ -46,7 +46,9 @@ app.use((req, _res, next) => {
 
 // ── Metrics ───────────────────────────────────────────────────────────────────
 import client from 'prom-client';
-client.collectDefaultMetrics();
+if (process.env.ENABLE_METRICS === 'true') {
+  client.collectDefaultMetrics();
+}
 app.get('/metrics', async (_req, res) => {
   res.set('Content-Type', client.register.contentType);
   res.send(await client.register.metrics());
@@ -92,8 +94,16 @@ app.use((_req, res) => {
 });
 
 // ── Error Handler ─────────────────────────────────────────────────────────────
-import * as Sentry from '@sentry/node';
-app.use(Sentry.Handlers.errorHandler());
+if (process.env.SENTRY_DSN) {
+  try {
+    const Sentry = require('@sentry/node');
+    if (Sentry.Handlers && Sentry.Handlers.errorHandler) {
+      app.use(Sentry.Handlers.errorHandler());
+    }
+  } catch (err) {
+    logger.warn('Failed to attach Sentry error handler');
+  }
+}
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   logger.error(err, 'Unhandled error');
