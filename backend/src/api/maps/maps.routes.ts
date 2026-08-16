@@ -1,12 +1,30 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { getRoute } from '../../services/maps.service';
+import { getRoute, forwardGeocode, reverseGeocode } from '../../services/maps.service';
 import { updatePartnerLocation } from '../../services/redis.service';
 import { emitToBooking, SOCKET_EVENTS } from '../../services/socket.service';
 import { authenticate, authorize, rateLimits } from '../../middleware/auth.middleware';
 import prisma from '../../lib/prisma';
 
 const router = Router();
+
+// GET /api/maps/search?q=
+router.get('/search', authenticate, async (req, res) => {
+  const q = req.query.q as string;
+  if (!q) { res.status(400).json({ error: 'Query parameter q is required' }); return; }
+  const result = await forwardGeocode(q);
+  if (!result) { res.status(404).json({ error: 'Location not found' }); return; }
+  res.json(result);
+});
+
+// GET /api/maps/reverse?lat=&lng=
+router.get('/reverse', authenticate, async (req, res) => {
+  const lat = parseFloat(req.query.lat as string);
+  const lng = parseFloat(req.query.lng as string);
+  if (isNaN(lat) || isNaN(lng)) { res.status(400).json({ error: 'Valid lat and lng required' }); return; }
+  const address = await reverseGeocode(lat, lng);
+  res.json({ address });
+});
 
 // GET /api/maps/route?originLat=&originLng=&destLat=&destLng=
 router.get('/route', authenticate, async (req, res) => {

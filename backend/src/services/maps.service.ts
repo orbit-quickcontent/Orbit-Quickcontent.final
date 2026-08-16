@@ -48,10 +48,35 @@ export async function getRoute(
   }
 }
 
-// ── Geocode address (fallback to coordinates) ──────────────────────────────────
+// ── Forward Geocode (Address → Coordinates) ──────────────────────────────────
+export async function forwardGeocode(query: string): Promise<{ lat: number; lng: number; displayName: string } | null> {
+  try {
+    const geocodingBase = process.env.GEOCODING_BASE_URL || 'https://nominatim.openstreetmap.org';
+    const response = await axios.get(`${geocodingBase}/search`, {
+      params: { q: query, format: 'json', limit: 1 },
+      headers: { 'User-Agent': 'ORBIT-Platform/1.0' },
+      timeout: 5000,
+    });
+    if (response.data && response.data.length > 0) {
+      const item = response.data[0];
+      return {
+        lat: parseFloat(item.lat),
+        lng: parseFloat(item.lon),
+        displayName: item.display_name,
+      };
+    }
+    return null;
+  } catch (err: any) {
+    logger.error({ err: err.message, query }, 'Nominatim forward geocoding failed');
+    return null;
+  }
+}
+
+// ── Geocode address (Coordinates → Address) ──────────────────────────────────
 export async function reverseGeocode(lat: number, lng: number): Promise<string> {
   try {
-    const response = await axios.get('https://nominatim.openstreetmap.org/reverse', {
+    const geocodingBase = process.env.GEOCODING_BASE_URL || 'https://nominatim.openstreetmap.org';
+    const response = await axios.get(`${geocodingBase}/reverse`, {
       params: { lat, lon: lng, format: 'json' },
       headers: { 'User-Agent': 'ORBIT-Platform/1.0' },
       timeout: 5000,
@@ -61,3 +86,4 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string> 
     return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   }
 }
+
