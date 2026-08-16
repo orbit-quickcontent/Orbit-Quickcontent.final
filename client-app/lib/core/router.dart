@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/screens/splash_screen.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/otp_screen.dart';
+import '../features/auth/screens/permission_screen.dart';
+import '../features/auth/screens/onboarding_screen.dart';
 import '../features/home/screens/home_screen.dart';
 import '../features/booking/screens/packages_screen.dart';
 import '../features/booking/screens/location_picker_screen.dart';
@@ -26,9 +28,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLoggedIn = auth.isLoggedIn;
       final isAuthRoute = state.matchedLocation.startsWith('/login') ||
           state.matchedLocation.startsWith('/otp') ||
-          state.matchedLocation == '/splash';
+          state.matchedLocation == '/splash' ||
+          state.matchedLocation == '/permissions' ||
+          state.matchedLocation == '/onboarding';
 
-      if (!isLoggedIn && !isAuthRoute) return '/login';
+      if (!isLoggedIn && !isAuthRoute) return '/permissions';
       if (isLoggedIn && isAuthRoute && state.matchedLocation != '/splash') return '/home';
       return null;
     },
@@ -36,6 +40,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/splash',
         builder: (ctx, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/permissions',
+        builder: (ctx, state) => const PermissionScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (ctx, state) => const OnboardingScreen(),
       ),
       GoRoute(
         path: '/login',

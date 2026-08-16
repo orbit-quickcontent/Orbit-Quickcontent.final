@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -20,7 +21,15 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _navigate() async {
     await Future.delayed(const Duration(milliseconds: 2500));
     if (!mounted) return;
-    context.go('/login');
+    
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenPermissions = prefs.getBool('has_seen_permissions') ?? false;
+    
+    if (!hasSeenPermissions) {
+      context.go('/permissions');
+    } else {
+      context.go('/login');
+    }
   }
 
   @override
