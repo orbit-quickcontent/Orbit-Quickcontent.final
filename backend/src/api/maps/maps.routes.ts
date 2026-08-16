@@ -8,13 +8,13 @@ import prisma from '../../lib/prisma';
 
 const router = Router();
 
-// GET /api/maps/search?q=
+// GET /api/maps/search?q=&limit=
 router.get('/search', authenticate, async (req, res) => {
   const q = req.query.q as string;
+  const limit = parseInt(req.query.limit as string || '5', 10);
   if (!q) { res.status(400).json({ error: 'Query parameter q is required' }); return; }
-  const result = await forwardGeocode(q);
-  if (!result) { res.status(404).json({ error: 'Location not found' }); return; }
-  res.json(result);
+  const results = await forwardGeocode(q, limit);
+  res.json({ results });
 });
 
 // GET /api/maps/reverse?lat=&lng=

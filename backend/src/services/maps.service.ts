@@ -49,26 +49,30 @@ export async function getRoute(
 }
 
 // ── Forward Geocode (Address → Coordinates) ──────────────────────────────────
-export async function forwardGeocode(query: string): Promise<{ lat: number; lng: number; displayName: string } | null> {
+export async function forwardGeocode(
+  query: string,
+  limit: number = 5
+): Promise<Array<{ lat: number; lng: number; displayName: string; category?: string; type?: string }>> {
   try {
     const geocodingBase = process.env.GEOCODING_BASE_URL || 'https://nominatim.openstreetmap.org';
     const response = await axios.get(`${geocodingBase}/search`, {
-      params: { q: query, format: 'json', limit: 1 },
-      headers: { 'User-Agent': 'ORBIT-Platform/1.0' },
+      params: { q: query, format: 'jsonv2', limit },
+      headers: { 'User-Agent': 'ORBIT-Platform/1.0 (contact@orbitlogic.io)' },
       timeout: 5000,
     });
-    if (response.data && response.data.length > 0) {
-      const item = response.data[0];
-      return {
+    if (Array.isArray(response.data)) {
+      return response.data.map((item: any) => ({
         lat: parseFloat(item.lat),
         lng: parseFloat(item.lon),
         displayName: item.display_name,
-      };
+        category: item.category,
+        type: item.type,
+      }));
     }
-    return null;
+    return [];
   } catch (err: any) {
     logger.error({ err: err.message, query }, 'Nominatim forward geocoding failed');
-    return null;
+    return [];
   }
 }
 
