@@ -52,7 +52,11 @@ app.get('/metrics', async (_req, res) => {
   res.send(await client.register.metrics());
 });
 
-// ── Health Check ──────────────────────────────────────────────────────────────
+// ── Root & Health Check ──────────────────────────────────────────────────────
+app.get('/', (_req, res) => {
+  res.json({ status: 'ok', message: 'ORBIT Platform API is online', version: '1.0.0' });
+});
+
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), service: 'orbit-backend' });
 });

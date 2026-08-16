@@ -71,11 +71,11 @@ export function verifyRefreshToken(token: string): { id: string } | null {
 
 // ── Rate Limiters ─────────────────────────────────────────────────────────────
 export const rateLimits = {
-  sendOtp: rateLimit({ windowMs: 60_000, max: 5, message: { error: 'Too many OTP requests' }, keyGenerator: (req) => req.ip || 'unknown' }),
-  verifyOtp: rateLimit({ windowMs: 60_000, max: 10, message: { error: 'Too many OTP attempts' }, keyGenerator: (req) => req.ip || 'unknown' }),
-  bookings: rateLimit({ windowMs: 60_000, max: 5, message: { error: 'Too many booking requests' }, keyGenerator: (req) => req.user?.id || req.ip || 'unknown' }),
-  withdraw: rateLimit({ windowMs: 3_600_000, max: 2, message: { error: 'Too many withdrawal requests' }, keyGenerator: (req) => req.user?.id || 'unknown' }),
-  admin: rateLimit({ windowMs: 60_000, max: 100, message: { error: 'Rate limit exceeded' }, keyGenerator: (req) => req.user?.id || req.ip || 'unknown' }),
-  verifyCode: rateLimit({ windowMs: 60_000, max: 5, message: { error: 'Too many code verification attempts' }, keyGenerator: (req) => req.user?.id || req.ip || 'unknown' }),
-  locationUpdate: rateLimit({ windowMs: 60_000, max: 30, message: { error: 'Location update rate limit exceeded' }, keyGenerator: (req) => req.user?.id || 'unknown' }),
+  sendOtp: rateLimit({ validate: false, windowMs: 60_000, max: 5, message: { error: 'Too many OTP requests' }, keyGenerator: (req) => req.ip || 'unknown' }),
+  verifyOtp: rateLimit({ validate: false, windowMs: 60_000, max: 10, message: { error: 'Too many OTP attempts' }, keyGenerator: (req) => req.ip || 'unknown' }),
+  bookings: rateLimit({ validate: false, windowMs: 60_000, max: 5, message: { error: 'Too many booking requests' }, keyGenerator: (req) => req.user?.id || req.ip || 'unknown' }),
+  withdraw: rateLimit({ validate: false, windowMs: 3_600_000, max: 2, message: { error: 'Too many withdrawal requests' }, keyGenerator: (req) => req.user?.id || 'unknown' }),
+  admin: rateLimit({ validate: false, windowMs: 60_000, max: 100, message: { error: 'Rate limit exceeded' }, keyGenerator: (req) => req.user?.id || req.ip || 'unknown' }),
+  verifyCode: rateLimit({ validate: false, windowMs: 60_000, max: 5, message: { error: 'Too many code verification attempts' }, keyGenerator: (req) => req.user?.id || req.ip || 'unknown' }),
+  locationUpdate: rateLimit({ validate: false, windowMs: 60_000, max: 30, message: { error: 'Location update rate limit exceeded' }, keyGenerator: (req) => req.user?.id || 'unknown' }),
 };
