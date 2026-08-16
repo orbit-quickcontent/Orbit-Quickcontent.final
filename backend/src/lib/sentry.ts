@@ -5,10 +5,7 @@ export function initSentry(app: import('express').Express) {
   if (process.env.SENTRY_DSN) {
     Sentry.init({
       dsn: process.env.SENTRY_DSN,
-      integrations: [
-        // @ts-ignore
-        nodeProfilingIntegration(),
-      ],
+      integrations: [],
       tracesSampleRate: 0.01, // 1% of transactions
       profilesSampleRate: 0.01,
       autoSessionTracking: false, // GlitchTip does not support sessions

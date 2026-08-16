@@ -1,4 +1,7 @@
 import { logger } from '../lib/logger';
+import { dispatchBooking } from './dispatch.service';
+import { processCashfreePayout } from './payout.service';
+import { sendBookingNotification } from './fcm.service';
 
 // Serverless-compatible Job Queue Adapter (Replacing BullMQ)
 // This interface matches BullMQ's queue.add() to prevent breaking callers.
@@ -33,13 +36,10 @@ class ServerlessQueue {
 
   private async executeInline(jobName: string, data: any) {
     if (this.queueName === 'orbit-dispatch') {
-      const { dispatchBooking } = await import('./dispatch.service');
       await dispatchBooking(data.bookingId);
     } else if (this.queueName === 'orbit-payouts') {
-      const { processCashfreePayout } = await import('./payout.service');
       await processCashfreePayout(data);
     } else if (this.queueName === 'orbit-notifications') {
-      const { sendBookingNotification } = await import('./fcm.service');
       await sendBookingNotification(data.token, data.notification);
     }
   }
