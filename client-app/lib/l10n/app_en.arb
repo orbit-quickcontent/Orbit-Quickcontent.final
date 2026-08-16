@@ -1,0 +1,14 @@
+{
+  "appTitle": "ORBIT Client",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "loginScreenTitle": "Login",
+  "@loginScreenTitle": {
+    "description": "Title on the login screen"
+  },
+  "welcomeMessage": "Welcome to ORBIT!",
+  "@welcomeMessage": {
+    "description": "Welcome message for clients"
+  }
+}

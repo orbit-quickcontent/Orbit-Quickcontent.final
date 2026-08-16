@@ -7,6 +7,28 @@ import { logger } from '../../lib/logger';
 
 const router = Router();
 
+/**
+ * @swagger
+ * /api/auth/send-otp:
+ *   post:
+ *     summary: Send OTP to email
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully
+ *       400:
+ *         description: Invalid email or rate limit exceeded
+ */
 // POST /api/auth/send-otp
 router.post('/send-otp', rateLimits.sendOtp, async (req, res) => {
   const schema = z.object({ email: z.string().email() });
@@ -17,9 +39,15 @@ router.post('/send-otp', rateLimits.sendOtp, async (req, res) => {
   res.json(result);
 });
 
+import { AuthService } from '../../services/auth.service';
+
 // POST /api/auth/verify-otp
 router.post('/verify-otp', rateLimits.verifyOtp, async (req, res) => {
-  const schema = z.object({ email: z.string().email(), otp: z.string().length(6) });
+  const schema = z.object({ 
+    email: z.string().email(), 
+    otp: z.string().length(6),
+    totp: z.string().length(6).optional()
+  });
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: 'Invalid request' }); return; }
 
@@ -32,6 +60,19 @@ router.post('/verify-otp', rateLimits.verifyOtp, async (req, res) => {
   });
   if (!user) { res.status(404).json({ error: 'User not found' }); return; }
 
+  // Check 2FA if enabled
+  if (user.twoFactorEnabled) {
+    if (!parsed.data.totp) {
+      res.status(403).json({ error: '2FA token required', requires2FA: true });
+      return;
+    }
+    const isValid = AuthService.verifyTotpToken(parsed.data.totp, user.twoFactorSecret!);
+    if (!isValid) {
+      res.status(401).json({ error: 'Invalid 2FA token' });
+      return;
+    }
+  }
+
   const tokens = issueTokens({
     id: user.id,
     email: user.email,
@@ -42,6 +83,31 @@ router.post('/verify-otp', rateLimits.verifyOtp, async (req, res) => {
 
   logger.info({ userId: user.id, role: user.role }, 'User logged in via OTP');
   res.json({ ...tokens, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+});
+
+// GET /api/auth/2fa/generate
+router.get('/2fa/generate', authenticate, async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+  if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+  
+  const { secret, qrCodeUrl } = await AuthService.generateTotpSecret(user.email);
+  res.json({ secret, qrCodeUrl });
+});
+
+// POST /api/auth/2fa/enable
+router.post('/2fa/enable', authenticate, async (req, res) => {
+  const schema = z.object({ secret: z.string(), token: z.string().length(6) });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: 'Invalid request' }); return; }
+
+  const isValid = AuthService.verifyTotpToken(parsed.data.token, parsed.data.secret);
+  if (!isValid) {
+    res.status(400).json({ error: 'Invalid 2FA token' });
+    return;
+  }
+
+  await AuthService.enable2FA(req.user!.id, parsed.data.secret);
+  res.json({ success: true });
 });
 
 // POST /api/auth/refresh

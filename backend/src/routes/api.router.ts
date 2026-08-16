@@ -12,8 +12,10 @@ import prisma from '../lib/prisma';
 
 const router = Router();
 
+import { authRateLimiter } from '../middleware/rate-limiter';
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
-router.use('/auth', authRouter);
+router.use('/auth', authRateLimiter, authRouter);
 
 // ── Partner ───────────────────────────────────────────────────────────────────
 router.use('/partner', partnerRouter);

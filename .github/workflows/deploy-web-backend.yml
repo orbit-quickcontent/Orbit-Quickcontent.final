@@ -1,0 +1,38 @@
+name: Deploy Web and Backend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'dashboard-web-app/**'
+      - 'editor-web-app/**'
+      - 'package.json'
+      - '.github/workflows/deploy-web-backend.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Applications
+        run: npm run build
+
+      # Add deployment steps here depending on the target infrastructure.
+      # E.g., deploying to DigitalOcean, AWS EC2 via SSH, Vercel for frontend, etc.
+      
+      - name: Run Tests
+        run: npm run test

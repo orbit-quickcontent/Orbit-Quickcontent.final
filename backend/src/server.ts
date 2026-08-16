@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
-import rateLimit from 'express-rate-limit';
 import { logger } from './lib/logger';
 import { initSocketService } from './services/socket.service';
 import { initWorkers } from './services/queue.service';
@@ -11,6 +10,9 @@ import apiRouter from './routes/api.router';
 dotenv.config();
 
 const app = express();
+import { initSentry } from './lib/sentry';
+initSentry(app);
+
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
 
@@ -37,18 +39,21 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ── Global Rate Limit ─────────────────────────────────────────────────────────
-app.use(rateLimit({
-  windowMs: 60 * 1000,
-  max: 200,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests, please try again later.' },
-}));
+import { apiRateLimiter } from './middleware/rate-limiter';
+app.use(apiRateLimiter);
 
 // ── Request Logging ───────────────────────────────────────────────────────────
 app.use((req, _res, next) => {
   logger.info({ method: req.method, url: req.url, ip: req.ip }, 'Incoming request');
   next();
+});
+
+// ── Metrics ───────────────────────────────────────────────────────────────────
+import client from 'prom-client';
+client.collectDefaultMetrics();
+app.get('/metrics', async (_req, res) => {
+  res.set('Content-Type', client.register.contentType);
+  res.send(await client.register.metrics());
 });
 
 // ── Health Check ──────────────────────────────────────────────────────────────
@@ -71,6 +76,9 @@ app.use((_req, res) => {
 });
 
 // ── Error Handler ─────────────────────────────────────────────────────────────
+import * as Sentry from '@sentry/node';
+Sentry.setupExpressErrorHandler(app);
+
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   logger.error(err, 'Unhandled error');
   res.status(err.status || 500).json({

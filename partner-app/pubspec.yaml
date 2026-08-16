@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # Navigation
   go_router: ^13.2.0
@@ -55,7 +57,7 @@ dependencies:
   path_provider: ^2.1.4
 
   # Utilities
-  intl: ^0.19.0
+  intl: ^0.20.2
   shared_preferences: ^2.3.2
   connectivity_plus: ^6.0.5
   permission_handler: ^11.3.1
@@ -68,6 +70,7 @@ dev_dependencies:
   flutter_lints: ^4.0.0
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
     - assets/images/
