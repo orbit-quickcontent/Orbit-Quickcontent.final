@@ -1,95 +1,69 @@
-import { Server as SocketServer } from 'socket.io';
-import { Server as HttpServer } from 'http';
-import jwt from 'jsonwebtoken';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '../lib/logger';
+import { Server as HttpServer } from 'http';
 
-let io: SocketServer;
+let supabase: SupabaseClient;
 
-export function initSocketService(httpServer: HttpServer) {
-  io = new SocketServer(httpServer, {
-    cors: {
-      origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(','),
-      credentials: true,
-    },
-    pingTimeout: 20000,
-    pingInterval: 25000,
-    transports: ['websocket', 'polling'],
-  });
-
-  // ── Auth Middleware ─────────────────────────────────────────────────────────
-  io.use((socket, next) => {
-    const token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.replace('Bearer ', '');
-    if (!token) return next(new Error('Authentication required'));
-
-    try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET!) as any;
-      socket.data.user = payload;
-      next();
-    } catch {
-      next(new Error('Invalid token'));
+export function initSocketService(httpServer?: HttpServer) {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    logger.warn('Supabase Realtime not initialized: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+    return null;
+  }
+  
+  supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+      auth: { persistSession: false },
     }
-  });
+  );
 
-  // ── Connection Handler ──────────────────────────────────────────────────────
-  io.on('connection', (socket) => {
-    const user = socket.data.user;
-    logger.info({ userId: user.id, role: user.role }, 'Socket connected');
-
-    // Join personal room
-    socket.join(`user:${user.id}`);
-    if (user.role === 'PARTNER') socket.join(`partner:${user.id}`);
-    if (user.role === 'CLIENT') socket.join(`client:${user.id}`);
-    if (user.role === 'EDITOR') socket.join(`editor:${user.id}`);
-    if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') socket.join('admin:ops');
-
-    // Join booking room
-    socket.on('join:booking', (bookingId: string) => {
-      socket.join(`booking:${bookingId}`);
-      logger.debug({ userId: user.id, bookingId }, 'Joined booking room');
-    });
-
-    socket.on('leave:booking', (bookingId: string) => {
-      socket.leave(`booking:${bookingId}`);
-    });
-
-    socket.on('disconnect', (reason) => {
-      logger.info({ userId: user.id, reason }, 'Socket disconnected');
-    });
-
-    socket.on('error', (err) => {
-      logger.error({ userId: user.id, err: err.message }, 'Socket error');
-    });
-  });
-
-  logger.info('✅ Socket.IO initialized');
-  return io;
+  logger.info('✅ Supabase Realtime service initialized (Serverless Socket replacement)');
+  return supabase;
 }
 
-export function getIO(): SocketServer {
-  if (!io) throw new Error('Socket.IO not initialized');
-  return io;
+export function getIO() {
+  if (!supabase) {
+    initSocketService();
+  }
+  if (!supabase) throw new Error('Supabase Realtime client not initialized');
+  return supabase;
 }
 
-// ── Emit Helpers ─────────────────────────────────────────────────────────────
+// ── Emit Helpers (Mapped to Supabase Channels) ─────────────────────────────
+
+async function broadcastToChannel(channelName: string, event: string, payload: any) {
+  try {
+    const channel = getIO().channel(channelName);
+    await channel.send({
+      type: 'broadcast',
+      event,
+      payload
+    });
+    logger.debug({ channelName, event }, 'Broadcasted realtime event');
+  } catch (err: any) {
+    logger.error({ channelName, event, err: err.message }, 'Failed to broadcast realtime event');
+  }
+}
 
 export function emitToBooking(bookingId: string, event: string, data: any) {
-  getIO().to(`booking:${bookingId}`).emit(event, data);
+  broadcastToChannel(`booking:${bookingId}`, event, data);
 }
 
 export function emitToPartner(partnerId: string, event: string, data: any) {
-  getIO().to(`partner:${partnerId}`).emit(event, data);
+  broadcastToChannel(`partner:${partnerId}`, event, data);
 }
 
 export function emitToClient(clientId: string, event: string, data: any) {
-  getIO().to(`client:${clientId}`).emit(event, data);
+  broadcastToChannel(`client:${clientId}`, event, data);
 }
 
 export function emitToEditor(editorId: string, event: string, data: any) {
-  getIO().to(`editor:${editorId}`).emit(event, data);
+  broadcastToChannel(`editor:${editorId}`, event, data);
 }
 
 export function emitToAdmin(event: string, data: any) {
-  getIO().to('admin:ops').emit(event, data);
+  broadcastToChannel('admin:ops', event, data);
 }
 
 // ── Typed Event Names ─────────────────────────────────────────────────────────

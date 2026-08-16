@@ -39,6 +39,10 @@ router.use('/editor', editorRouter);
 // ── Admin ─────────────────────────────────────────────────────────────────────
 router.use('/admin', adminRouter);
 
+// ── Internal Serverless Jobs (QStash) ─────────────────────────────────────────
+import jobsRouter from './jobs.router';
+router.use('/internal/jobs', jobsRouter);
+
 // ── Packages ──────────────────────────────────────────────────────────────────
 router.get('/packages', async (_req, res) => {
   const packages = await prisma.package.findMany({

@@ -24,7 +24,7 @@ export default function BookingStudio({ params }: { params: Promise<{ id: string
     }
 
     // Fetch booking details
-    fetch(`http://localhost:5000/api/editor/bookings/${bookingId}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/editor/bookings/${bookingId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.booking) {
@@ -105,7 +105,7 @@ export default function BookingStudio({ params }: { params: Promise<{ id: string
     setUploadProgress(0);
 
     const storageKey = `reels/${bookingId}_${Date.now()}_${file.name}`;
-    const uploadUrl = `http://localhost:5000/api/upload/mock-s3?key=${encodeURIComponent(storageKey)}`;
+    const uploadUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/upload/mock-s3?key=${encodeURIComponent(storageKey)}`;
 
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", uploadUrl);
@@ -122,7 +122,7 @@ export default function BookingStudio({ params }: { params: Promise<{ id: string
       if (xhr.status === 200 || xhr.status === 204) {
         setUploadProgress(100);
         setTimeout(() => {
-          const finalUrl = `http://localhost:5000/upload/${storageKey}`;
+          const finalUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/upload/${storageKey}`;
           setReelUrl(finalUrl);
           setIsUploading(false);
         }, 400);
@@ -144,7 +144,7 @@ export default function BookingStudio({ params }: { params: Promise<{ id: string
 
   const handleAcceptAssignment = () => {
     setIsLoading(true);
-    fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/bookings/${bookingId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -172,7 +172,7 @@ export default function BookingStudio({ params }: { params: Promise<{ id: string
     setIsDelivering(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/editor/deliver", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/editor/deliver`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -360,7 +360,7 @@ export default function BookingStudio({ params }: { params: Promise<{ id: string
                             </div>
                           </div>
                           <a
-                            href={url.startsWith("http") ? url : `http://localhost:5000${url}`}
+                            href={url.startsWith("http") ? url : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${url}`}
                             download
                             target="_blank"
                             rel="noopener noreferrer"
@@ -396,7 +396,7 @@ export default function BookingStudio({ params }: { params: Promise<{ id: string
                             </div>
                           </div>
                           <a
-                            href={url.startsWith("http") ? url : `http://localhost:5000${url}`}
+                            href={url.startsWith("http") ? url : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${url}`}
                             download
                             target="_blank"
                             rel="noopener noreferrer"

@@ -1,19 +1,15 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import { createServer } from 'http';
 import { logger } from './lib/logger';
 import { initSocketService } from './services/socket.service';
 import { initWorkers } from './services/queue.service';
 import apiRouter from './routes/api.router';
 
-dotenv.config();
-
 const app = express();
 import { initSentry } from './lib/sentry';
 initSentry(app);
 
-const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
 
 // ── CORS ────────────────────────────────────────────────────────────────────
@@ -86,17 +82,19 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   });
 });
 
-// ── Start Socket.IO ───────────────────────────────────────────────────────────
-initSocketService(httpServer);
+// ── Initialize Services ───────────────────────────────────────────────────────
+initSocketService();
 
-// ── Start BullMQ Workers ──────────────────────────────────────────────────────
 if (process.env.NODE_ENV !== 'test') {
   initWorkers();
 }
 
-// ── Start HTTP Server ─────────────────────────────────────────────────────────
-httpServer.listen(PORT, () => {
-  logger.info(`🚀 ORBIT Backend running on port ${PORT}`);
-});
+// ── Start HTTP Server (Local Development) ─────────────────────────────────────
+if (process.env.NODE_ENV !== 'production' || process.env.FORCE_START_SERVER === 'true') {
+  app.listen(PORT, () => {
+    logger.info(`🚀 ORBIT Backend running on port ${PORT}`);
+  });
+}
 
-export { app, httpServer };
+// Export for Vercel Serverless
+module.exports = app;

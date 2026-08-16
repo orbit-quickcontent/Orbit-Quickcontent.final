@@ -83,11 +83,11 @@ export default function AdminDashboard() {
       };
 
       const [overviewRes, partnersRes, bookingsRes, logsRes, codesRes] = await Promise.all([
-        fetch("http://localhost:5000/api/admin/overview", { headers: authHeaders }),
-        fetch("http://localhost:5000/api/admin/partners?status=ACTIVE", { headers: authHeaders }),
-        fetch("http://localhost:5000/api/admin/bookings", { headers: authHeaders }),
-        fetch("http://localhost:5000/api/admin/audit-logs", { headers: authHeaders }),
-        fetch("http://localhost:5000/api/admin/partner-codes", { headers: authHeaders })
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/admin/overview`, { headers: authHeaders }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/admin/partners?status=ACTIVE`, { headers: authHeaders }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/admin/bookings`, { headers: authHeaders }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/admin/audit-logs`, { headers: authHeaders }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/admin/partner-codes`, { headers: authHeaders })
       ]);
 
       if (overviewRes.ok) {
@@ -132,7 +132,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     setIsGenerating(true);
     try {
-      const res = await fetch("http://localhost:5000/api/admin/partner-codes", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/admin/partner-codes`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -163,7 +163,7 @@ export default function AdminDashboard() {
 
   const handleRevokeCode = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/partner-codes/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/admin/partner-codes/${id}`, {
         method: "DELETE",
         headers: { 
           "Content-Type": "application/json",
@@ -194,7 +194,7 @@ export default function AdminDashboard() {
   const handleToggleVerification = async (partnerId: string, currentStatus: boolean) => {
     setTogglingVerify(partnerId);
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/partners/${partnerId}/status`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/admin/partners/${partnerId}/status`, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",

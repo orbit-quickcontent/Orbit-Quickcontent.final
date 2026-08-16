@@ -16,7 +16,7 @@ export default function EditorDashboard() {
 
   const fetchBookings = (eid: string) => {
     setIsLoading(true);
-    fetch(`http://localhost:5000/api/editor/bookings?editorId=${eid}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/editor/bookings?editorId=${eid}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.bookings) {
@@ -73,7 +73,7 @@ export default function EditorDashboard() {
     if (!editorId) return;
     setIsAccepting(bookingId);
     try {
-      const res = await fetch(`http://localhost:5000/api/editor/bookings/${bookingId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/editor/bookings/${bookingId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ editorId }),
