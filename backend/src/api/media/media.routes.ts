@@ -1,26 +1,15 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
 import prisma from '../../lib/prisma';
 import { authenticate, authorize } from '../../middleware/auth.middleware';
 import { emitToBooking, emitToAdmin, SOCKET_EVENTS } from '../../services/socket.service';
+import { firebaseStorage } from '../../services/firebase-admin';
 import { logger } from '../../lib/logger';
 
 const router = Router();
 
-// Supabase client (using service role for storage admin)
-const getSupabaseClient = () => {
-  return createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-};
-
-const BUCKET_RAW = process.env.STORAGE_BUCKET_RAW || 'orbit-raw-footage';
-const BUCKET_REELS = process.env.STORAGE_BUCKET_REELS || 'orbit-reels';
-
-// POST /api/media/upload-url — Get presigned upload URL
+// POST /api/media/upload-url — Get Firebase signed upload URL
 router.post('/upload-url', authenticate, authorize('PARTNER'), async (req, res) => {
   const schema = z.object({
     bookingId: z.string(),
@@ -39,33 +28,39 @@ router.post('/upload-url', authenticate, authorize('PARTNER'), async (req, res) 
     res.status(403).json({ error: 'Not authorized to upload for this booking' }); return;
   }
 
-  const key = `${parsed.data.bookingId}/${uuidv4()}-${parsed.data.fileName}`;
-  const supabase = getSupabaseClient();
+  const key = `raw/${parsed.data.bookingId}/${uuidv4()}-${parsed.data.fileName}`;
 
-  const { data, error } = await supabase.storage.from(BUCKET_RAW).createSignedUploadUrl(key);
-  
-  if (error || !data) {
-    logger.error({ err: error }, 'Failed to create Supabase signed upload URL');
-    res.status(500).json({ error: 'Failed to generate upload URL' }); return;
+  try {
+    const bucket = firebaseStorage.bucket();
+    const file = bucket.file(key);
+    const [signedUrl] = await file.getSignedUrl({
+      version: 'v4',
+      action: 'write',
+      expires: Date.now() + 15 * 60 * 1000,
+      contentType: parsed.data.mimeType,
+    });
+
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${key}`;
+
+    // Pre-create media asset record
+    const asset = await prisma.mediaAsset.create({
+      data: {
+        bookingId: parsed.data.bookingId,
+        type: 'RAW_FOOTAGE',
+        url: publicUrl,
+        key,
+        mimeType: parsed.data.mimeType,
+        sizeBytes: BigInt(parsed.data.sizeBytes),
+        uploadedBy: req.user!.partnerId,
+        isVerified: false,
+      },
+    });
+
+    res.json({ uploadUrl: signedUrl, key, assetId: asset.id, publicUrl });
+  } catch (err: any) {
+    logger.error({ err: err.message }, 'Failed to create Firebase Storage signed upload URL');
+    res.status(500).json({ error: 'Failed to generate upload URL' });
   }
-
-  const { data: publicUrlData } = supabase.storage.from(BUCKET_RAW).getPublicUrl(key);
-
-  // Pre-create media asset record
-  const asset = await prisma.mediaAsset.create({
-    data: {
-      bookingId: parsed.data.bookingId,
-      type: 'RAW_FOOTAGE',
-      url: publicUrlData.publicUrl,
-      key,
-      mimeType: parsed.data.mimeType,
-      sizeBytes: BigInt(parsed.data.sizeBytes),
-      uploadedBy: req.user!.partnerId,
-      isVerified: false,
-    },
-  });
-
-  res.json({ uploadUrl: data.signedUrl, key, assetId: asset.id });
 });
 
 // POST /api/media/finalize — Partner confirms upload complete
@@ -131,18 +126,25 @@ router.post('/editor-upload-url', authenticate, authorize('EDITOR'), async (req,
     res.status(403).json({ error: 'Not authorized to upload for this booking' }); return;
   }
 
-  const key = `${parsed.data.bookingId}/${uuidv4()}-${parsed.data.fileName}`;
-  const supabase = getSupabaseClient();
-  const { data, error } = await supabase.storage.from(BUCKET_REELS).createSignedUploadUrl(key);
+  const key = `reels/${parsed.data.bookingId}/${uuidv4()}-${parsed.data.fileName}`;
 
-  if (error || !data) {
-    logger.error({ err: error }, 'Failed to create Supabase signed upload URL');
-    res.status(500).json({ error: 'Failed to generate upload URL' }); return;
+  try {
+    const bucket = firebaseStorage.bucket();
+    const file = bucket.file(key);
+    const [signedUrl] = await file.getSignedUrl({
+      version: 'v4',
+      action: 'write',
+      expires: Date.now() + 15 * 60 * 1000,
+      contentType: parsed.data.mimeType,
+    });
+
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${key}`;
+
+    res.json({ uploadUrl: signedUrl, key, publicUrl });
+  } catch (err: any) {
+    logger.error({ err: err.message }, 'Failed to create Firebase Storage signed upload URL for editor');
+    res.status(500).json({ error: 'Failed to generate upload URL' });
   }
-
-  const { data: publicUrlData } = supabase.storage.from(BUCKET_REELS).getPublicUrl(key);
-
-  res.json({ uploadUrl: data.signedUrl, key, publicUrl: publicUrlData.publicUrl });
 });
 
 export default router;

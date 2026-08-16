@@ -1,69 +1,46 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '../lib/logger';
-import { Server as HttpServer } from 'http';
+import { firestore } from './firebase-admin';
 
-let supabase: SupabaseClient;
-
-export function initSocketService(httpServer?: HttpServer) {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    logger.warn('Supabase Realtime not initialized: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
-    return null;
-  }
-  
-  supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    {
-      auth: { persistSession: false },
-    }
-  );
-
-  logger.info('✅ Supabase Realtime service initialized (Serverless Socket replacement)');
-  return supabase;
+export function initSocketService() {
+  logger.info('✅ Firebase Realtime/Firestore event service initialized');
+  return true;
 }
 
-export function getIO() {
-  if (!supabase) {
-    initSocketService();
-  }
-  if (!supabase) throw new Error('Supabase Realtime client not initialized');
-  return supabase;
-}
+// ── Emit Helpers (Mapped to Firestore Realtime Collections) ───────────────────
 
-// ── Emit Helpers (Mapped to Supabase Channels) ─────────────────────────────
-
-async function broadcastToChannel(channelName: string, event: string, payload: any) {
+async function broadcastToFirestore(channelName: string, event: string, payload: any) {
   try {
-    const channel = getIO().channel(channelName);
-    await channel.send({
-      type: 'broadcast',
+    const eventDoc = {
+      channel: channelName,
       event,
-      payload
-    });
-    logger.debug({ channelName, event }, 'Broadcasted realtime event');
+      payload,
+      createdAt: new Date().toISOString(),
+    };
+    await firestore.collection('realtime_events').add(eventDoc);
+    logger.debug({ channelName, event }, 'Broadcasted Firestore realtime event');
   } catch (err: any) {
-    logger.error({ channelName, event, err: err.message }, 'Failed to broadcast realtime event');
+    logger.error({ channelName, event, err: err.message }, 'Failed to record realtime event in Firestore');
   }
 }
 
 export function emitToBooking(bookingId: string, event: string, data: any) {
-  broadcastToChannel(`booking:${bookingId}`, event, data);
+  broadcastToFirestore(`booking:${bookingId}`, event, data);
 }
 
 export function emitToPartner(partnerId: string, event: string, data: any) {
-  broadcastToChannel(`partner:${partnerId}`, event, data);
+  broadcastToFirestore(`partner:${partnerId}`, event, data);
 }
 
 export function emitToClient(clientId: string, event: string, data: any) {
-  broadcastToChannel(`client:${clientId}`, event, data);
+  broadcastToFirestore(`client:${clientId}`, event, data);
 }
 
 export function emitToEditor(editorId: string, event: string, data: any) {
-  broadcastToChannel(`editor:${editorId}`, event, data);
+  broadcastToFirestore(`editor:${editorId}`, event, data);
 }
 
 export function emitToAdmin(event: string, data: any) {
-  broadcastToChannel('admin:ops', event, data);
+  broadcastToFirestore('admin:ops', event, data);
 }
 
 // ── Typed Event Names ─────────────────────────────────────────────────────────

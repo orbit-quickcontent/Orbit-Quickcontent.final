@@ -1,14 +1,16 @@
 import { logger } from '../lib/logger';
 
 const requiredEnv = [
-  'DATABASE_URL',
   'JWT_SECRET',
   'JWT_REFRESH_SECRET',
 ];
 
 const optionalEnv = [
-  'SUPABASE_URL',
-  'SUPABASE_SERVICE_ROLE_KEY',
+  'DATABASE_URL',
+  'FIREBASE_PROJECT_ID',
+  'FIREBASE_CLIENT_EMAIL',
+  'FIREBASE_PRIVATE_KEY',
+  'FIREBASE_STORAGE_BUCKET',
   'REDIS_URL',
   'QSTASH_TOKEN',
   'RAZORPAY_KEY_ID',
