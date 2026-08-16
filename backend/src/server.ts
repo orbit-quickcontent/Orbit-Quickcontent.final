@@ -8,7 +8,13 @@ import apiRouter from './routes/api.router';
 
 const app = express();
 import { initSentry } from './lib/sentry';
-initSentry(app);
+
+// Initialize Sentry (safe - only connects if SENTRY_DSN is set)
+try {
+  initSentry(app);
+} catch (err: any) {
+  logger.warn({ err: err.message }, 'Sentry initialization failed, continuing');
+}
 
 const PORT = process.env.PORT || 5000;
 
@@ -113,10 +119,18 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 });
 
 // ── Initialize Services ───────────────────────────────────────────────────────
-initSocketService();
+try {
+  initSocketService();
+} catch (err: any) {
+  logger.warn({ err: err.message }, 'Socket service initialization failed, continuing');
+}
 
 if (process.env.NODE_ENV !== 'test') {
-  initWorkers();
+  try {
+    initWorkers();
+  } catch (err: any) {
+    logger.warn({ err: err.message }, 'Worker initialization failed, continuing');
+  }
 }
 
 // ── Start HTTP Server (Local Development) ─────────────────────────────────────
