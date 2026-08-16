@@ -18,11 +18,7 @@ redis.on('connect', () => logger.info('✅ Redis connected'));
 redis.on('error', (err) => logger.error({ err: err.message }, '❌ Redis error'));
 redis.on('reconnecting', () => logger.warn('♻️  Redis reconnecting...'));
 
-// Separate client for BullMQ (cannot share connection)
-export const redisForBull = new Redis(redisUrl, {
-  maxRetriesPerRequest: null, // Required by BullMQ
-  enableReadyCheck: false,
-});
+
 
 // ── Key patterns ──────────────────────────────────────────────────────────────
 export const REDIS_KEYS = {
