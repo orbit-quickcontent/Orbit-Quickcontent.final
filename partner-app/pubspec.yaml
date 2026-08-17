@@ -32,9 +32,8 @@ dependencies:
   # Maps
   maplibre_gl: ^0.21.0
 
-  # Location (continuous background updates)
+  # Location
   geolocator: ^12.0.0
-  background_locator_2: ^2.0.6
 
   # Camera
   camera: ^0.11.0+2

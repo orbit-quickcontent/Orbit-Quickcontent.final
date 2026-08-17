@@ -22,6 +22,25 @@ subprojects {
 subprojects {
     project.evaluationDependsOn(":app")
 }
+subprojects {
+    afterEvaluate {
+        if (project.hasProperty("android")) {
+            val extension = project.extensions.findByName("android")
+            if (extension != null) {
+                try {
+                    val getNamespace = extension.javaClass.getMethod("getNamespace")
+                    val currentNamespace = getNamespace.invoke(extension)
+                    if (currentNamespace == null || currentNamespace.toString().isEmpty()) {
+                        val setNamespace = extension.javaClass.getMethod("setNamespace", String::class.java)
+                        val pkgName = project.group.toString().takeIf { it.isNotBlank() } ?: "com.orbit.${project.name.replace('-', '_')}"
+                        setNamespace.invoke(extension, pkgName)
+                    }
+                } catch (_: Exception) {
+                }
+            }
+        }
+    }
+}
 
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)

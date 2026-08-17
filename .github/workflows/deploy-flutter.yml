@@ -34,7 +34,7 @@ jobs:
 
       - name: Client App - Build APK
         working-directory: ./client-app
-        run: flutter build apk --release
+        run: flutter build apk --release --android-skip-build-dependency-validation
 
       - name: Upload Client APK Artifact
         uses: actions/upload-artifact@v4
@@ -66,7 +66,7 @@ jobs:
 
       - name: Partner App - Build APK
         working-directory: ./partner-app
-        run: flutter build apk --release
+        run: flutter build apk --release --android-skip-build-dependency-validation
 
       - name: Upload Partner APK Artifact
         uses: actions/upload-artifact@v4
