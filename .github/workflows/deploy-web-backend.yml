@@ -10,6 +10,7 @@ on:
       - 'editor-web-app/**'
       - 'package.json'
       - '.github/workflows/deploy-web-backend.yml'
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
