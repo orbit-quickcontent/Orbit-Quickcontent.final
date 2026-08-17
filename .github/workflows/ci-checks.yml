@@ -1,0 +1,70 @@
+name: CI Checks & Code Quality
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+jobs:
+  web-backend-checks:
+    name: Web and Backend Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Prisma Client Generation
+        run: npm run db:generate
+
+      - name: Lint Verification
+        run: npm run lint
+
+      - name: TypeScript Type Check
+        run: npm run type-check
+
+      - name: Unit Tests
+        run: npm run test
+
+  flutter-app-checks:
+    name: Flutter Apps Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Client App Pub Get
+        working-directory: ./client-app
+        run: flutter pub get
+
+      - name: Client App Analyze
+        working-directory: ./client-app
+        run: flutter analyze --no-fatal-infos
+
+      - name: Partner App Pub Get
+        working-directory: ./partner-app
+        run: flutter pub get
+
+      - name: Partner App Analyze
+        working-directory: ./partner-app
+        run: flutter analyze --no-fatal-infos
