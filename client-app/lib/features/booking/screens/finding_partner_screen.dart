@@ -59,10 +59,8 @@ class _FindingPartnerScreenState extends State<FindingPartnerScreen> with Single
 
     _socket!.on('dispatch:accepted', (data) {
       if (!mounted) return;
-      setState(() => _statusMessage = '🎉 Partner found! Getting ready...');
+      setState(() => _statusMessage = 'Partner found! Getting ready...');
     });
-
-    setState(() => _isConnecting = false);
   }
 
   void _handleStatusChange(String status) {

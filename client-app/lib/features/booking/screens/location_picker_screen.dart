@@ -7,7 +7,6 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'package:http/http.dart' as http;
 import '../../../core/theme.dart';
-import '../../../core/api_client.dart';
 
 class LocationPickerScreen extends StatefulWidget {
   final String packageId;
