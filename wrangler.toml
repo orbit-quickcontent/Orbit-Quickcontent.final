@@ -1,0 +1,9 @@
+name = "orbit-platform"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+main = "api/index.ts"
+
+[vars]
+NODE_ENV = "production"
+ALLOWED_ORIGINS = "*"
