@@ -46,7 +46,7 @@ class _SplashScreenState extends State<SplashScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: OrbitPartnerTheme.surface,
-                border: Border.all(color: OrbitPartnerTheme.border, width: 2),
+                border: Border.all(color: OrbitPartnerTheme.outlineFaint, width: 2),
               ),
               child: const Icon(
                 Icons.work_outline,
@@ -59,7 +59,7 @@ class _SplashScreenState extends State<SplashScreen> {
               'ORBIT Partner',
               style: OrbitPartnerTheme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: OrbitPartnerTheme.onBackground,
+                color: OrbitPartnerTheme.onSurface,
               ),
             ).animate(delay: 200.ms).fadeIn().slideY(begin: 0.2),
           ],

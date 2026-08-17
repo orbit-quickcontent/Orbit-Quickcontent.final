@@ -87,7 +87,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
                 'To receive booking requests and navigate to clients, you must grant access to your Location and Notifications. Camera access is needed for verification.',
                 textAlign: TextAlign.center,
                 style: OrbitPartnerTheme.textTheme.bodyLarge?.copyWith(
-                  color: OrbitPartnerTheme.onSurfaceVariant,
+                  color: OrbitPartnerTheme.textSecondary,
                 ),
               )
               .animate(delay: 400.ms).fadeIn().slideY(begin: 0.2),

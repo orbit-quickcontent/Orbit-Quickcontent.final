@@ -32,6 +32,8 @@ class OrbitPartnerTheme {
   // ── Text ───────────────────────────────────────────────────────────────────
   static const Color onSurface = Color(0xFFE5E2E1);    // #e5e2e1
   static const Color textSecondary = Color(0xFF94A3B8); // Mid-gray
+  static const Color onSurfaceVariant = textSecondary;
+  static const Color onBackground = onSurface;
 
   // ── Semantic ───────────────────────────────────────────────────────────────
   static const Color error = Color(0xFFFFB4AB);
@@ -41,6 +43,7 @@ class OrbitPartnerTheme {
   // ── Border ─────────────────────────────────────────────────────────────────
   static const Color outline = Color(0xFF374151);
   static const Color outlineFaint = Color(0xFF1F2937);
+  static const Color border = outlineFaint;
 
   // ── Gradient ───────────────────────────────────────────────────────────────
   static const LinearGradient partnerGradient = LinearGradient(

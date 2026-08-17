@@ -31,8 +31,10 @@ class OrbitClientTheme {
   // ── Text Colors ─────────────────────────────────────────────────────────────
   static const Color onSurface = Color(0xFFE5E2E1);
   static const Color onSurfaceVariant = Color(0xFFBBC9CF);
+  static const Color onBackground = onSurface;
   static const Color outline = Color(0xFF859399);
   static const Color outlineVariant = Color(0xFF3C494E);
+  static const Color border = outlineVariant;
 
   // ── Semantic ────────────────────────────────────────────────────────────────
   static const Color error = Color(0xFFFFB4AB);
