@@ -1,202 +1,454 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme.dart';
-import '../../../core/api_client.dart';
+import '../../auth/providers/auth_provider.dart';
 
-class PackagesScreen extends StatefulWidget {
+class PackagesScreen extends ConsumerStatefulWidget {
   const PackagesScreen({super.key});
 
   @override
-  State<PackagesScreen> createState() => _PackagesScreenState();
+  ConsumerState<PackagesScreen> createState() => _PackagesScreenState();
 }
 
-class _PackagesScreenState extends State<PackagesScreen> {
-  List<Map<String, dynamic>> _packages = [];
-  bool _isLoading = true;
-  String? _selectedPackageId;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPackages();
-  }
-
-  Future<void> _loadPackages() async {
-    try {
-      final res = await apiClient.get('/packages');
-      setState(() {
-        _packages = List<Map<String, dynamic>>.from(res.data);
-        if (_packages.isNotEmpty) {
-          _selectedPackageId = _packages.firstWhere((p) => p['popular'] == true, orElse: () => _packages[0])['id'];
-        }
-        _isLoading = false;
-      });
-    } catch (_) {
-      setState(() => _isLoading = false);
-    }
+class _PackagesScreenState extends ConsumerState<PackagesScreen> {
+  void _bookPackage(Map<String, dynamic> pkg) {
+    context.push('/location', extra: pkg['id'] ?? 'pkg_creator_personalized');
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(authStateProvider);
+    final userName = user.name?.isNotEmpty == true ? user.name! : 'Test User';
+    final userInitials = userName.isNotEmpty ? userName.split(' ').map((n) => n[0]).take(2).join('').toUpperCase() : 'TU';
+
     return Scaffold(
-      backgroundColor: OrbitClientTheme.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, size: 18),
-          onPressed: () => context.pop(),
-        ),
-        title: Text('Choose Package', style: OrbitClientTheme.textTheme.headlineMedium),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: OrbitClientTheme.primaryFixed))
-          : Column(
-              children: [
-                Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: _packages.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 16),
-                    itemBuilder: (_, i) => _PackageCard(
-                      package: _packages[i],
-                      isSelected: _packages[i]['id'] == _selectedPackageId,
-                      onSelect: () => setState(() => _selectedPackageId = _packages[i]['id']),
-                    ).animate(delay: (i * 100).ms).fadeIn().slideY(begin: 0.15),
-                  ),
-                ),
-                // Bottom CTA
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                  child: OrbitGradientButton(
-                    label: 'Select Location',
-                    onPressed: _selectedPackageId == null ? null : () {
-                      context.push('/location', extra: _selectedPackageId);
-                    },
-                  ),
-                ),
-              ],
-            ),
-    );
-  }
-}
-
-class _PackageCard extends StatelessWidget {
-  final Map<String, dynamic> package;
-  final bool isSelected;
-  final VoidCallback onSelect;
-
-  const _PackageCard({required this.package, required this.isSelected, required this.onSelect});
-
-  @override
-  Widget build(BuildContext context) {
-    final isPopular = package['popular'] == true;
-    final features = (package['features'] as List?)?.cast<String>() ?? [];
-    final priceDisplay = package['priceDisplay'] ?? 0;
-
-    return GestureDetector(
-      onTap: onSelect,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: OrbitClientTheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? OrbitClientTheme.primaryFixed : OrbitClientTheme.outlineVariant,
-            width: isSelected ? 1.5 : 0.5,
-          ),
-          boxShadow: isSelected
-              ? [BoxShadow(color: OrbitClientTheme.primaryFixed.withOpacity(0.15), blurRadius: 20)]
-              : [],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: const Color(0xFF131313),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // ── Top App Bar ────────────────────────────────────────────────
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
                     children: [
-                      if (isPopular)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(
-                            gradient: OrbitClientTheme.primaryGradient,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text('MOST POPULAR', style: OrbitClientTheme.textTheme.labelSmall?.copyWith(color: Colors.white, fontSize: 9, letterSpacing: 1.5)),
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFF3C494E)),
+                          color: const Color(0xFF2A2A2A),
                         ),
-                      Text(package['name'] ?? '', style: OrbitClientTheme.textTheme.headlineMedium),
-                      const SizedBox(height: 2),
-                      Text(package['focus'] ?? '', style: OrbitClientTheme.textTheme.bodySmall?.copyWith(color: OrbitClientTheme.onSurfaceVariant)),
+                        child: Center(
+                          child: Text(
+                            userInitials,
+                            style: const TextStyle(
+                              color: Color(0xFFA5E7FF),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Text(
+                                'GOOD AFTERNOON',
+                                style: TextStyle(
+                                  color: Color(0xFFBBC9CF),
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF6E208C),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: const Text(
+                                  'CREATOR',
+                                  style: TextStyle(
+                                    color: Color(0xFFE498FF),
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Hi, $userName',
+                            style: const TextStyle(
+                              color: Color(0xFFA5E7FF),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Montserrat',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF201F1F),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.search, color: Color(0xFFE5E2E1), size: 18),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () => context.push('/notifications'),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF201F1F),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.notifications_none, color: Color(0xFFE5E2E1), size: 18),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF201F1F),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.expand_more, color: Color(0xFFE5E2E1), size: 18),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── Hero Section ───────────────────────────────────────────────
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: const Color(0xFF00D2FF).withValues(alpha: 0.3)),
+                  color: const Color(0xFF00D2FF).withValues(alpha: 0.08),
+                ),
+                child: const Text(
+                  'CHOOSE YOUR PACKAGE',
+                  style: TextStyle(
+                    color: Color(0xFF00D2FF),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              RichText(
+                textAlign: TextAlign.center,
+                text: const TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'The Orbit ',
+                      style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    TextSpan(
+                      text: 'Edge.',
+                      style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        fontStyle: FontStyle.italic,
+                        color: Color(0xFF00D2FF),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  'Select the package that fits your needs. Both include professional express editing delivered in 60-120 minutes.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFFBBC9CF),
+                    fontSize: 13,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── Package 1: Personalized ────────────────────────────────────
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF18181B).withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Personalized',
+                      style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800, fontFamily: 'Montserrat'),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Individual creators, personal events',
+                      style: TextStyle(color: Color(0xFF859399), fontSize: 13),
+                    ),
+                    const SizedBox(height: 16),
+
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: const [
+                        Text('₹1,999', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w800, fontFamily: 'Montserrat')),
+                        Text(' /session', style: TextStyle(color: Color(0xFF859399), fontSize: 13)),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+                    const Divider(color: Color(0xFF27272A)),
+                    const SizedBox(height: 16),
+
+                    _checkFeature('1 cinematic reel (30-60 sec)'),
+                    _checkFeature('Professional color grading'),
+                    _checkFeature('Background score licensing'),
+                    _checkFeature('Same-day delivery (60-90 mins)'),
+                    _checkFeature('1 revision round'),
+                    _checkFeature('Ideal for active content creators'),
+
+                    const SizedBox(height: 24),
+
+                    GestureDetector(
+                      onTap: () => _bookPackage({'id': 'pkg_creator_personalized', 'name': 'Personalized'}),
+                      child: Container(
+                        width: double.infinity,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFF3C494E)),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Book Now',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ── Package 2: Professional (UGC) - Most Popular ───────────────
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1C1B1B),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: const Color(0xFF00D2FF).withValues(alpha: 0.3)),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFEDB1FF),
+                            borderRadius: BorderRadius.only(bottomLeft: Radius.circular(20)),
+                          ),
+                          child: const Text(
+                            'MOST POPULAR',
+                            style: TextStyle(
+                              color: Color(0xFF520070),
+                              fontWeight: FontWeight.w900,
+                              fontSize: 9,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Professional (UGC)',
+                              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800, fontFamily: 'Montserrat'),
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'Brands, businesses, template creators',
+                              style: TextStyle(color: Color(0xFF859399), fontSize: 13),
+                            ),
+                            const SizedBox(height: 16),
+
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: const [
+                                Text('₹4,999', style: TextStyle(color: Color(0xFF00D2FF), fontSize: 32, fontWeight: FontWeight.w800, fontFamily: 'Montserrat')),
+                                Text(' /session', style: TextStyle(color: Color(0xFF859399), fontSize: 13)),
+                              ],
+                            ),
+
+                            const SizedBox(height: 16),
+                            const Divider(color: Color(0xFF27272A)),
+                            const SizedBox(height: 16),
+
+                            _checkFeature('3 cinematic reels (30-60 sec each)'),
+                            _checkFeature('Brand DNA integration (logo, palette, font)'),
+                            _checkFeature('Professional color grading & stabilization'),
+                            _checkFeature('Licensed premium sound scores'),
+                            _checkFeature('Same-day express delivery (90-120 mins)'),
+                            _checkFeature('2 revision rounds with master editor'),
+                            _checkFeature('Dedicated creator-editor sync'),
+
+                            const SizedBox(height: 24),
+
+                            GestureDetector(
+                              onTap: () => _bookPackage({'id': 'pkg_creator_ugc_pro', 'name': 'Professional (UGC)'}),
+                              child: Container(
+                                width: double.infinity,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFF00D2FF), Color(0xFF6E208C)],
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(14),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF00D2FF).withValues(alpha: 0.3),
+                                      blurRadius: 20,
+                                    ),
+                                  ],
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    'Book Now',
+                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── Trust Badges Section ───────────────────────────────────────
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0E0E0E),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: const Color(0xFF3C494E).withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Column(
                   children: [
-                    Text(
-                      '₹$priceDisplay',
-                      style: OrbitClientTheme.textTheme.headlineLarge?.copyWith(
-                        foreground: Paint()..shader = OrbitClientTheme.primaryGradient.createShader(const Rect.fromLTWH(0, 0, 120, 40)),
-                      ),
+                    Row(
+                      children: const [
+                        Icon(Icons.verified_user_outlined, color: Color(0xFF00D2FF), size: 18),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'All videographers on the Orbit network match certified filming standards.',
+                            style: TextStyle(color: Color(0xFFBBC9CF), fontSize: 12),
+                          ),
+                        ),
+                      ],
                     ),
-                    Text('per shoot', style: OrbitClientTheme.textTheme.bodySmall?.copyWith(color: OrbitClientTheme.outline)),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: const [
+                        Icon(Icons.lock_outline, color: Color(0xFFEDB1FF), size: 18),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'PCI compliance mock checkout secure links.',
+                            style: TextStyle(color: Color(0xFFBBC9CF), fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-            Divider(color: OrbitClientTheme.outlineVariant),
-            const SizedBox(height: 12),
-
-            // Features
-            ...features.map((f) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Container(
-                    width: 18, height: 18,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: isSelected ? OrbitClientTheme.primaryGradient : null,
-                      color: isSelected ? null : OrbitClientTheme.surfaceHigh,
-                    ),
-                    child: Icon(Icons.check, size: 11, color: isSelected ? Colors.white : OrbitClientTheme.onSurfaceVariant),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(f, style: OrbitClientTheme.textTheme.bodySmall)),
-                ],
               ),
-            )),
 
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.schedule, size: 13, color: OrbitClientTheme.onSurfaceVariant),
-                const SizedBox(width: 4),
-                Text('Delivery: ${package['deliveryTime']}', style: OrbitClientTheme.textTheme.bodySmall?.copyWith(color: OrbitClientTheme.onSurfaceVariant)),
-              ],
-            ),
-
-            // Selected indicator
-            if (isSelected) ...[
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.check_circle, size: 16, color: OrbitClientTheme.primaryFixed),
-                  const SizedBox(width: 6),
-                  Text('Selected', style: OrbitClientTheme.textTheme.labelMedium?.copyWith(color: OrbitClientTheme.primaryFixed)),
-                ],
-              ),
+              const SizedBox(height: 32),
             ],
-          ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _checkFeature(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          const Icon(Icons.check, color: Color(0xFF00D2FF), size: 16),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(color: Color(0xFFBBC9CF), fontSize: 13),
+            ),
+          ),
+        ],
       ),
     );
   }
