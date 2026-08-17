@@ -1,7 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-const String _kBase = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:5000/api');
+const String _kBase = String.fromEnvironment(
+  'API_BASE_URL',
+  defaultValue: 'https://orbit-quickcontent.vercel.app/api',
+);
 const FlutterSecureStorage _storage = FlutterSecureStorage();
 
 class PartnerApiClient {
