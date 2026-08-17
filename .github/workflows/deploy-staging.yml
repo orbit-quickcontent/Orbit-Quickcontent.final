@@ -1,0 +1,29 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - develop
+      - staging
+  workflow_dispatch:
+
+jobs:
+  deploy-staging:
+    name: Build and Deploy to Staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validate Staging Configuration
+        run: |
+          echo "Validating Docker Compose staging configuration..."
+          docker compose -f docker-compose.staging.yml config --quiet
+          echo "Staging configuration valid."
+
+      - name: Build Staging Containers
+        run: |
+          docker compose -f docker-compose.staging.yml build

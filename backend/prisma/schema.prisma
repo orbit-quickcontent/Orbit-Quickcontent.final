@@ -270,6 +270,8 @@ model Package {
   focus        String
   deliveryTime String
   features     Json     // Array of feature strings
+  addOns       Json?    // Optional add-on items and pricing
+  maxRevisions Int      @default(0) // Maximum allowed revision rounds
   popular      Boolean  @default(false)
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())

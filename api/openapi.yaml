@@ -1,0 +1,132 @@
+openapi: 3.0.3
+info:
+  title: ORBIT API Specification
+  version: 1.0.0
+  description: Hyperlocal Professional Video Marketplace Platform API
+servers:
+  - url: https://orbit-quickcontent.vercel.app/api
+    description: Production API
+  - url: http://localhost:5000/api
+    description: Local Development
+
+paths:
+  /auth/send-otp:
+    post:
+      summary: Send OTP for Email Verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                role:
+                  type: string
+                  enum: [CLIENT, PARTNER, EDITOR, ADMIN]
+      responses:
+        '200':
+          description: OTP sent successfully
+
+  /auth/verify-otp:
+    post:
+      summary: Verify OTP and Obtain JWT Tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, otp]
+              properties:
+                email:
+                  type: string
+                otp:
+                  type: string
+                role:
+                  type: string
+      responses:
+        '200':
+          description: Authenticated successfully with accessToken and user profile
+
+  /packages:
+    get:
+      summary: List Available Shoot Packages
+      responses:
+        '200':
+          description: Array of available packages with pricing and features
+
+  /bookings:
+    get:
+      summary: List User Bookings
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Bookings history
+    post:
+      summary: Create New Shoot Booking
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [packageId, latitude, longitude, address]
+              properties:
+                packageId:
+                  type: string
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+                address:
+                  type: string
+      responses:
+        '200':
+          description: Booking created and payment order initialized
+
+  /bookings/{id}/accept:
+    post:
+      summary: Partner Accepts Dispatch Offer
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Partner assigned to booking
+
+  /partner/profile:
+    get:
+      summary: Get Partner Profile and Metrics
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Partner profile data and wallet balance
+
+  /partner/earnings:
+    get:
+      summary: Get Partner Earnings Summary
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Earnings metrics and breakdown
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
