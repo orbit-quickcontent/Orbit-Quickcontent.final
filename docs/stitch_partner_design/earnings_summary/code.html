@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Earnings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Round" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            primary: '#22c55e',
+            background: '#0e0e0e',
+            surface: '#131313',
+            'surface-container-low': '#1c1b1b',
+            'surface-bright': '#3a3939',
+            'on-background': '#ffffff',
+            'on-surface': '#ffffff',
+            'on-surface-variant': '#a3a3a3',
+            outline: '#3f3f46',
+            'outline-variant': '#27272a',
+          },
+          borderRadius: {
+            'xl': '0.75rem',
+            '2xl': '1rem',
+            '3xl': '1.5rem',
+          },
+          spacing: {
+            'safe': 'env(safe-area-inset-bottom)',
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-utilities">
+    body {
+      background-color: #0e0e0e;
+      color: #ffffff;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .material-icons-round {
+      font-size: 24px;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .glass-nav {
+      background: rgba(19, 19, 19, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background min-h-screen pb-24">
+<!-- BEGIN: TopAppBar -->
+<header class="flex justify-between items-center w-full px-4 py-4 bg-background sticky top-0 z-40">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img alt="Avatar" class="w-10 h-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRbNMGebAEAvV9tZc_4Nl367u70MrSz6Z7qJKw_Z5qc7r4XNyPczn63TC6s3UWLGndZrgp5AvVPThBL7BaIvyiP3Nnv4Fa_8nMKzqzApAkpA5c8X_C3rLymvYukJ7vpM93c3nrGjXObf2ma5nh1Mr0xmRocGeb-4ndlQa_5teQKjIO_YcVlGR6zD0ngQOzco2wsOwixajpdQ4bz2LZuVRHSMT4hXbA2YWhtA5GR_jVQNVrLfybsBnsdmDT93KlnWI8koQH0nTMwmff"/>
+<div class="absolute bottom-0 right-0 w-3 h-3 bg-primary rounded-full border-2 border-background"></div>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="text-sm text-on-surface-variant">Good evening</span>
+<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#2a1a3a] text-[#a855f7] border border-[#a855f7]/30 uppercase tracking-wider">Partner</span>
+</div>
+<h1 class="text-xl font-bold text-on-surface">Hi, utkarsh</h1>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-bright transition-colors">
+<span class="material-icons-round">search</span>
+</button>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low border border-outline-variant">
+<div class="w-2 h-2 bg-primary rounded-full"></div>
+<span class="text-sm font-medium text-primary">Online</span>
+</div>
+<button class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-bright transition-colors relative">
+<span class="material-icons-round">notifications</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-bright transition-colors">
+<span class="material-icons-round">keyboard_arrow_down</span>
+</button>
+</div>
+</header>
+<!-- END: TopAppBar -->
+<!-- BEGIN: Status Banner -->
+<div class="px-4 py-2 flex items-center gap-2 text-primary bg-background">
+<span class="material-icons-round text-lg">wallet</span>
+<span class="text-sm font-medium">Ready for your next gig</span>
+</div>
+<!-- END: Status Banner -->
+<!-- BEGIN: Main Content -->
+<main class="px-4 py-4 space-y-6">
+<!-- BEGIN: Link Bank Section -->
+<section class="bg-surface-container-low rounded-3xl p-6 flex flex-col items-center justify-center text-center border border-outline-variant/30 min-h-[220px]">
+<div class="w-14 h-14 rounded-full bg-surface flex items-center justify-center mb-4">
+<span class="material-icons-round text-3xl text-on-surface-variant">account_balance</span>
+</div>
+<h2 class="text-lg font-medium text-on-surface mb-1">Link Bank Account to Withdraw</h2>
+<p class="text-sm text-on-surface-variant mb-6">Add your bank details to start withdrawing earnings</p>
+<button class="flex items-center gap-2 px-6 py-2.5 rounded-full border border-[#0ea5e9]/30 bg-[#0ea5e9]/10 text-[#0ea5e9] font-medium hover:bg-[#0ea5e9]/20 transition-colors">
+<span class="material-icons-round text-xl">settings</span>
+        Go to Settings
+      </button>
+</section>
+<!-- END: Link Bank Section -->
+<!-- BEGIN: Earnings Summary Section -->
+<section class="bg-surface-container-low rounded-3xl p-6 border border-outline-variant/30 relative overflow-hidden">
+<!-- Glow effect -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+<div class="flex items-center gap-3 mb-8 relative z-10">
+<div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-icons-round">account_balance_wallet</span>
+</div>
+<div>
+<h2 class="text-base font-bold text-on-surface">Earnings</h2>
+<p class="text-xs text-on-surface-variant">Income summary</p>
+</div>
+</div>
+<div class="text-center mb-8 relative z-10">
+<p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Total Earned</p>
+<div class="flex items-center justify-center gap-1">
+<span class="text-2xl font-bold text-primary">₹</span>
+<span class="text-5xl font-bold text-on-surface">0</span>
+</div>
+</div>
+<!-- Stat Grid -->
+<div class="grid grid-cols-2 gap-4 relative z-10">
+<!-- Month -->
+<div class="bg-[#1a1120] rounded-2xl p-4 border border-[#a855f7]/20">
+<div class="flex items-center gap-2 text-on-surface-variant mb-3">
+<span class="material-icons-round text-[18px]">calendar_month</span>
+<span class="text-xs font-medium uppercase tracking-wider">Month</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="text-lg font-bold text-[#a855f7]">₹</span>
+<span class="text-2xl font-bold text-on-surface">0</span>
+</div>
+</div>
+<!-- Week -->
+<div class="bg-[#0f172a] rounded-2xl p-4 border border-[#0ea5e9]/20">
+<div class="flex items-center gap-2 text-on-surface-variant mb-3">
+<span class="material-icons-round text-[18px]">schedule</span>
+<span class="text-xs font-medium uppercase tracking-wider">Week</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="text-lg font-bold text-[#0ea5e9]">₹</span>
+<span class="text-2xl font-bold text-on-surface">0</span>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Earnings Summary Section -->
+<!-- BEGIN: Stats Grid 2x2 -->
+<section class="grid grid-cols-2 gap-4">
+<!-- Done -->
+<div class="bg-surface-container-low rounded-2xl p-4 border border-outline-variant/30 flex flex-col justify-between h-[100px]">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-icons-round text-[18px] text-primary">check_circle</span>
+<span class="text-xs font-medium uppercase tracking-wider">Done</span>
+</div>
+<div class="text-3xl font-bold text-primary">0</div>
+</div>
+<!-- Rating -->
+<div class="bg-surface-container-low rounded-2xl p-4 border border-outline-variant/30 flex flex-col justify-between h-[100px]">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-icons-round text-[18px] text-[#eab308]">star_outline</span>
+<span class="text-xs font-medium uppercase tracking-wider">Rating</span>
+</div>
+<div class="text-3xl font-bold text-[#eab308]">-</div>
+</div>
+<!-- Week (Duplicate as in image) -->
+<div class="bg-surface-container-low rounded-2xl p-4 border border-outline-variant/30 flex flex-col justify-between h-[100px]">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-icons-round text-[18px] text-[#0ea5e9]">schedule</span>
+<span class="text-xs font-medium uppercase tracking-wider">Week</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="text-xl font-bold text-[#0ea5e9]">₹</span>
+<span class="text-3xl font-bold text-[#0ea5e9]">0</span>
+</div>
+</div>
+<!-- Avg -->
+<div class="bg-surface-container-low rounded-2xl p-4 border border-outline-variant/30 flex flex-col justify-between h-[100px]">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-icons-round text-[18px] text-[#d946ef]">bar_chart</span>
+<span class="text-xs font-medium uppercase tracking-wider">Avg</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="text-xl font-bold text-[#d946ef]">₹</span>
+<span class="text-3xl font-bold text-[#d946ef]">0</span>
+</div>
+</div>
+</section>
+<!-- END: Stats Grid 2x2 -->
+<!-- BEGIN: Breakdown Section -->
+<section class="bg-surface-container-low rounded-3xl p-6 border border-outline-variant/30 mb-8">
+<h3 class="text-sm font-bold text-on-surface uppercase tracking-wider mb-6">Breakdown</h3>
+<div class="space-y-5">
+<div class="flex justify-between items-center">
+<span class="text-sm text-on-surface-variant">Lifetime</span>
+<div class="flex items-center gap-1">
+<span class="text-sm font-medium text-primary">₹</span>
+<span class="text-base font-bold text-primary">0</span>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm text-on-surface-variant">This Month</span>
+<div class="flex items-center gap-1">
+<span class="text-sm font-medium text-[#a855f7]">₹</span>
+<span class="text-base font-bold text-[#a855f7]">0</span>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm text-on-surface-variant">This Week</span>
+<div class="flex items-center gap-1">
+<span class="text-sm font-medium text-[#0ea5e9]">₹</span>
+<span class="text-base font-bold text-[#0ea5e9]">0</span>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm text-on-surface-variant">Avg/Project</span>
+<div class="flex items-center gap-1">
+<span class="text-sm font-medium text-[#eab308]">₹</span>
+<span class="text-base font-bold text-[#eab308]">0</span>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Breakdown Section -->
+</main>
+<!-- END: Main Content -->
+<!-- BEGIN: BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full h-20 glass-nav border-t border-outline-variant rounded-t-2xl z-50 flex justify-around items-center px-4 pb-safe shadow-lg">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface transition-all gap-1 w-16" href="#">
+<span class="material-icons-round text-2xl">grid_view</span>
+<span class="text-[10px] font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface transition-all gap-1 w-16" href="#">
+<span class="material-icons-round text-2xl">work</span>
+<span class="text-[10px] font-medium">Work</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary relative after:content-[''] after:absolute after:-top-3 after:w-1.5 after:h-1.5 after:bg-primary after:rounded-full gap-1 w-16" href="#">
+<div class="relative">
+<span class="material-icons-round text-2xl">account_balance_wallet</span>
+<div class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-[#131313]"></div>
+</div>
+<span class="text-[10px] font-medium">Earnings</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface transition-all gap-1 w-16" href="#">
+<span class="material-icons-round text-2xl">account_circle</span>
+<span class="text-[10px] font-medium">Profile</span>
+</a>
+</nav>
+<!-- END: BottomNavBar -->
+</body></html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Work History</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@500;600&amp;family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-high": "#2a2a2a",
+                      "on-primary-fixed": "#002109",
+                      "on-tertiary-fixed": "#001a42",
+                      "on-surface": "#e5e2e1",
+                      "surface-bright": "#3a3939",
+                      "inverse-primary": "#006e2f",
+                      "outline-variant": "#3d4a3d",
+                      "on-secondary-container": "#d6a9ff",
+                      "on-error": "#690005",
+                      "inverse-surface": "#e5e2e1",
+                      "tertiary-fixed-dim": "#adc6ff",
+                      "surface": "#131313",
+                      "on-tertiary-fixed-variant": "#004395",
+                      "background": "#131313",
+                      "tertiary": "#afc7ff",
+                      "on-secondary-fixed-variant": "#6900b3",
+                      "on-surface-variant": "#bccbb9",
+                      "on-error-container": "#ffdad6",
+                      "surface-tint": "#4ae176",
+                      "surface-container-lowest": "#0e0e0e",
+                      "outline": "#869585",
+                      "surface-variant": "#353534",
+                      "surface-dim": "#131313",
+                      "primary-container": "#22c55e",
+                      "primary": "#4be277",
+                      "on-primary-fixed-variant": "#005321",
+                      "error-container": "#93000a",
+                      "primary-fixed-dim": "#4ae176",
+                      "surface-container-low": "#1c1b1b",
+                      "error": "#ffb4ab",
+                      "surface-container": "#201f1f",
+                      "primary-fixed": "#6bff8f",
+                      "on-secondary-fixed": "#2c0051",
+                      "on-primary-container": "#004b1e",
+                      "on-primary": "#003915",
+                      "on-background": "#e5e2e1",
+                      "surface-container-highest": "#353534",
+                      "secondary-fixed-dim": "#ddb7ff",
+                      "secondary-fixed": "#f0dbff",
+                      "on-tertiary-container": "#003d88",
+                      "on-secondary": "#490080",
+                      "inverse-on-surface": "#313030",
+                      "tertiary-container": "#82abff",
+                      "tertiary-fixed": "#d8e2ff",
+                      "secondary": "#ddb7ff",
+                      "secondary-container": "#6f00be",
+                      "on-tertiary": "#002e6a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-margin": "20px",
+                      "md": "16px",
+                      "sm": "12px",
+                      "lg": "24px",
+                      "gutter": "16px",
+                      "xs": "8px",
+                      "xl": "40px",
+                      "base": "4px"
+              },
+              "fontFamily": {
+                      "label-status": [
+                              "Geist"
+                      ],
+                      "headline-xl": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "title-md": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "body-lg": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-lg": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "label-caps": [
+                              "Geist"
+                      ],
+                      "body-sm": [
+                              "Plus Jakarta Sans"
+                      ],
+                      "headline-lg-mobile": [
+                              "Plus Jakarta Sans"
+                      ]
+              },
+              "fontSize": {
+                      "label-status": [
+                              "13px",
+                              {
+                                      "lineHeight": "1",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-xl": [
+                              "40px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "800"
+                              }
+                      ],
+                      "title-md": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "1",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body {
+            background-color: #000000;
+        }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-black text-on-surface min-h-screen pb-safe">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-container-margin py-md bg-background sticky top-0 z-40">
+<div class="flex items-center gap-sm">
+<div class="relative">
+<img class="w-10 h-10 rounded-full object-cover border border-outline-variant" data-alt="A small circular avatar placeholder image for the user utkarsh, set against a highly detailed tech-forward dark mode background with a subtle neon green glow. The style is premium and minimalistic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSSVC67_ja5lLlx31fmq4cwAXoD2Z-NBy50PlYBxiYymKNrGxYBTZRZBbgzXiHE2q4L9BadTAlMy9y3ko5NbyItFyKwNdY8lMDSnp4gPCMCtwNmDNLT3a5QGdsdtvUvP7xLQ2nOy40QpxSWtUeHcCpE53NbUIuYQYtHoPWWQ2Dg9DNEvzN60CDgHg978tx7P93FMhk65Wxhk4oGOvsptl968NJz33QHygTqMZdSPBWbfei1jtLujksuZ9ymN0vi3it4syxKdQkS5af"/>
+<div class="absolute bottom-0 right-0 w-3 h-3 bg-primary rounded-full border-2 border-background"></div>
+</div>
+<div class="flex flex-col">
+<span class="text-label-status font-label-status text-on-surface-variant flex items-center gap-2">Good afternoon <span class="bg-secondary-container/20 text-secondary-fixed text-[10px] px-2 py-0.5 rounded-full border border-secondary-container/50">PARTNER</span></span>
+<span class="text-headline-lg-mobile font-headline-lg-mobile font-bold text-on-surface">Hi, utkarsh</span>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center border border-outline-variant hover:bg-surface-variant/50 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant text-xl">search</span>
+</button>
+<button class="h-10 px-sm rounded-full bg-surface-container flex items-center justify-center gap-2 border border-outline-variant hover:bg-surface-variant/50 transition-colors">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="text-body-sm font-body-sm text-primary">Online</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center border border-outline-variant hover:bg-surface-variant/50 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant text-xl">notifications</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center border border-outline-variant hover:bg-surface-variant/50 transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant text-xl">keyboard_arrow_down</span>
+</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="px-container-margin py-md flex flex-col gap-lg pb-32">
+<!-- Status Indicator -->
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-sm">account_balance_wallet</span>
+<span class="text-label-status font-label-status">Ready for your next gig</span>
+</div>
+<!-- Section Header -->
+<div class="flex items-center justify-between border-b border-outline-variant pb-sm">
+<div class="flex items-center gap-sm">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high border border-outline-variant flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+<span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">work</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-title-md font-title-md text-on-surface">Work History</h1>
+<span class="text-label-status font-label-status text-on-surface-variant">Completed jobs</span>
+</div>
+</div>
+<div class="bg-primary-container/10 border border-primary-container/30 px-3 py-1 rounded-full flex items-center">
+<span class="text-label-status font-label-status text-primary font-bold">0 done</span>
+</div>
+</div>
+<!-- Stats Card -->
+<div class="bg-surface border border-outline-variant rounded-xl p-md flex flex-col gap-md relative overflow-hidden">
+<!-- Subtle glow effect -->
+<div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl"></div>
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-primary-container/10 border border-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+</div>
+<div class="flex flex-col">
+<span class="text-title-md font-title-md text-on-surface">0 Completed</span>
+<span class="text-label-status font-label-status text-on-surface-variant">Lifetime work</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-headline-lg-mobile font-headline-lg-mobile text-primary">₹0</span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">Total earned</span>
+</div>
+</div>
+<!-- This Month Sub-card -->
+<div class="bg-surface-container-high border border-outline-variant/50 rounded-lg p-sm flex items-center justify-between mt-xs shadow-inner">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-sm">bar_chart</span>
+<span class="text-label-status font-label-status text-on-surface">This Month</span>
+</div>
+<span class="text-body-lg font-body-lg text-secondary font-bold">₹0</span>
+</div>
+</div>
+<!-- Empty State Placeholder -->
+<div class="bg-surface border border-outline-variant rounded-xl p-xl flex flex-col items-center justify-center gap-md min-h-[300px]">
+<div class="w-16 h-16 rounded-full bg-secondary-container/10 border border-secondary/20 flex items-center justify-center shadow-[0_0_20px_rgba(111,0,190,0.15)]">
+<span class="material-symbols-outlined text-secondary text-3xl">inbox</span>
+</div>
+<div class="flex flex-col items-center text-center gap-1">
+<span class="text-title-md font-title-md text-on-surface">No Completed Work Yet</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant">Completed bookings will appear here.</span>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full h-20 flex justify-around items-center px-4 pb-safe bg-surface/70 dark:bg-surface/70 backdrop-blur-xl border-t border-outline-variant shadow-lg z-50 rounded-t-xl md:hidden">
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface transition-all">
+<span class="material-symbols-outlined text-2xl mb-1">grid_view</span>
+<span class="text-label-status font-label-status">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-primary relative after:content-[''] after:absolute after:-top-1 after:w-1 after:h-1 after:bg-primary after:rounded-full">
+<div class="absolute -top-3 w-8 h-1 bg-gradient-to-r from-secondary to-primary rounded-full blur-[2px]"></div>
+<span class="material-symbols-outlined text-2xl mb-1" style="font-variation-settings: 'FILL' 1;">work</span>
+<span class="text-label-status font-label-status">Work</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface transition-all relative">
+<div class="absolute -top-1 right-1 w-2 h-2 bg-primary rounded-full border-2 border-surface shadow-[0_0_5px_rgba(34,197,94,0.5)]"></div>
+<span class="material-symbols-outlined text-2xl mb-1">account_balance_wallet</span>
+<span class="text-label-status font-label-status">Earnings</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface transition-all">
+<div class="relative mb-1">
+<img class="w-6 h-6 rounded-full object-cover border border-outline-variant opacity-70" data-alt="A tiny profile avatar placeholder for the bottom navigation bar, featuring the same dark mode, tech-forward aesthetic with deep blacks and subtle glowing accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6exzfMeuKSYkIDkFV_V4DjWehPy6LNXLLw7njMIrwm-dIXDT4yoeA729xHjbcNWJbZMm_URcxuEg982W7DmEScYrYFQCMZnublRxP3EtcYPeRH9p0DP--DG9ycOtkKCFjnkl4jpDyjsRm1QDFSzG4jq0AGtzn7OH2haozBB1NHyzyL1OG8zk-btz9tLZa9TUGBXh7u6Vwi0zVH7CmceHcCFHIFbzGSzNi4hERbgYyBkO7kKGqfNKrlUTOzCXi_oHk-W9zVMjPUo4Y"/>
+</div>
+<span class="text-label-status font-label-status">Profile</span>
+</div>
+</nav>
+</body></html>

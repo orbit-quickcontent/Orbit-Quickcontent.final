@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>User Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<style>
+    body {
+      background-color: #0b0c10;
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .glass-panel {
+      background-color: #1a1c23;
+      border: 1px solid #2d303a;
+      border-radius: 12px;
+    }
+
+    .badge-partner {
+      background-color: rgba(138, 43, 226, 0.2);
+      color: #c785ff;
+      border: 1px solid #c785ff;
+    }
+
+    .badge-verified {
+      background-color: rgba(46, 204, 113, 0.1);
+      color: #2ecc71;
+      border: 1px solid #2ecc71;
+    }
+    
+    .badge-online {
+      background-color: rgba(46, 204, 113, 0.1);
+      color: #2ecc71;
+      border: 1px solid #2ecc71;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col pb-20">
+<!-- BEGIN: TopHeader -->
+<header class="p-4 flex justify-between items-center bg-[#0b0c10] sticky top-0 z-10">
+<div class="flex items-center gap-3">
+<div class="relative w-10 h-10 rounded-full overflow-hidden border border-gray-600">
+<img alt="Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-ifEOhyqr3uU1eVbnMRD2hd03i5Rirkl0CUjSM8OeyzIYE7cKNZH1u3Sak_NV3G__cPyFyp1QTRTcmShOPGZ2vRNS6uyoFtYm97cuIZM5aMKxfwVonDVy_hSPsE3unxwZfzUNz7i3nIuj2PLAVBCPfwHW40VRbqKqovBUXqPxhiu1whgYI2O_3eG6UUvFTsRwUQa7VSG7u6lFQGyGtYFURDsB_h2wFWvkVE8NF0marXLa80HDsTDV_2YpavJDWv5nccFl1CB_V0bc"/>
+<div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black"></div>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="text-xs text-gray-400">Good evening</span>
+<span class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded badge-partner">PARTNER</span>
+</div>
+<h1 class="text-base font-semibold leading-tight">Hi, utkarsh</h1>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-300">
+<i class="fas fa-search text-sm"></i>
+</button>
+<button class="px-2.5 py-1 rounded-full badge-online flex items-center gap-1.5 text-xs font-medium">
+<div class="w-2 h-2 bg-green-500 rounded-full"></div>
+        Online
+      </button>
+<button class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-300 relative">
+<i class="fas fa-bell text-sm"></i>
+</button>
+<button class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-300">
+<i class="fas fa-chevron-down text-sm"></i>
+</button>
+</div>
+</header>
+<!-- END: TopHeader -->
+<!-- BEGIN: MainContent -->
+<main class="flex-1 px-4 space-y-4">
+<!-- User Info Card -->
+<section class="glass-panel p-4 relative">
+<div class="flex items-start gap-4">
+<div class="relative w-16 h-16 rounded-full overflow-hidden border-2 border-gray-700 shrink-0">
+<img alt="Profile Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuU3555-5sWs3rnG1fhkNPfVAf8boNiD53K8nvy7FFSugUGcL_mpcMphj7yr0yuFWuskgdVyUkSkeMlui0L3Ke0yqdHzX0cSSnDGzlLQwc8SsZjqwCB_sRJEwgbQrPmr_Rx2JlmCVrGMjwaj0qOYI4sxbUnckjWCLNb6BfjiGQ1ghwx7H50EbBI8Ub-YbQO9Pyy28ExOUvo8VBMApmPmSZVPQGCcKSauKPldX9dSRrZZITNxwKDjR9NpPYJcfrADjS05bWJ9sYYHOV"/>
+<div class="absolute bottom-1 right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-black"></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-2 mb-1">
+<h2 class="text-lg font-bold truncate">utkarsh gupta</h2>
+<span class="text-[10px] font-medium px-1.5 py-0.5 rounded badge-verified flex items-center gap-1">
+<i class="fas fa-shield-alt"></i> Verified
+            </span>
+</div>
+<p class="text-sm text-gray-400 truncate mb-2">utkarshssg2608@gmail.com</p>
+<div class="flex items-center gap-2">
+<span class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded badge-partner flex items-center gap-1">
+<i class="fas fa-camera"></i> Partner
+            </span>
+<span class="text-[10px] font-medium px-1.5 py-0.5 rounded badge-online flex items-center gap-1">
+<div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div> Online
+            </span>
+</div>
+</div>
+</div>
+<button class="absolute top-4 right-4 text-xs flex items-center gap-1 text-gray-300 hover:text-white px-2 py-1 rounded bg-gray-800">
+<i class="fas fa-pen"></i> Edit
+      </button>
+<!-- Wallet Balance -->
+<div class="mt-4 bg-gradient-to-r from-[#1e2235] to-[#1a1c23] border border-gray-700 rounded-lg p-3 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-blue-900/30 flex items-center justify-center text-blue-400">
+<i class="fas fa-wallet"></i>
+</div>
+<div>
+<p class="text-xs text-blue-300 font-medium tracking-wider">WALLET BALANCE</p>
+<p class="text-lg font-bold">₹0</p>
+</div>
+</div>
+</section>
+<!-- Stats Grid -->
+<section class="grid grid-cols-3 gap-3">
+<div class="glass-panel p-3 flex flex-col items-center justify-center text-center gap-1">
+<i class="fas fa-camera text-purple-400 mb-1"></i>
+<span class="text-xl font-bold">0</span>
+<span class="text-[10px] text-gray-400 tracking-wider font-semibold">SHOOTS</span>
+</div>
+<div class="glass-panel p-3 flex flex-col items-center justify-center text-center gap-1">
+<i class="far fa-clock text-yellow-400 mb-1"></i>
+<span class="text-xl font-bold">0</span>
+<span class="text-[10px] text-gray-400 tracking-wider font-semibold">ACTIVE</span>
+</div>
+<div class="glass-panel p-3 flex flex-col items-center justify-center text-center gap-1">
+<i class="far fa-star text-blue-400 mb-1"></i>
+<span class="text-xl font-bold">0</span>
+<span class="text-[10px] text-gray-400 tracking-wider font-semibold">DONE</span>
+</div>
+</section>
+<!-- Bank Account Section -->
+<section class="glass-panel p-4">
+<h3 class="text-sm font-bold flex items-center gap-2 mb-3">
+<i class="fas fa-university text-purple-400"></i> BANK ACCOUNT
+      </h3>
+<button class="w-full py-3 border border-dashed border-purple-500/50 rounded-lg text-purple-400 text-sm font-medium hover:bg-purple-500/10 transition-colors flex items-center justify-center gap-2">
+<i class="fas fa-plus"></i> Link Bank Account
+      </button>
+</section>
+<!-- Settings List -->
+<section class="glass-panel overflow-hidden">
+<ul class="divide-y divide-gray-800">
+<li>
+<button class="w-full flex items-center justify-between p-4 hover:bg-gray-800/50 transition-colors">
+<div class="flex items-center gap-3">
+<i class="fas fa-shield-alt text-purple-400 w-5 text-center text-lg"></i>
+<div class="text-left">
+<p class="text-sm font-semibold">Privacy Shield</p>
+<p class="text-xs text-gray-400">Client data protection</p>
+</div>
+</div>
+<i class="fas fa-chevron-right text-gray-600 text-xs"></i>
+</button>
+</li>
+<li>
+<button class="w-full flex items-center justify-between p-4 hover:bg-gray-800/50 transition-colors">
+<div class="flex items-center gap-3">
+<i class="fas fa-cog text-purple-400 w-5 text-center text-lg"></i>
+<div class="text-left">
+<p class="text-sm font-semibold">App Settings</p>
+<p class="text-xs text-gray-400">Notifications, sync preferences</p>
+</div>
+</div>
+<i class="fas fa-chevron-right text-gray-600 text-xs"></i>
+</button>
+</li>
+<li>
+<button class="w-full flex items-center justify-between p-4 hover:bg-gray-800/50 transition-colors">
+<div class="flex items-center gap-3">
+<i class="far fa-question-circle text-purple-400 w-5 text-center text-lg"></i>
+<div class="text-left">
+<p class="text-sm font-semibold">Help &amp; Support</p>
+<p class="text-xs text-gray-400">Guides, contact, report</p>
+</div>
+</div>
+<i class="fas fa-chevron-right text-gray-600 text-xs"></i>
+</button>
+</li>
+</ul>
+</section>
+<!-- Logout Button -->
+<button class="w-full glass-panel p-4 mt-2 flex items-center justify-center gap-2 text-red-400 font-medium hover:bg-red-500/10 transition-colors">
+<i class="fas fa-sign-out-alt"></i> Log Out
+    </button>
+</main>
+<!-- END: MainContent -->
+<!-- BEGIN: BottomNavigation -->
+<nav class="fixed bottom-0 w-full bg-[#0b0c10] border-t border-gray-800 px-6 py-2 pb-safe">
+<div class="flex justify-between items-center">
+<button class="flex flex-col items-center gap-1 text-gray-500 hover:text-white">
+<i class="fas fa-th-large text-xl"></i>
+<span class="text-[10px]">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-gray-500 hover:text-white">
+<i class="fas fa-briefcase text-xl"></i>
+<span class="text-[10px]">Work</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-gray-500 hover:text-white relative">
+<i class="fas fa-wallet text-xl"></i>
+<span class="text-[10px]">Earnings</span>
+<div class="absolute top-0 right-1 w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+</button>
+<button class="flex flex-col items-center gap-1 text-white">
+<div class="w-6 h-6 rounded overflow-hidden border border-purple-500 mb-0.5">
+<img alt="Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoCBTaquPCsIWtSVZivCZvpHHRYsjBvszKDw8YFD8eGZmFNBSa1lXr9MqEYa0Kxyk8dtWANEw2TDq_uqS14JzR4tKPL05uIgyiUvTHAf-2MPID_jIk_l7J2dR0bntCWxAYHWGlqj3-umO7r58lTaN2AGm2f2dYqqGugi--oqBzpy1Lk3E2JH6q-klEOmbbUKAzlTesGpMtZU4Z6chHGswWd85pjqkH-p4fyPtUT39APOggBsQEbqDW6iTB34WfoMEdvygEfwKzxLRe"/>
+</div>
+<span class="text-[10px] font-bold">Profile</span>
+<div class="w-6 h-0.5 bg-purple-500 absolute -top-2 rounded-full"></div>
+</button>
+</div>
+</nav>
+<!-- END: BottomNavigation -->
+</body></html>
