@@ -1,11 +1,11 @@
-﻿# ── Stage 1: Builder ──────────────────────────────────────────────────────────
+# ── Stage 1: Builder ──────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 # Install all deps (including devDeps for TypeScript build)
 COPY package*.json ./
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 # Copy source files
 COPY tsconfig.json ./
@@ -25,7 +25,7 @@ WORKDIR /app
 
 # Install only production deps
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --omit=dev --legacy-peer-deps && npm cache clean --force
 
 # Copy built artifacts
 COPY --from=builder /app/dist ./dist
