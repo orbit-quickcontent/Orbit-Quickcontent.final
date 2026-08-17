@@ -33,6 +33,27 @@ router.get('/jobs/:id', authenticate, authorize('EDITOR'), async (req, res) => {
   res.json(booking);
 });
 
+// GET /api/editor/jobs/:id/download-urls — Get download URLs for raw footage clips
+router.get('/jobs/:id/download-urls', authenticate, authorize('EDITOR'), async (req, res) => {
+  const booking = await prisma.booking.findUnique({
+    where: { id: req.params.id },
+    include: {
+      mediaAssets: { where: { type: 'RAW_FOOTAGE' } }
+    }
+  });
+
+  if (!booking) { res.status(404).json({ error: 'Job not found' }); return; }
+
+  const downloadUrls = booking.mediaAssets.map((asset) => ({
+    id: asset.id,
+    fileName: asset.key ? asset.key.split('/').pop() : `clip_${asset.id}.mp4`,
+    url: asset.url,
+    uploadedAt: asset.createdAt
+  }));
+
+  res.json({ bookingId: booking.id, clipsCount: downloadUrls.length, assets: downloadUrls });
+});
+
 // POST /api/editor/jobs/:id/claim — Atomic editor claim
 router.post('/jobs/:id/claim', authenticate, authorize('EDITOR'), async (req, res) => {
   const editorId = req.user!.editorId!;

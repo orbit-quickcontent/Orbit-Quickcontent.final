@@ -63,36 +63,24 @@ app.get('/metrics', async (_req, res) => {
 import { validateEnvironment } from './config/env';
 validateEnvironment();
 
-// ── Root & Health Check ──────────────────────────────────────────────────────
-app.get('/', (_req, res) => {
-  res.json({
-    status: 'ok',
-    message: 'ORBIT Platform API is online',
-    version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development',
-    timestamp: new Date().toISOString()
-  });
-});
-
+// ── Health Check Endpoint ──────────────────────────────────────────────────────
 app.get('/health', async (_req, res) => {
   const envCheck = validateEnvironment();
-  let firestoreConnected = false;
+  let dbConnected = false;
+
   try {
-    const { firestore } = await import('./services/firebase-admin');
-    await firestore.collection('system_health').doc('ping').set({
-      lastPing: new Date().toISOString(),
-      service: 'orbit-backend'
-    }, { merge: true });
-    firestoreConnected = true;
+    const { db } = await import('./lib/db');
+    await db.$queryRaw`SELECT 1`;
+    dbConnected = true;
   } catch (err: any) {
-    logger.warn({ err: err.message }, 'Firestore ping check failed');
+    logger.warn({ err: err.message }, 'Database ping check failed');
   }
 
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     service: 'orbit-backend',
-    firestore: firestoreConnected ? 'connected' : 'unreachable',
+    database: dbConnected ? 'connected' : 'unreachable',
     envConfigured: envCheck.isValid,
     missingRequiredVars: envCheck.missing
   });
@@ -146,10 +134,10 @@ if (process.env.NODE_ENV !== 'test') {
   }
 }
 
-// ── Start HTTP Server (Local Development) ─────────────────────────────────────
-if (process.env.NODE_ENV !== 'production' || process.env.FORCE_START_SERVER === 'true') {
+// ── Start HTTP Server ────────────────────────────────────────────────────────
+if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
-    logger.info(`🚀 ORBIT Backend running on port ${PORT}`);
+    logger.info(`🚀 ORBIT Backend running on port ${PORT} [env: ${process.env.NODE_ENV || 'development'}]`);
   });
 }
 

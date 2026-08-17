@@ -261,6 +261,9 @@ export async function executePayout(
   }
 }
 
+import { decryptAccountNumber } from "./security.service";
+import prisma from "../lib/prisma";
+
 /**
  * Process a payout / withdrawal job from BullMQ queue
  */
@@ -268,15 +271,83 @@ export async function processCashfreePayout(jobData: {
   withdrawalId: string;
   partnerId: string;
   amountPaise: number;
-  bankAccountId: string;
+  bankAccountId?: string;
 }): Promise<PayoutResult> {
-  const amountINR = jobData.amountPaise / 100;
+  const grossAmountINR = jobData.amountPaise / 100;
+  
+  // 1. Calculate 1% TDS deduction (Section 194-O)
+  const tdsAmount = Math.round(grossAmountINR * 0.01 * 100) / 100;
+  const netAmountINR = Math.max(0, grossAmountINR - tdsAmount);
+
+  // 2. Fetch Partner and Bank Account details from Database
+  const partner = await prisma.partner.findUnique({
+    where: { id: jobData.partnerId },
+    include: {
+      user: { select: { name: true, email: true } },
+      bankAccount: true
+    }
+  });
+
+  if (!partner) {
+    return { success: false, payoutId: "", transactionId: "", error: "Partner record not found" };
+  }
+
+  // 3. Find bank account (either specified or default active bank account)
+  let bankAccount = partner.bankAccount;
+  if (!bankAccount && jobData.bankAccountId) {
+    bankAccount = await prisma.bankAccount.findUnique({ where: { id: jobData.bankAccountId } });
+  }
+
+  if (!bankAccount) {
+    // Fallback search for default active bank account for partner
+    bankAccount = await prisma.bankAccount.findFirst({
+      where: { partnerId: jobData.partnerId, isActive: true },
+      orderBy: { isDefault: "desc" }
+    });
+  }
+
+  if (!bankAccount) {
+    return { success: false, payoutId: "", transactionId: "", error: "No active bank account linked for partner" };
+  }
+
+  // 4. Decrypt Bank Account Number
+  let accountNumber = decryptAccountNumber(bankAccount.encryptedAccountNumber);
+  if (!accountNumber) {
+    accountNumber = bankAccount.encryptedAccountNumber; // Fallback if unencrypted
+  }
+
+  const partnerName = bankAccount.accountHolderName || partner.displayName || partner.user?.name || "Partner";
+  const ifsc = bankAccount.ifscCode;
+
+  // 5. Record TDS Deduction Transaction if applicable
+  if (tdsAmount > 0 && partner.walletId) {
+    try {
+      const tdsPaise = Math.round(tdsAmount * 100);
+      await prisma.walletTransaction.create({
+        data: {
+          partnerId: partner.id,
+          walletId: partner.walletId,
+          withdrawalId: jobData.withdrawalId,
+          type: "TDS_DEDUCTION",
+          amount: -tdsPaise,
+          balanceAfter: 0,
+          status: "COMPLETED",
+          description: `1% TDS Section 194-O deduction for withdrawal #${jobData.withdrawalId}`,
+          idempotencyKey: `tds_${jobData.withdrawalId}`
+        }
+      });
+    } catch (txErr) {
+      console.warn("[Payout Service] Could not log TDS transaction:", txErr);
+    }
+  }
+
+  // 6. Execute Payout with real Bank Details and net amount
   return executePayout(
     jobData.partnerId,
-    amountINR,
-    "",
-    "",
-    "Partner",
+    netAmountINR,
+    accountNumber,
+    ifsc,
+    partnerName,
     jobData.withdrawalId
   );
 }
