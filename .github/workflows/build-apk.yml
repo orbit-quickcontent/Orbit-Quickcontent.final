@@ -36,7 +36,7 @@ jobs:
 
       - name: Build Client Release APK
         working-directory: ./client-app
-        run: flutter build apk --release --android-skip-build-dependency-validation
+        run: flutter build apk --release --android-skip-build-dependency-validation --no-tree-shake-icons
 
       - name: Upload Client APK Artifact
         uses: actions/upload-artifact@v4
@@ -70,7 +70,7 @@ jobs:
 
       - name: Build Partner Release APK
         working-directory: ./partner-app
-        run: flutter build apk --release --android-skip-build-dependency-validation
+        run: flutter build apk --release --android-skip-build-dependency-validation --no-tree-shake-icons
 
       - name: Upload Partner APK Artifact
         uses: actions/upload-artifact@v4
