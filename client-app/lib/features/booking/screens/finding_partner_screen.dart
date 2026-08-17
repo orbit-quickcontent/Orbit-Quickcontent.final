@@ -23,7 +23,6 @@ class FindingPartnerScreen extends StatefulWidget {
 class _FindingPartnerScreenState extends State<FindingPartnerScreen> with SingleTickerProviderStateMixin {
   io.Socket? _socket;
   String _statusMessage = 'Finding the best videographer near you...';
-  bool _isConnecting = true;
   Timer? _pollingTimer;
 
   @override

@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../../core/theme.dart';
-import '../../../core/api_client.dart';
 
 class PaymentScreen extends StatefulWidget {
   final Map<String, dynamic> params;
@@ -76,7 +75,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
   @override
   Widget build(BuildContext context) {
     final package = widget.params['package'] as Map<String, dynamic>;
-    final payment = widget.params['payment'] as Map<String, dynamic>;
 
     return Scaffold(
       backgroundColor: OrbitClientTheme.background,

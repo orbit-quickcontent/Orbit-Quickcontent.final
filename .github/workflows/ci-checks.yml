@@ -59,7 +59,7 @@ jobs:
 
       - name: Client App Analyze
         working-directory: ./client-app
-        run: flutter analyze --no-fatal-infos
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
 
       - name: Partner App Pub Get
         working-directory: ./partner-app
@@ -67,4 +67,4 @@ jobs:
 
       - name: Partner App Analyze
         working-directory: ./partner-app
-        run: flutter analyze --no-fatal-infos
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos

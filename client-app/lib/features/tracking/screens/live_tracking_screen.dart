@@ -23,10 +23,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   LatLng? _clientLocation;
   double? _etaMinutes;
   Symbol? _partnerMarker;
-  Symbol? _clientMarker;
   Line? _routeLine;
   String _partnerName = 'Your Partner';
-  Map<String, dynamic>? _booking;
 
   @override
   void initState() {
@@ -46,7 +44,6 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
       final res = await apiClient.get('/bookings/${widget.bookingId}');
       final booking = res.data;
       setState(() {
-        _booking = booking;
         _clientLocation = LatLng(booking['latitude'] ?? 28.6, booking['longitude'] ?? 77.2);
         _partnerName = booking['partner']?['user']?['name'] ?? 'Your Partner';
       });

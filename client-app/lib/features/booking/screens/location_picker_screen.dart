@@ -79,12 +79,6 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
 
   Future<void> _reverseGeocode(LatLng position) async {
     try {
-      final res = await apiClient.get('/maps/route', params: {
-        'originLat': position.latitude,
-        'originLng': position.longitude,
-        'destLat': position.latitude,
-        'destLng': position.longitude,
-      });
       // Use Nominatim for reverse geocoding
       final nominatimRes = await http.get(
         Uri.parse('https://nominatim.openstreetmap.org/reverse?lat=${position.latitude}&lon=${position.longitude}&format=json'),

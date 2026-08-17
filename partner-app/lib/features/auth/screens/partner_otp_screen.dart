@@ -20,7 +20,6 @@ class PartnerOtpScreen extends ConsumerStatefulWidget {
 class _PartnerOtpScreenState extends ConsumerState<PartnerOtpScreen> {
   final _otpController = TextEditingController();
   bool _isVerifying = false;
-  bool _isResending = false;
   String? _error;
   int _countdown = 60;
   Timer? _timer;

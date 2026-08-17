@@ -305,7 +305,7 @@ class _TimelineItem extends StatelessWidget {
                 color: isLast ? null : OrbitClientTheme.outline,
               ),
             ),
-            if (entry != null)
+            if (!isLast)
               Container(width: 1, height: 28, color: OrbitClientTheme.outlineVariant),
           ],
         ),
