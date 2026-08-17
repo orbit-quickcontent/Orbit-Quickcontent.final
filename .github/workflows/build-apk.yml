@@ -26,7 +26,7 @@ on:
 
 jobs:
   build-client-apk:
-    name: 📱 Build Client App APK
+    name: Build Client App APK
     if: "${{ github.event_name != 'workflow_dispatch' || inputs.build_target == 'all' || inputs.build_target == 'client-only' }}"
     runs-on: ubuntu-latest
     steps:
@@ -61,7 +61,7 @@ jobs:
           retention-days: 30
 
   build-partner-apk:
-    name: 📸 Build Partner App APK
+    name: Build Partner App APK
     if: "${{ github.event_name != 'workflow_dispatch' || inputs.build_target == 'all' || inputs.build_target == 'partner-only' }}"
     runs-on: ubuntu-latest
     steps:
