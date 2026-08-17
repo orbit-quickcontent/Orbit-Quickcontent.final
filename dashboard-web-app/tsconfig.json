@@ -40,6 +40,11 @@
     "node_modules",
     "examples",
     "mini-services",
-    "functions"
+    "functions",
+    "src/app/_api_backup",
+    "src/cleanup-packages.ts",
+    "src/inspect-packages.ts",
+    "src/lib/test_flow.ts"
   ]
 }
+
