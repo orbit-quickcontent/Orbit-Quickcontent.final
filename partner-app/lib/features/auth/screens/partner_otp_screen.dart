@@ -20,6 +20,7 @@ class PartnerOtpScreen extends ConsumerStatefulWidget {
 class _PartnerOtpScreenState extends ConsumerState<PartnerOtpScreen> {
   final _otpController = TextEditingController();
   bool _isVerifying = false;
+  bool _isResending = false;
   String? _error;
   int _countdown = 60;
   Timer? _timer;
@@ -176,9 +177,11 @@ class _PartnerOtpScreenState extends ConsumerState<PartnerOtpScreen> {
 
               Center(
                 child: GestureDetector(
-                  onTap: _countdown == 0 ? _resend : null,
+                  onTap: _countdown == 0 && !_isResending ? _resend : null,
                   child: Text(
-                    _countdown > 0 ? 'Resend code in ${_countdown}s' : 'Resend code',
+                    _countdown > 0
+                        ? 'Resend code in ${_countdown}s'
+                        : (_isResending ? 'Resending...' : 'Resend code'),
                     style: OrbitPartnerTheme.textTheme.bodySmall?.copyWith(
                       color: _countdown == 0 ? OrbitPartnerTheme.primary : OrbitPartnerTheme.textSecondary,
                       fontWeight: _countdown == 0 ? FontWeight.w600 : FontWeight.w400,
