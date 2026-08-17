@@ -3,7 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 const String _kBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'https://orbit-quickcontent.vercel.app/api',
+  defaultValue: 'https://orbit-quickcontent-final.orbit-quickcontent.workers.dev',
 );
 
 const FlutterSecureStorage _storage = FlutterSecureStorage();
