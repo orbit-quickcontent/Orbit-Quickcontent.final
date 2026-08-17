@@ -25,12 +25,13 @@ WORKDIR /app
 
 # Install only production deps
 COPY package*.json ./
-RUN npm install --omit=dev --legacy-peer-deps && npm cache clean --force
+RUN npm install --omit=dev --ignore-scripts --legacy-peer-deps && npm cache clean --force
 
 # Copy built artifacts
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Non-root user for security
 RUN addgroup -g 1001 -S orbit && adduser -S orbit -u 1001
