@@ -1,8 +1,8 @@
-name = "orbit-platform"
+name = "orbit-quickcontent-final"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-main = "api/index.ts"
+main = "api/worker.ts"
 
 [vars]
 NODE_ENV = "production"
