@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -63,10 +63,10 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen>
 
     try {
       if (accept) {
-        await partnerApiClient.post('/bookings//accept');
-        if (mounted) context.go('/job/');
+        await partnerApiClient.post('/bookings/$bookingId/accept');
+        if (mounted) context.go('/job/$bookingId');
       } else {
-        await partnerApiClient.post('/bookings//decline');
+        await partnerApiClient.post('/bookings/$bookingId/decline');
         if (mounted) context.go('/work');
       }
     } on DioException {
@@ -84,6 +84,7 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen>
   Widget build(BuildContext context) {
     final booking = widget.dispatch['booking'] as Map<String, dynamic>? ?? {};
     final pkg = booking['package'] as Map<String, dynamic>? ?? {};
+    final payout = booking['partnerSalary'] ?? 700;
     final progressFraction = _countdown / 45.0;
 
     return Scaffold(
@@ -105,22 +106,26 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen>
                       strokeWidth: 5,
                       backgroundColor: OrbitPartnerTheme.surface,
                       valueColor: AlwaysStoppedAnimation(
-                        _countdown > 15 ? OrbitPartnerTheme.primary
-                            : _countdown > 5 ? const Color(0xFFFFB347)
-                            : OrbitPartnerTheme.error,
+                        _countdown > 15
+                            ? OrbitPartnerTheme.primary
+                            : _countdown > 5
+                                ? const Color(0xFFFFB347)
+                                : OrbitPartnerTheme.error,
                       ),
                     ),
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          '',
+                          '$_countdown',
                           style: TextStyle(
                             fontSize: 40,
                             fontWeight: FontWeight.w800,
-                            color: _countdown > 15 ? OrbitPartnerTheme.primary
-                                : _countdown > 5 ? const Color(0xFFFFB347)
-                                : OrbitPartnerTheme.error,
+                            color: _countdown > 15
+                                ? OrbitPartnerTheme.primary
+                                : _countdown > 5
+                                    ? const Color(0xFFFFB347)
+                                    : OrbitPartnerTheme.error,
                           ),
                         ),
                         Text('seconds', style: OrbitPartnerTheme.textTheme.bodySmall),
@@ -141,7 +146,9 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen>
                 child: Text(
                   'NEW SHOOT REQUEST',
                   style: OrbitPartnerTheme.textTheme.labelSmall?.copyWith(
-                    color: Colors.black, letterSpacing: 2, fontWeight: FontWeight.w700,
+                    color: Colors.black,
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ).animate(delay: 200.ms).fadeIn(),
@@ -153,7 +160,7 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen>
                 decoration: BoxDecoration(
                   color: OrbitPartnerTheme.surface,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: OrbitPartnerTheme.primary.withOpacity(0.4)),
+                  border: Border.all(color: OrbitPartnerTheme.primary.withValues(alpha: 0.4)),
                 ),
                 child: Column(
                   children: [
@@ -173,11 +180,11 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(
-                            color: OrbitPartnerTheme.primary.withOpacity(0.1),
+                            color: OrbitPartnerTheme.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: OrbitPartnerTheme.primary.withOpacity(0.4)),
+                            border: Border.all(color: OrbitPartnerTheme.primary.withValues(alpha: 0.4)),
                           ),
-                          child: Text('Rs.500', style: TextStyle(color: OrbitPartnerTheme.primary, fontWeight: FontWeight.w800, fontSize: 22)),
+                          child: Text('₹$payout', style: const TextStyle(color: OrbitPartnerTheme.primary, fontWeight: FontWeight.w800, fontSize: 22)),
                         ),
                       ],
                     ),
@@ -185,24 +192,25 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen>
                     const Divider(color: OrbitPartnerTheme.outlineFaint),
                     const SizedBox(height: 12),
                     Row(
-                      children: [
+                      children: const [
                         Icon(Icons.location_on_outlined, color: OrbitPartnerTheme.primary, size: 18),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            booking['address'] ?? 'Location shared on acceptance',
-                            style: OrbitPartnerTheme.textTheme.bodySmall,
-                            maxLines: 2, overflow: TextOverflow.ellipsis,
+                            'Location shared on acceptance',
+                            style: TextStyle(color: Color(0xFFBBC9CF), fontSize: 13),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Row(
-                      children: [
+                      children: const [
                         Icon(Icons.schedule_outlined, color: OrbitPartnerTheme.textSecondary, size: 18),
-                        const SizedBox(width: 8),
-                        Text(booking['timeSlot'] ?? 'Immediate', style: OrbitPartnerTheme.textTheme.bodySmall),
+                        SizedBox(width: 8),
+                        Text('Immediate', style: TextStyle(color: Color(0xFFBBC9CF), fontSize: 13)),
                       ],
                     ),
                   ],
@@ -219,7 +227,7 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen>
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         foregroundColor: OrbitPartnerTheme.error,
-                        side: BorderSide(color: OrbitPartnerTheme.error.withOpacity(0.6)),
+                        side: BorderSide(color: OrbitPartnerTheme.error.withValues(alpha: 0.6)),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                       child: const Text('Decline', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
@@ -246,7 +254,7 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen>
 
               const SizedBox(height: 16),
               Text(
-                'Auto-decline in  seconds',
+                'Auto-decline in $_countdown seconds',
                 style: OrbitPartnerTheme.textTheme.bodySmall?.copyWith(color: OrbitPartnerTheme.textSecondary),
                 textAlign: TextAlign.center,
               ),

@@ -150,7 +150,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                   width: 40, height: 40,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: OrbitClientTheme.surfaceContainerLowest.withOpacity(0.9),
+                    color: OrbitClientTheme.surfaceContainerLowest.withValues(alpha: 0.9),
                     border: Border.all(color: OrbitClientTheme.outlineVariant),
                   ),
                   child: const Icon(Icons.arrow_back_ios, size: 16, color: OrbitClientTheme.onSurface),
@@ -165,7 +165,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
             child: Container(
               padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).padding.bottom + 20),
               decoration: BoxDecoration(
-                color: OrbitClientTheme.surfaceContainerLowest.withOpacity(0.95),
+                color: OrbitClientTheme.surfaceContainerLowest.withValues(alpha: 0.95),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Row(children: [

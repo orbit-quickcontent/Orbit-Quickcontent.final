@@ -73,7 +73,7 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
             decoration: BoxDecoration(
               color: OrbitPartnerTheme.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: OrbitPartnerTheme.primary.withOpacity(0.4)),
+              border: Border.all(color: OrbitPartnerTheme.primary.withValues(alpha: 0.4)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
