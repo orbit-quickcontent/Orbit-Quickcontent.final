@@ -36,7 +36,7 @@ export default {
     }
 
     // Root Health / Info
-    if (path === '/' || path === '/health') {
+    if (path === '/' || path === '/health' || path === '/api' || path === '/api/health') {
       return jsonResponse({
         status: 'ok',
         service: 'orbit-cloudflare-edge',
@@ -47,8 +47,11 @@ export default {
       });
     }
 
+    // Normalize path to strip /api prefix for easier matching
+    const normalizedPath = path.startsWith('/api/') ? path.substring(4) : path;
+
     // Packages Endpoint
-    if (path === '/api/packages') {
+    if (normalizedPath === '/packages') {
       return jsonResponse([
         {
           id: 'pkg_creator_personalized',
@@ -87,7 +90,7 @@ export default {
     }
 
     // Auth: Send OTP
-    if (path === '/api/auth/send-otp') {
+    if (normalizedPath === '/auth/send-otp') {
       return jsonResponse({
         success: true,
         message: 'Verification code sent to your email (Demo code: 123456)',
@@ -95,7 +98,7 @@ export default {
     }
 
     // Auth: Verify OTP
-    if (path === '/api/auth/verify-otp') {
+    if (normalizedPath === '/auth/verify-otp') {
       let body: any = {};
       try { body = await request.json(); } catch (_) {}
       const email = body.email || 'user@orbit-quickcontent.com';
@@ -124,7 +127,7 @@ export default {
     }
 
     // Partner Profile
-    if (path === '/api/partner/profile') {
+    if (normalizedPath === '/partner/profile') {
       return jsonResponse({
         displayName: 'utkarsh gupta',
         user: {
@@ -139,7 +142,7 @@ export default {
     }
 
     // Partner Earnings
-    if (path === '/api/partner/earnings') {
+    if (normalizedPath === '/partner/earnings') {
       return jsonResponse({
         totalEarned: 8400,
         monthEarned: 2800,
@@ -150,7 +153,7 @@ export default {
     }
 
     // Bookings
-    if (path.startsWith('/api/bookings')) {
+    if (normalizedPath.startsWith('/bookings')) {
       if (method === 'POST') {
         return jsonResponse({
           bookingId: `bk_${Date.now()}`,
@@ -174,7 +177,7 @@ export default {
     }
 
     // Notifications
-    if (path === '/api/notifications') {
+    if (normalizedPath === '/notifications') {
       return jsonResponse([
         {
           id: 'n1',
