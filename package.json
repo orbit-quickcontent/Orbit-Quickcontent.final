@@ -33,11 +33,11 @@
     "db:migrate:dev": "cd backend && npx prisma migrate dev",
     "db:studio": "cd backend && npx prisma studio",
     "db:seed": "cd backend && npm run seed",
-    "docker:build": "docker-compose build",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f",
-    "docker:staging": "docker-compose -f docker-compose.staging.yml up -d"
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:staging": "docker compose -f docker-compose.staging.yml up -d"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

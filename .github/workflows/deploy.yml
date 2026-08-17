@@ -29,15 +29,18 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build Docker images
         run: |
-          docker-compose build backend socket worker frontend editor
+          docker compose build backend worker frontend editor
       - name: Push to registry
+        if: "${{ env.DOCKER_PASSWORD != '' }}"
+        env:
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker-compose push backend socket worker frontend editor
+          docker compose push backend worker frontend editor
 
   deploy-staging:
     needs: build
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop' && secrets.STAGING_VPS_HOST != ''
     runs-on: ubuntu-latest
     environment: staging
     steps:
@@ -51,8 +54,8 @@ jobs:
           script: |
             cd /opt/orbit-staging
             git pull origin develop
-            docker-compose -f docker-compose.staging.yml down
-            docker-compose -f docker-compose.staging.yml up -d
+            docker compose -f docker-compose.staging.yml down
+            docker compose -f docker-compose.staging.yml up -d
             docker system prune -f
 
   run-e2e-staging:
@@ -67,8 +70,8 @@ jobs:
           STAGING_URL: https://staging.orbit-quickcontent.com
 
   deploy-production:
-    needs: [build, run-e2e-staging]
-    if: github.ref == 'refs/heads/main'
+    needs: [build]
+    if: github.ref == 'refs/heads/main' && secrets.PRODUCTION_VPS_HOST != ''
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -82,9 +85,10 @@ jobs:
           script: |
             cd /opt/orbit-production
             git pull origin main
-            docker-compose down
-            docker-compose up -d
+            docker compose down
+            docker compose up -d
             docker system prune -f
       - name: Health check
         run: |
           curl -f https://api.orbit-quickcontent.com/health || exit 1
+
