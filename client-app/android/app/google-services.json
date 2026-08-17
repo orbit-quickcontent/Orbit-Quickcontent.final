@@ -29,13 +29,35 @@
             {
               "client_id": "753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com",
               "client_type": 3
-            },
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:753333113627:android:0c837b402fcec13fecf9be",
+        "android_client_info": {
+          "package_name": "com.orbitplatform.client"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4JpCOQqRrx_kXu0WoRM12K42h6ZC89yc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
             {
-              "client_id": "753333113627-bjctev1ji81nsijp5nhtgar9hmiid3la.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.orbit.client"
-              }
+              "client_id": "753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com",
+              "client_type": 3
             }
           ]
         }
@@ -65,13 +87,35 @@
             {
               "client_id": "753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com",
               "client_type": 3
-            },
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:753333113627:android:23cd3305fa9fba7becf9be",
+        "android_client_info": {
+          "package_name": "com.orbitplatform.partner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4JpCOQqRrx_kXu0WoRM12K42h6ZC89yc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
             {
-              "client_id": "753333113627-bjctev1ji81nsijp5nhtgar9hmiid3la.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.orbit.client"
-              }
+              "client_id": "753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com",
+              "client_type": 3
             }
           ]
         }
