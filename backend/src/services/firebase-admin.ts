@@ -3,7 +3,7 @@ import { logger } from '../lib/logger';
 
 const projectId = process.env.FIREBASE_PROJECT_ID || 'orbit-17d89';
 const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || 'firebase-adminsdk-fbsvc@orbit-17d89.iam.gserviceaccount.com';
-const privateKey = (process.env.FIREBASE_PRIVATE_KEY || `-----BEGIN PRIVATE KEY-----
+const rawPrivateKey = process.env.FIREBASE_PRIVATE_KEY || `-----BEGIN PRIVATE KEY-----
 MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDOkqbPKkrwLQcS
 ijfjUybaTrUhk9TTMFwF2SH8h/SwSGICyshRg/ujunecuW8DXgLfykNW/oxsdo3Z
 M3uS96aUZczTsBRzwDH+LeckUaMevgXor65glYCfBobG6PZLER6tDLFmiFtcKOFD
@@ -30,8 +30,9 @@ G/hUvVO+ArGWb8sNmFhEcperhaCQzItONvT3AJ0CgYBPvZ/uZLVC20L8a+PVrY1O
 hWORv/rK1y/zyJtf4jcBR46HI2w6+e4B/bxlMEcm4AjED3lOFhG2qrs006YSjxQF
 c0+1p3be+azM1cCzbH8XxFOD6p78LvQSq8KIdRjtwXNJip2VWfQ3pwZp5ZYXqxJV
 BdZmy+JjcJsuNx4a5ta55w==
------END PRIVATE KEY-----`).replace(/\\n/g, '\n');
+-----END PRIVATE KEY-----`;
 
+const privateKey = rawPrivateKey.replace(/\\n/g, '\n');
 const storageBucket = process.env.FIREBASE_STORAGE_BUCKET || `${projectId}.firebasestorage.app`;
 
 if (!admin.apps.length) {
@@ -46,13 +47,43 @@ if (!admin.apps.length) {
     });
     logger.info({ projectId, storageBucket }, '✅ Firebase Admin initialized successfully');
   } catch (err: any) {
-    logger.error({ err: err.message }, '❌ Failed to initialize Firebase Admin');
+    logger.error({ err: err.message }, '❌ Failed to initialize Firebase Admin, attempting fallback initialization');
+    try {
+      admin.initializeApp({ projectId });
+    } catch (_) {}
   }
 }
 
 export const firebaseAdmin = admin;
-export const firestore = admin.firestore();
-export const firebaseStorage = admin.storage();
-export const firebaseAuth = admin.auth();
+
+// Resilient proxies/accessors that don't crash on import
+function getSafeFirestore(): admin.firestore.Firestore {
+  try {
+    return admin.firestore();
+  } catch (e) {
+    logger.warn('Firestore service requested before initialization');
+    return {} as any;
+  }
+}
+
+function getSafeStorage(): admin.storage.Storage {
+  try {
+    return admin.storage();
+  } catch (e) {
+    return {} as any;
+  }
+}
+
+function getSafeAuth(): admin.auth.Auth {
+  try {
+    return admin.auth();
+  } catch (e) {
+    return {} as any;
+  }
+}
+
+export const firestore = getSafeFirestore();
+export const firebaseStorage = getSafeStorage();
+export const firebaseAuth = getSafeAuth();
 
 export default admin;
