@@ -57,7 +57,7 @@ dependencies:
   path_provider: ^2.1.4
 
   # Utilities
-  intl: ^0.19.0
+  intl: '>=0.19.0 <1.0.0'
   shared_preferences: ^2.3.2
   connectivity_plus: ^6.0.5
   permission_handler: ^11.3.1
