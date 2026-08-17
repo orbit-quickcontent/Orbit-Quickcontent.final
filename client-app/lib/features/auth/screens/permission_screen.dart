@@ -60,7 +60,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: OrbitClientTheme.surface,
-                  border: Border.all(color: OrbitClientTheme.border, width: 2),
+                  border: Border.all(color: OrbitClientTheme.outlineVariant, width: 2),
                 ),
                 child: const Icon(
                   Icons.location_on_outlined,
@@ -79,7 +79,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
                 textAlign: TextAlign.center,
                 style: OrbitClientTheme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: OrbitClientTheme.onBackground,
+                  color: OrbitClientTheme.onSurface,
                 ),
               )
               .animate(delay: 200.ms).fadeIn().slideY(begin: 0.2),
