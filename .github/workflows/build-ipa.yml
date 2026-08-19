@@ -48,7 +48,7 @@ jobs:
 
       - name: Build Client iOS Release (Unsigned)
         working-directory: ./client-app
-        run: flutter build ios --release --no-codesign --no-tree-shake-icons
+        run: flutter build ios --release --build-number=${{ github.run_number }} --no-codesign --no-tree-shake-icons
 
       - name: Package Client IPA
         run: |
@@ -72,7 +72,7 @@ jobs:
 
       - name: Build Partner iOS Release (Unsigned)
         working-directory: ./partner-app
-        run: flutter build ios --release --no-codesign --no-tree-shake-icons
+        run: flutter build ios --release --build-number=${{ github.run_number }} --no-codesign --no-tree-shake-icons
 
       - name: Package Partner IPA
         run: |

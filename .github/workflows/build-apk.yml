@@ -47,7 +47,7 @@ jobs:
 
       - name: Build Client Release APK
         working-directory: ./client-app
-        run: flutter build apk --release --android-skip-build-dependency-validation --no-tree-shake-icons
+        run: flutter build apk --release --build-number=${{ github.run_number }} --android-skip-build-dependency-validation --no-tree-shake-icons
 
       - name: Prepare Client APK
         run: |
@@ -61,7 +61,7 @@ jobs:
 
       - name: Build Partner Release APK
         working-directory: ./partner-app
-        run: flutter build apk --release --android-skip-build-dependency-validation --no-tree-shake-icons
+        run: flutter build apk --release --build-number=${{ github.run_number }} --android-skip-build-dependency-validation --no-tree-shake-icons
 
       - name: Prepare Partner APK
         run: |
