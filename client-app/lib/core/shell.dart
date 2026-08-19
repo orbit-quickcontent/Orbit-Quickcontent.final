@@ -18,7 +18,7 @@ class MainShell extends StatelessWidget {
     switch (index) {
       case 0: context.go('/home'); break;
       case 1: context.go('/history'); break;
-      case 2: context.go('/notifications'); break;
+      case 2: context.go('/history'); break; // Routes to history for now since tracking requires an active ID
       case 3: context.go('/profile'); break;
     }
   }
@@ -60,7 +60,7 @@ class _OrbitBottomNav extends StatelessWidget {
             children: [
               _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home', index: 0, currentIndex: currentIndex, onTap: onTap),
               _NavItem(icon: Icons.history_outlined, activeIcon: Icons.history, label: 'Bookings', index: 1, currentIndex: currentIndex, onTap: onTap),
-              _NavItem(icon: Icons.notifications_outlined, activeIcon: Icons.notifications, label: 'Alerts', index: 2, currentIndex: currentIndex, onTap: onTap),
+              _NavItem(icon: Icons.location_on_outlined, activeIcon: Icons.location_on, label: 'Tracking', index: 2, currentIndex: currentIndex, onTap: onTap),
               _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile', index: 3, currentIndex: currentIndex, onTap: onTap),
             ],
           ),

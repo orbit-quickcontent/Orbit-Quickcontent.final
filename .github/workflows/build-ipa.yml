@@ -1,0 +1,117 @@
+name: Build & Release iOS IPAs (Client & Partner)
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-ipas:
+    name: Build & Release Unsigned iOS IPAs
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Apple CocoaPods
+        run: sudo gem install cocoapods
+
+      # --- Client App ---
+      - name: Install Client Dependencies
+        working-directory: ./client-app
+        run: |
+          flutter pub get
+          cd ios
+          pod install --repo-update
+
+      - name: Build Client iOS Release (Unsigned)
+        working-directory: ./client-app
+        run: flutter build ios --release --no-codesign --no-tree-shake-icons
+
+      - name: Package Client IPA
+        run: |
+          mkdir -p release-ipas
+          mkdir -p Payload
+          cp -r client-app/build/ios/iphoneos/Runner.app Payload/
+          zip -r release-ipas/orbit-client-app-release.ipa Payload
+          rm -rf Payload
+
+      # --- Partner App ---
+      - name: Install Partner Dependencies
+        working-directory: ./partner-app
+        run: |
+          flutter pub get
+          cd ios
+          pod install --repo-update
+
+      - name: Build Partner iOS Release (Unsigned)
+        working-directory: ./partner-app
+        run: flutter build ios --release --no-codesign --no-tree-shake-icons
+
+      - name: Package Partner IPA
+        run: |
+          mkdir -p Payload
+          cp -r partner-app/build/ios/iphoneos/Runner.app Payload/
+          zip -r release-ipas/orbit-partner-app-release.ipa Payload
+          rm -rf Payload
+
+      # --- Artifact Uploads ---
+      - name: Upload Client IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbit-client-app-release-ipa
+          path: release-ipas/orbit-client-app-release.ipa
+          retention-days: 30
+
+      - name: Upload Partner IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbit-partner-app-release-ipa
+          path: release-ipas/orbit-partner-app-release.ipa
+          retention-days: 30
+
+      # --- GitHub Release (Direct Download Links) ---
+      - name: Create or Update GitHub Release
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'latest' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/') && format('Orbit Release {0}', github.ref_name) || 'Orbit Latest Builds' }}
+          body: |
+            ## Orbit Mobile Applications (iOS) 🍏
+            
+            Download the latest iOS Unsigned IPA binaries below. 
+            *Note: Unsigned IPAs require tools like AltStore, Sideloadly, or a developer account to install on a physical device.*
+            
+            | Application | Direct Download |
+            |---|---|
+            | 👤 **Client App** | [Download `orbit-client-app-release.ipa`](https://github.com/${{ github.repository }}/releases/download/${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'latest' }}/orbit-client-app-release.ipa) |
+            | 🤝 **Partner App** | [Download `orbit-partner-app-release.ipa`](https://github.com/${{ github.repository }}/releases/download/${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'latest' }}/orbit-partner-app-release.ipa) |
+            
+            *Automated build from commit: `${{ github.sha }}`*
+          files: |
+            release-ipas/orbit-client-app-release.ipa
+            release-ipas/orbit-partner-app-release.ipa
+          draft: false
+          prerelease: false
+          append_body: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

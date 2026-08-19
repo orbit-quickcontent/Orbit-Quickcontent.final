@@ -52,25 +52,13 @@ class _SplashScreenState extends State<SplashScreen> {
               Container(
                 width: 120,
                 height: 120,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: OrbitClientTheme.primaryGradient,
-                  boxShadow: [
-                    BoxShadow(
-                      color: OrbitClientTheme.primaryFixed.withOpacity(0.4),
-                      blurRadius: 40,
-                      spreadRadius: 10,
-                    ),
-                    BoxShadow(
-                      color: OrbitClientTheme.secondary.withOpacity(0.2),
-                      blurRadius: 60,
-                      spreadRadius: 5,
-                    ),
-                  ],
+                  color: Colors.transparent,
                 ),
                 child: ClipOval(
                   child: Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(12),
                     child: Image.asset(
                       'assets/icon/orbit_logo.png',
                       fit: BoxFit.contain,
@@ -81,7 +69,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               )
               .animate()
-              .scale(begin: const Offset(0.3, 0.3), duration: 600.ms, curve: Curves.elasticOut)
+              .scaleXY(begin: 0.3, end: 1.0, duration: 600.ms, curve: Curves.elasticOut)
               .fadeIn(duration: 400.ms),
 
               const SizedBox(height: 24),

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/screens/splash_screen.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/otp_screen.dart';
+import '../features/auth/screens/personal_info_screen.dart';
 import '../features/auth/screens/permission_screen.dart';
 import '../features/auth/screens/onboarding_screen.dart';
 import '../features/home/screens/home_screen.dart';
@@ -56,6 +57,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/otp',
         builder: (ctx, state) => OtpScreen(email: state.extra as String),
+      ),
+      GoRoute(
+        path: '/personal-info',
+        builder: (ctx, state) => const PersonalInfoScreen(),
       ),
       // Shell with bottom navigation
       ShellRoute(

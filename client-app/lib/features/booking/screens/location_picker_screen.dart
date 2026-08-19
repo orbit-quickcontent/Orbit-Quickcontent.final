@@ -43,13 +43,20 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         await Geolocator.requestPermission();
       }
 
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
+      // Try fast lookup first
+      Position? position = await Geolocator.getLastKnownPosition(
+        forceAndroidLocationManager: true,
+      );
+
+      // If no last known position, request current position
+      position ??= await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.medium, // faster than high
+        timeLimit: const Duration(seconds: 5),
+        forceAndroidLocationManager: true,
       );
 
       setState(() {
-        _selectedLocation = LatLng(position.latitude, position.longitude);
+        _selectedLocation = LatLng(position!.latitude, position.longitude);
         _isLocating = false;
       });
 

@@ -153,16 +153,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     Row(
                       children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF201F1F),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.search, color: Color(0xFFE5E2E1), size: 18),
-                        ),
-                        const SizedBox(width: 8),
+
                         GestureDetector(
                           onTap: () => context.push('/notifications'),
                           child: Stack(
@@ -192,14 +183,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF201F1F),
-                            shape: BoxShape.circle,
+                        GestureDetector(
+                          onTap: () => context.push('/profile'),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF201F1F),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.keyboard_arrow_down, color: Color(0xFFE5E2E1), size: 18),
                           ),
-                          child: const Icon(Icons.keyboard_arrow_down, color: Color(0xFFE5E2E1), size: 18),
                         ),
                       ],
                     ),

@@ -53,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 size: 60,
                 color: OrbitPartnerTheme.primary,
               ),
-            ).animate().scale(begin: const Offset(0.5, 0.5), duration: 500.ms, curve: Curves.easeOutBack).fadeIn(),
+            ).animate().scaleXY(begin: 0.5, end: 1.0, duration: 500.ms, curve: Curves.easeOutBack).fadeIn(),
             const SizedBox(height: 24),
             Text(
               'ORBIT Partner',

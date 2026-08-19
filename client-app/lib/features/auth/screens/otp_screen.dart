@@ -68,7 +68,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           refreshToken: data['refreshToken'],
           user: data['user'],
         );
-        context.go('/home');
+        context.go('/personal-info');
       } else {
         setState(() => _error = data['message'] ?? 'Invalid OTP');
       }

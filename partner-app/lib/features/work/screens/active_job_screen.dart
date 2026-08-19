@@ -35,16 +35,78 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
     }
   }
 
-  Future<void> _updateStatus(String action) async {
+  Future<void> _updateStatus(String action, {Map<String, dynamic>? payload}) async {
     setState(() => _isActionRunning = true);
     try {
-      await partnerApiClient.post('/bookings/${widget.bookingId}/$action');
+      await partnerApiClient.post('/bookings/${widget.bookingId}/$action', data: payload);
       await _loadJob();
     } catch (_) {
     } finally {
       if (mounted) setState(() => _isActionRunning = false);
     }
   }
+
+  void _showPinDialog() {
+    final pinController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: OrbitPartnerTheme.surface,
+        title: Text('Enter Client PIN', style: OrbitPartnerTheme.textTheme.titleMedium),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Ask the client for their 4-digit shoot PIN to begin.',
+              style: OrbitPartnerTheme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: pinController,
+              keyboardType: TextInputType.number,
+              maxLength: 4,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white, fontSize: 24, letterSpacing: 12),
+              decoration: InputDecoration(
+                hintText: '0000',
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                counterText: '',
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: OrbitPartnerTheme.outlineFaint),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: OrbitPartnerTheme.primary),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: OrbitPartnerTheme.primary,
+              foregroundColor: Colors.black,
+            ),
+            onPressed: () {
+              final pin = pinController.text.trim();
+              if (pin.length == 4) {
+                Navigator.pop(ctx);
+                _updateStatus('start-shoot', payload: {'pin': pin});
+              }
+            },
+            child: const Text('Verify & Start'),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +187,7 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
               label: 'Start Video Shoot',
               color: OrbitPartnerTheme.primary,
               isLoading: _isActionRunning,
-              onPressed: () => _updateStatus('start-shoot'),
+              onPressed: _showPinDialog,
             ),
           ] else if (status == 'SHOOTING') ...[
             PartnerButton(
