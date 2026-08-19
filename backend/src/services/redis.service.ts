@@ -1,39 +1,42 @@
 import Redis from 'ioredis';
 import { logger } from '../lib/logger';
 
-const redisUrl = process.env.REDIS_URL;
+const redisUrl = process.env.VALKEY_URL || process.env.REDIS_URL;
 const isRedisConfigured = !!redisUrl && redisUrl !== '';
+const engineName = process.env.VALKEY_URL ? 'Valkey' : 'Redis/Valkey';
 
 export let redis: Redis | null = null;
 
-// Only initialize Redis if explicitly configured (for serverless compatibility)
+// Only initialize Redis/Valkey if explicitly configured (for serverless compatibility)
 if (isRedisConfigured) {
   try {
-    redis = new Redis(redisUrl, {
+    const isTls = redisUrl!.startsWith('rediss://');
+    redis = new Redis(redisUrl!, {
       maxRetriesPerRequest: 3,
       retryStrategy: (times: number) => Math.min(times * 100, 3000),
       reconnectOnError: (err) => {
-        logger.warn({ err: err.message }, 'Redis reconnect on error');
+        logger.warn({ err: err.message }, `${engineName} reconnect on error`);
         return true;
       },
       lazyConnect: true,
+      tls: isTls ? { rejectUnauthorized: false } : undefined,
     });
 
-    redis.on('connect', () => logger.info('✅ Redis connected'));
-    redis.on('error', (err) => logger.error({ err: err.message }, '❌ Redis error'));
-    redis.on('reconnecting', () => logger.warn('♻️  Redis reconnecting...'));
+    redis.on('connect', () => logger.info(`✅ ${engineName} connected`));
+    redis.on('error', (err) => logger.error({ err: err.message }, `❌ ${engineName} error`));
+    redis.on('reconnecting', () => logger.warn(`♻️  ${engineName} reconnecting...`));
 
     // Try to connect immediately
     redis.connect().catch(err => {
-      logger.warn({ err: err.message }, '⚠️ Redis connection failed, operating in serverless mode');
+      logger.warn({ err: err.message }, `⚠️ ${engineName} connection failed, operating in serverless mode`);
       redis = null;
     });
   } catch (err: any) {
-    logger.warn({ err: err.message }, '⚠️ Failed to initialize Redis client');
+    logger.warn({ err: err.message }, `⚠️ Failed to initialize ${engineName} client`);
     redis = null;
   }
 } else {
-  logger.info('ℹ️ Redis not configured (REDIS_URL not set), using in-memory storage');
+  logger.info('ℹ️ Valkey/Redis not configured (neither VALKEY_URL nor REDIS_URL set), using in-memory storage');
 }
 
 export function isRedisAvailable(): boolean {
