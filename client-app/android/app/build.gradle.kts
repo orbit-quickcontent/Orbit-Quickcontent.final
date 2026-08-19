@@ -21,6 +21,15 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("orbit.keystore")
+            storePassword = "orbit123"
+            keyAlias = "orbit"
+            keyPassword = "orbit123"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.orbitplatform.client"
         // flutter_inappwebview requires minSdk 21+
@@ -33,9 +42,7 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
