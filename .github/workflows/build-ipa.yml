@@ -39,8 +39,11 @@ jobs:
         working-directory: ./client-app
         run: |
           flutter pub get
+          flutter build ios --config-only --no-codesign || true
           cd ios
           sed -i '' "s/^# platform :ios.*/platform :ios, '14.0'/g" Podfile
+          sed -i '' "s/platform :ios.*/platform :ios, '14.0'/g" Podfile
+          sed -i '' "s/IPHONEOS_DEPLOYMENT_TARGET = .*/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/g" Runner.xcodeproj/project.pbxproj
           pod install --repo-update
 
       - name: Build Client iOS Release (Unsigned)
@@ -60,8 +63,11 @@ jobs:
         working-directory: ./partner-app
         run: |
           flutter pub get
+          flutter build ios --config-only --no-codesign || true
           cd ios
           sed -i '' "s/^# platform :ios.*/platform :ios, '14.0'/g" Podfile
+          sed -i '' "s/platform :ios.*/platform :ios, '14.0'/g" Podfile
+          sed -i '' "s/IPHONEOS_DEPLOYMENT_TARGET = .*/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/g" Runner.xcodeproj/project.pbxproj
           pod install --repo-update
 
       - name: Build Partner iOS Release (Unsigned)
