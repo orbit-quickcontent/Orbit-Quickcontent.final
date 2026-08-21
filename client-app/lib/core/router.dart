@@ -76,27 +76,49 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/packages', builder: (ctx, state) => const PackagesScreen()),
       GoRoute(
         path: '/location',
-        builder: (ctx, state) => LocationPickerScreen(packageId: state.extra as String),
+        builder: (ctx, state) => LocationPickerScreen(packageId: (state.extra is String ? state.extra as String : (state.extra as Map?)?['packageId']?.toString()) ?? 'pkg_standard'),
+      ),
+      GoRoute(
+        path: '/location-picker',
+        builder: (ctx, state) => LocationPickerScreen(packageId: (state.extra is String ? state.extra as String : (state.extra as Map?)?['packageId']?.toString()) ?? 'pkg_standard'),
       ),
       GoRoute(
         path: '/review',
-        builder: (ctx, state) => BookingReviewScreen(params: state.extra as Map<String, dynamic>),
+        builder: (ctx, state) => BookingReviewScreen(
+          params: (state.extra is Map<String, dynamic>)
+              ? state.extra as Map<String, dynamic>
+              : {
+                  'packageId': (state.extra is String ? state.extra as String : 'pkg_standard'),
+                  'latitude': 28.6139,
+                  'longitude': 77.2090,
+                  'address': 'Connaught Place, New Delhi',
+                },
+        ),
       ),
       GoRoute(
         path: '/payment',
-        builder: (ctx, state) => PaymentScreen(params: state.extra as Map<String, dynamic>),
+        builder: (ctx, state) => PaymentScreen(
+          params: (state.extra is Map<String, dynamic>)
+              ? state.extra as Map<String, dynamic>
+              : {'bookingId': 'bk_${DateTime.now().millisecondsSinceEpoch}'},
+        ),
       ),
       GoRoute(
         path: '/finding-partner',
-        builder: (ctx, state) => FindingPartnerScreen(bookingId: state.extra as String),
+        builder: (ctx, state) {
+          final bId = (state.extra is String)
+              ? state.extra as String
+              : (state.extra is Map ? (state.extra as Map)['bookingId']?.toString() : null);
+          return FindingPartnerScreen(bookingId: bId ?? 'bk_${DateTime.now().millisecondsSinceEpoch}');
+        },
       ),
       GoRoute(
         path: '/booking/:id',
-        builder: (ctx, state) => BookingStatusScreen(bookingId: state.pathParameters['id']!),
+        builder: (ctx, state) => BookingStatusScreen(bookingId: state.pathParameters['id'] ?? 'bk_default'),
       ),
       GoRoute(
         path: '/tracking/:id',
-        builder: (ctx, state) => LiveTrackingScreen(bookingId: state.pathParameters['id']!),
+        builder: (ctx, state) => LiveTrackingScreen(bookingId: state.pathParameters['id'] ?? 'bk_default'),
       ),
     ],
     errorBuilder: (ctx, state) => const LoginScreen(),

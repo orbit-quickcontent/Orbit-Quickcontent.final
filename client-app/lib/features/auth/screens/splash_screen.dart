@@ -19,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigate() async {
-    await Future.delayed(const Duration(milliseconds: 2500));
+    await Future.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
     
     final prefs = await SharedPreferences.getInstance();
@@ -48,29 +48,32 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Glowing ORBIT logo container
+              // Sleek Glowing ORBIT Symbol
               Container(
-                width: 120,
-                height: 120,
-                decoration: const BoxDecoration(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.transparent,
-                ),
-                child: ClipOval(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Image.asset(
-                      'assets/icon/orbit_logo.png',
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.radio_button_checked, color: Colors.white, size: 50),
+                  gradient: OrbitClientTheme.primaryGradient,
+                  boxShadow: [
+                    BoxShadow(
+                      color: OrbitClientTheme.primaryFixed.withOpacity(0.4),
+                      blurRadius: 32,
+                      spreadRadius: 4,
                     ),
+                  ],
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.videocam_rounded,
+                    size: 48,
+                    color: Colors.white,
                   ),
                 ),
               )
               .animate()
-              .scaleXY(begin: 0.3, end: 1.0, duration: 600.ms, curve: Curves.elasticOut)
-              .fadeIn(duration: 400.ms),
+              .scaleXY(begin: 0.8, end: 1.0, duration: 300.ms, curve: Curves.easeOutCubic)
+              .fadeIn(duration: 250.ms),
 
               const SizedBox(height: 24),
 
@@ -88,9 +91,9 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                 ),
               )
-              .animate(delay: 300.ms)
-              .fadeIn(duration: 500.ms)
-              .slideY(begin: 0.3, duration: 500.ms, curve: Curves.easeOut),
+              .animate(delay: 100.ms)
+              .fadeIn(duration: 300.ms)
+              .slideY(begin: 0.1, duration: 300.ms, curve: Curves.easeOutCubic),
 
               const SizedBox(height: 8),
 
@@ -101,8 +104,8 @@ class _SplashScreenState extends State<SplashScreen> {
                   letterSpacing: 1.5,
                 ),
               )
-              .animate(delay: 600.ms)
-              .fadeIn(duration: 500.ms),
+              .animate(delay: 200.ms)
+              .fadeIn(duration: 300.ms),
 
               const SizedBox(height: 80),
 
@@ -118,9 +121,9 @@ class _SplashScreenState extends State<SplashScreen> {
                       gradient: OrbitClientTheme.primaryGradient,
                     ),
                   )
-                  .animate(delay: (800 + i * 150).ms, onPlay: (c) => c.repeat(reverse: true))
-                  .scaleXY(begin: 0.5, end: 1.0, duration: 500.ms, curve: Curves.easeInOut)
-                  .fadeIn(duration: 300.ms),
+                  .animate(delay: (300 + i * 120).ms, onPlay: (c) => c.repeat(reverse: true))
+                  .scaleXY(begin: 0.6, end: 1.0, duration: 400.ms, curve: Curves.easeInOut)
+                  .fadeIn(duration: 200.ms),
                 ),
               ),
             ],

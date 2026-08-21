@@ -6,14 +6,14 @@ import 'package:google_fonts/google_fonts.dart';
 class OrbitClientTheme {
   OrbitClientTheme._();
 
-  // ── Core Palette ────────────────────────────────────────────────────────────
-  static const Color background = Color(0xFF131313);
-  static const Color surfaceContainerLowest = Color(0xFF0E0E0E);
-  static const Color surfaceContainerLow = Color(0xFF1C1B1B);
-  static const Color surface = Color(0xFF201F1F);
-  static const Color surfaceHigh = Color(0xFF2A2A2A);
-  static const Color surfaceHighest = Color(0xFF353534);
-  static const Color surfaceBright = Color(0xFF393939);
+  // ── Core Palette (Total Pitch Black OLED Theme) ──────────────────────────
+  static const Color background = Color(0xFF000000);
+  static const Color surfaceContainerLowest = Color(0xFF000000);
+  static const Color surfaceContainerLow = Color(0xFF060606);
+  static const Color surface = Color(0xFF0D0D0D);
+  static const Color surfaceHigh = Color(0xFF141414);
+  static const Color surfaceHighest = Color(0xFF1C1C1C);
+  static const Color surfaceBright = Color(0xFF262626);
 
   // ── Primary (Cyan/Blue) ─────────────────────────────────────────────────────
   static const Color primary = Color(0xFFA5E7FF);      // #a5e7ff
@@ -270,9 +270,9 @@ class OrbitGlassCard extends StatelessWidget {
     return Container(
       padding: padding ?? const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: OrbitClientTheme.surfaceContainerLow.withOpacity(0.8),
+        color: const Color(0xFF0E0E0E),
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: Colors.white.withOpacity(0.08), width: 0.5),
+        border: Border.all(color: Colors.white.withOpacity(0.10), width: 1.0),
       ),
       child: child,
     );

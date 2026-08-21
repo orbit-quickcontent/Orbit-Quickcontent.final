@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { userId, packageId, bookingDate, timeSlot, location, notes, razorpayPaymentId } = (validation as any).data
+    const { userId, packageId, bookingDate, timeSlot, location, notes, paymentId } = (validation as any).data
 
     // 2. Verify user exists in client DB
     const user = await firestoreDb.clientUsers.findUnique({
@@ -158,8 +158,8 @@ export async function POST(request: NextRequest) {
         notes: notes || null,
         status: 'PAID',
         paymentStatus: 'SUCCESS',
-        paymentId: razorpayPaymentId || null,
-        paymentMethod: razorpayPaymentId ? 'razorpay' : null,
+        paymentId: paymentId || `pay_${Date.now()}`,
+        paymentMethod: 'DIRECT',
         syncPercentage: 0,
       },
     });

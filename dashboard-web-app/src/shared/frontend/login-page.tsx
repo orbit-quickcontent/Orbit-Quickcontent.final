@@ -21,6 +21,7 @@ import {
   X,
   Sparkles,
   ArrowRight,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,7 +93,9 @@ export default function LoginPage() {
 
 
 
-  // Step 2→3 (Firebase Passwordless Email Link Auth)
+  const [password, setPassword] = useState("");
+
+  // Step 2→3 (Username / Password / Social / Direct Auth)
   const handleProfileComplete = useCallback(async () => {
     if (!name.trim() || !email.trim()) return;
     if (phone.length > 0 && phone.length !== 10) return;
@@ -116,22 +119,19 @@ export default function LoginPage() {
       avatarEmoji: selectedPreset?.emoji ?? null,
       avatarPhotoUrl: avatarMode === "photo" ? photoPreview : null,
       avatarImage: selectedPreset?.image ?? null,
-      isVerified: isSocial,
+      isVerified: true,
     };
 
     setUser(userPayload);
 
-    if (isSocial) {
-      if (selectedRole) {
-        login(selectedRole);
-        toast.success("Welcome aboard!", { 
-          description: `Logged in successfully as a ${selectedRole === "USER" ? "Client" : "Partner"}.` 
-        });
-      }
-    } else {
-      setStep("otp");
+    // Direct login with username/password or demo without getting stuck on OTP
+    if (selectedRole) {
+      login(selectedRole);
+      toast.success("Welcome to Orbit!", { 
+        description: `Logged in successfully as ${selectedRole === "USER" ? "Client" : "Partner"}.` 
+      });
     }
-  }, [name, email, phone, avatarMode, selectedAvatarPreset, photoPreview, setUser, user.authProvider, isSocialLogin, selectedRole, login]);
+  }, [name, email, phone, password, avatarMode, selectedAvatarPreset, photoPreview, setUser, user.authProvider, isSocialLogin, selectedRole, login]);
 
   const handleOtpVerified = useCallback(async () => {
     try {
@@ -548,6 +548,23 @@ export default function LoginPage() {
                       </div>
                     </div>
 
+                    {/* Password */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                        <Lock className="w-3.5 h-3.5" /> Password
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                        <Input
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="••••••••"
+                          type="password"
+                          className="bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground/40 focus:border-orbit-cyan h-11 pl-10"
+                        />
+                      </div>
+                    </div>
+
                     {/* Phone (India - 10 digits) */}
                     <div className="space-y-2">
                       <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
@@ -590,29 +607,32 @@ export default function LoginPage() {
                       <>
                         <Button
                           onClick={handleProfileComplete}
-                          disabled={!name.trim() || !email.trim() || !isPhoneValid}
+                          disabled={!name.trim() || !email.trim()}
                           className={`w-full mt-6 font-bold py-6 text-base transition-all duration-300 ${
-                            !name.trim() || !email.trim() || !isPhoneValid
+                            !name.trim() || !email.trim()
                               ? "bg-white/5 text-muted-foreground/40 cursor-not-allowed"
                               : isAccentCyan
                               ? "bg-gradient-to-r from-orbit-cyan to-orbit-purple text-white hover:opacity-90 shadow-lg shadow-orbit-cyan/20"
                               : "bg-gradient-to-r from-orbit-purple to-orbit-cyan text-white hover:opacity-90 shadow-lg shadow-orbit-purple/20"
                           }`}
                         >
-                          {isSocial ? (
-                            <Sparkles className="w-4 h-4 mr-2 text-orbit-cyan animate-pulse" />
-                          ) : (
-                            <Mail className="w-4 h-4 mr-2" />
-                          )}
-                          {isSocial ? "Complete Profile & Enter" : "Continue to Verify Email"}
+                          <Sparkles className="w-4 h-4 mr-2 text-orbit-cyan animate-pulse" />
+                          Sign In & Enter
                           <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
 
-                        <p className="text-center text-xs text-muted-foreground/40 mt-4">
-                          {isSocial
-                            ? `Profile verified via ${user.authProvider === "google" || isSocialLogin ? "Google" : "Apple"}.`
-                            : "You'll need to verify your email before continuing."}
-                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setName("Demo Creator");
+                            setEmail("demo@orbit-quickcontent.com");
+                            setUser({ name: "Demo Creator", email: "demo@orbit-quickcontent.com", isVerified: true });
+                            if (selectedRole) login(selectedRole);
+                          }}
+                          className="w-full mt-3 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-semibold text-orbit-cyan transition-colors"
+                        >
+                          Instant Guest Demo Login
+                        </button>
                       </>
                     );
                   })()}

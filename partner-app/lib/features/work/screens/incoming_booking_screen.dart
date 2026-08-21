@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
-import '../../../core/theme.dart';
+import '../../../core/theme/orbit_theme.dart';
 import '../../../core/api_client.dart';
+import '../../../shared/widgets/orbit_button.dart';
+import '../../../shared/widgets/orbit_card.dart';
+import '../../../analytics/analytics_service.dart';
 
 class IncomingBookingScreen extends StatefulWidget {
   final Map<String, dynamic> dispatch;
@@ -14,34 +16,39 @@ class IncomingBookingScreen extends StatefulWidget {
   State<IncomingBookingScreen> createState() => _IncomingBookingScreenState();
 }
 
-class _IncomingBookingScreenState extends State<IncomingBookingScreen>
-    with TickerProviderStateMixin {
-  int _countdown = 45;
+class _IncomingBookingScreenState extends State<IncomingBookingScreen> {
+  final ValueNotifier<int> _countdown = ValueNotifier<int>(45);
   Timer? _timer;
   bool _isResponding = false;
-  late AnimationController _pulseController;
+  late final DateTime _receivedAt;
 
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    )..repeat(reverse: true);
+    _receivedAt = DateTime.now();
+    OrbitMotion.successHaptic();
+
+    final booking = widget.dispatch['booking'] as Map<String, dynamic>? ?? widget.dispatch;
+    partnerAnalytics.trackRequestReceived(
+      bookingId: booking['id']?.toString() ?? 'unknown',
+      earning: (booking['earning'] ?? booking['partnerSalary'] ?? 500) as int,
+      distanceKm: ((booking['distanceKm'] ?? 2.5) as num).toDouble(),
+    );
+
     _startTimer();
   }
 
   @override
   void dispose() {
     _timer?.cancel();
-    _pulseController.dispose();
+    _countdown.dispose();
     super.dispose();
   }
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (_countdown > 0) {
-        setState(() => _countdown--);
+      if (_countdown.value > 0) {
+        _countdown.value--;
       } else {
         t.cancel();
         if (mounted) _respond(accept: false);
@@ -54,211 +61,195 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen>
     setState(() => _isResponding = true);
     _timer?.cancel();
 
-    final booking = widget.dispatch['booking'] as Map<String, dynamic>? ?? {};
-    final bookingId = booking['id'] as String?;
+    final booking = widget.dispatch['booking'] as Map<String, dynamic>? ?? widget.dispatch;
+    final bookingId = booking['id']?.toString() ?? widget.dispatch['bookingId']?.toString();
     if (bookingId == null) {
       if (mounted) context.go('/work');
       return;
     }
 
+    final responseTimeMs = DateTime.now().difference(_receivedAt).inMilliseconds;
+
     try {
       if (accept) {
+        OrbitMotion.successHaptic();
+        partnerAnalytics.trackRequestAccepted(bookingId: bookingId, responseTimeMs: responseTimeMs);
         await partnerApiClient.post('/bookings/$bookingId/accept');
         if (mounted) context.go('/job/$bookingId');
       } else {
+        OrbitMotion.lightTap();
+        partnerAnalytics.trackRequestRejected(bookingId: bookingId, reason: 'manual_decline');
         await partnerApiClient.post('/bookings/$bookingId/decline');
         if (mounted) context.go('/work');
       }
-    } on DioException {
+    } on DioException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to respond. Please try again.')),
+          SnackBar(
+            content: Text(e.response?.data['message'] ?? 'Failed to respond. Job may no longer be available.'),
+            backgroundColor: OrbitColors.danger,
+          ),
         );
-        setState(() => _isResponding = false);
-        _startTimer();
+        context.go('/work');
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final booking = widget.dispatch['booking'] as Map<String, dynamic>? ?? {};
+    final booking = widget.dispatch['booking'] as Map<String, dynamic>? ?? widget.dispatch;
     final pkg = booking['package'] as Map<String, dynamic>? ?? {};
-    final payout = booking['partnerSalary'] ?? 700;
-    final progressFraction = _countdown / 45.0;
+    final packageName = pkg['name'] ?? booking['packageName'] ?? 'Professional Reel Shoot';
+    final payout = booking['earning'] ?? booking['partnerSalary'] ?? 500;
+    final distanceKm = booking['distanceKm'] ?? 2.5;
+    final clientArea = booking['address'] ?? booking['clientArea'] ?? 'Nearby Area (Within 3 km)';
 
     return Scaffold(
-      backgroundColor: OrbitPartnerTheme.background,
+      backgroundColor: OrbitColors.background,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: OrbitSpacing.space20, vertical: OrbitSpacing.space16),
           child: Column(
             children: [
-              const SizedBox(height: 24),
-              SizedBox(
-                width: 140,
-                height: 140,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      value: progressFraction,
-                      strokeWidth: 5,
-                      backgroundColor: OrbitPartnerTheme.surface,
-                      valueColor: AlwaysStoppedAnimation(
-                        _countdown > 15
-                            ? OrbitPartnerTheme.primary
-                            : _countdown > 5
-                                ? const Color(0xFFFFB347)
-                                : OrbitPartnerTheme.error,
-                      ),
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+              const SizedBox(height: OrbitSpacing.space16),
+
+              // ── Circular Isolated Countdown ─────────────────────────
+              ValueListenableBuilder<int>(
+                valueListenable: _countdown,
+                builder: (context, count, _) {
+                  final progress = count / 45.0;
+                  final color = count > 15
+                      ? OrbitColors.secondary
+                      : count > 5
+                          ? OrbitColors.warning
+                          : OrbitColors.danger;
+
+                  return SizedBox(
+                    width: 120,
+                    height: 120,
+                    child: Stack(
+                      alignment: Alignment.center,
                       children: [
-                        Text(
-                          '$_countdown',
-                          style: TextStyle(
-                            fontSize: 40,
-                            fontWeight: FontWeight.w800,
-                            color: _countdown > 15
-                                ? OrbitPartnerTheme.primary
-                                : _countdown > 5
-                                    ? const Color(0xFFFFB347)
-                                    : OrbitPartnerTheme.error,
-                          ),
+                        CircularProgressIndicator(
+                          value: progress,
+                          strokeWidth: 6,
+                          backgroundColor: OrbitColors.surfaceHighlight,
+                          valueColor: AlwaysStoppedAnimation<Color>(color),
                         ),
-                        Text('seconds', style: OrbitPartnerTheme.textTheme.bodySmall),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '$count',
+                              style: OrbitTypography.displayLarge.copyWith(
+                                color: color,
+                                fontSize: 36,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            Text('SECONDS', style: OrbitTypography.labelSmall.copyWith(fontSize: 9)),
+                          ],
+                        ),
                       ],
                     ),
-                  ],
-                ),
-              ).animate().scale(duration: 400.ms, curve: Curves.elasticOut),
+                  );
+                },
+              ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: OrbitSpacing.space24),
+              Text('NEW SHOOT REQUEST', style: OrbitTypography.headingLarge),
+              const SizedBox(height: 4),
+              Text('Client is ready for immediate shoot', style: OrbitTypography.bodyMedium),
 
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                decoration: BoxDecoration(
-                  gradient: OrbitPartnerTheme.partnerGradient,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  'NEW SHOOT REQUEST',
-                  style: OrbitPartnerTheme.textTheme.labelSmall?.copyWith(
-                    color: Colors.black,
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ).animate(delay: 200.ms).fadeIn(),
+              const SizedBox(height: OrbitSpacing.space24),
 
-              const SizedBox(height: 24),
-
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: OrbitPartnerTheme.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: OrbitPartnerTheme.primary.withValues(alpha: 0.4)),
-                ),
-                child: Column(
+              // ── Request Details Card ────────────────────────────────
+              Expanded(
+                child: ListView(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    OrbitCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(pkg['name'] ?? 'Shoot Request', style: OrbitPartnerTheme.textTheme.titleLarge),
-                              const SizedBox(height: 4),
-                              Text(pkg['focus'] ?? 'Professional Video Shoot', style: OrbitPartnerTheme.textTheme.bodySmall),
+                              Text('Guaranteed Payout', style: OrbitTypography.bodySmall),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: OrbitColors.success.withValues(alpha: 0.15),
+                                  borderRadius: OrbitRadius.roundedFull,
+                                ),
+                                child: Text(
+                                  'INSTANT PAY',
+                                  style: OrbitTypography.labelSmall.copyWith(color: OrbitColors.success),
+                                ),
+                              ),
                             ],
                           ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: OrbitPartnerTheme.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: OrbitPartnerTheme.primary.withValues(alpha: 0.4)),
+                          const SizedBox(height: OrbitSpacing.space8),
+                          Text('₹$payout', style: OrbitTypography.displayLarge.copyWith(color: OrbitColors.success)),
+                          const Divider(color: OrbitColors.borderSubtle, height: OrbitSpacing.space24),
+
+                          // Package info
+                          Row(
+                            children: [
+                              const Icon(Icons.videocam_rounded, size: 20, color: OrbitColors.secondary),
+                              const SizedBox(width: OrbitSpacing.space12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Package', style: OrbitTypography.labelSmall),
+                                    Text(packageName, style: OrbitTypography.titleSmall),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                          child: Text('₹$payout', style: const TextStyle(color: OrbitPartnerTheme.primary, fontWeight: FontWeight.w800, fontSize: 22)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    const Divider(color: OrbitPartnerTheme.outlineFaint),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: const [
-                        Icon(Icons.location_on_outlined, color: OrbitPartnerTheme.primary, size: 18),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Location shared on acceptance',
-                            style: TextStyle(color: Color(0xFFBBC9CF), fontSize: 13),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                          const SizedBox(height: OrbitSpacing.space16),
+
+                          // Location info
+                          Row(
+                            children: [
+                              const Icon(Icons.location_on_rounded, size: 20, color: OrbitColors.primaryLight),
+                              const SizedBox(width: OrbitSpacing.space12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Client Location', style: OrbitTypography.labelSmall),
+                                    Text(clientArea, style: OrbitTypography.bodyMedium),
+                                    const SizedBox(height: 2),
+                                    Text('$distanceKm km away • ~15 min travel time', style: OrbitTypography.bodySmall),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: const [
-                        Icon(Icons.schedule_outlined, color: OrbitPartnerTheme.textSecondary, size: 18),
-                        SizedBox(width: 8),
-                        Text('Immediate', style: TextStyle(color: Color(0xFFBBC9CF), fontSize: 13)),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ).animate(delay: 300.ms).fadeIn().slideY(begin: 0.2),
-
-              const Spacer(),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _isResponding ? null : () => _respond(accept: false),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        foregroundColor: OrbitPartnerTheme.error,
-                        side: BorderSide(color: OrbitPartnerTheme.error.withValues(alpha: 0.6)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                      child: const Text('Decline', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: _isResponding ? null : () => _respond(accept: true),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: OrbitPartnerTheme.primary,
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                      child: _isResponding
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
-                          : const Text('Accept Shoot', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                    ),
-                  ),
-                ],
-              ).animate(delay: 400.ms).fadeIn().slideY(begin: 0.2),
-
-              const SizedBox(height: 16),
-              Text(
-                'Auto-decline in $_countdown seconds',
-                style: OrbitPartnerTheme.textTheme.bodySmall?.copyWith(color: OrbitPartnerTheme.textSecondary),
-                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+
+              // ── Thumb Zone Actions (Von Restorff Single Dominant CTA) ─
+              const SizedBox(height: OrbitSpacing.space16),
+              OrbitPrimaryButton(
+                label: 'ACCEPT JOB',
+                icon: Icons.check_circle_outline_rounded,
+                isLoading: _isResponding,
+                onPressed: () => _respond(accept: true),
+              ),
+              const SizedBox(height: OrbitSpacing.space12),
+              OrbitSecondaryButton(
+                label: 'Decline',
+                textColor: OrbitColors.textMuted,
+                onPressed: _isResponding ? null : () => _respond(accept: false),
+              ),
+              const SizedBox(height: OrbitSpacing.space8),
             ],
           ),
         ),

@@ -14,10 +14,7 @@ const optionalEnv = [
   'REDIS_URL',
   'VALKEY_URL',
   'QSTASH_TOKEN',
-  'RAZORPAY_KEY_ID',
-  'RAZORPAY_KEY_SECRET',
-  'CASHFREE_APP_ID',
-  'CASHFREE_SECRET_KEY',
+  'ZAVU_API_KEY',
 ];
 
 export function validateEnvironment(): { isValid: boolean; missing: string[] } {

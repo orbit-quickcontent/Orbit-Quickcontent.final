@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../auth/providers/auth_provider.dart';
+import '../../../core/api_client.dart';
+import '../../../core/theme/orbit_theme.dart';
+import '../../../shared/widgets/orbit_button.dart';
+import '../../../shared/widgets/orbit_card.dart';
+import '../../../shared/widgets/orbit_loading.dart';
+import '../../../shared/widgets/orbit_empty_state.dart';
+import '../../../analytics/analytics_service.dart';
 
 class PackagesScreen extends ConsumerStatefulWidget {
   const PackagesScreen({super.key});
@@ -11,444 +17,253 @@ class PackagesScreen extends ConsumerStatefulWidget {
 }
 
 class _PackagesScreenState extends ConsumerState<PackagesScreen> {
-  void _bookPackage(Map<String, dynamic> pkg) {
-    context.push('/location', extra: pkg['id'] ?? 'pkg_creator_personalized');
+  List<Map<String, dynamic>> _packages = [];
+  String? _selectedPackageId = 'pkg_standard';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    analytics.trackScreenView('packages_screen');
+    _loadPackages();
+  }
+
+  Future<void> _loadPackages() async {
+    try {
+      final res = await apiClient.get('/packages');
+      final pkgs = List<Map<String, dynamic>>.from(res.data ?? []);
+      if (mounted) {
+        setState(() {
+          _packages = pkgs;
+          _selectedPackageId = pkgs.isNotEmpty ? pkgs.first['id'] : null;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      // Fallback default packages if offline or empty
+      if (mounted) {
+        setState(() {
+          _packages = [
+            {
+              'id': 'pkg_quick',
+              'name': 'Quick Reel',
+              'tier': 'QUICK',
+              'priceDisplay': 999,
+              'focus': '1 High-Impact 9:16 Reel',
+              'deliveryTime': '60 min delivery',
+              'features': ['30-second reel', 'Color grading', 'Trending audio sync', 'Fast delivery'],
+              'popular': false,
+            },
+            {
+              'id': 'pkg_standard',
+              'name': 'Creator Standard',
+              'tier': 'STANDARD',
+              'priceDisplay': 1999,
+              'focus': '3 Polished Reels + B-Roll',
+              'deliveryTime': '120 min delivery',
+              'features': ['3 Short-form Reels', 'Pro Color Grading', 'Motion Captions', '4K Export'],
+              'popular': true,
+            },
+            {
+              'id': 'pkg_premium',
+              'name': 'Brand Premium',
+              'tier': 'PREMIUM',
+              'priceDisplay': 4999,
+              'focus': '6 Cinematic Reels + Brand Kit',
+              'deliveryTime': 'Same Day delivery',
+              'features': ['6 Master Reels', 'Sound Design & VO', 'Custom Brand Kit', 'Raw Footage Access'],
+              'popular': false,
+            },
+          ];
+          _selectedPackageId = 'pkg_standard';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _onContinue() {
+    final pkgId = _selectedPackageId ?? 'pkg_standard';
+    final selectedPkg = _packages.cast<Map<String, dynamic>?>().firstWhere(
+          (p) => p != null && p['id'] == pkgId,
+          orElse: () => {'id': pkgId, 'tier': 'STANDARD'},
+        );
+    OrbitMotion.lightTap();
+    analytics.trackBookingStarted(packageId: pkgId, tier: selectedPkg?['tier']?.toString());
+    context.push('/location-picker', extra: pkgId);
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authStateProvider);
-    final userName = user.name?.isNotEmpty == true ? user.name! : 'Test User';
-    final userInitials = userName.isNotEmpty ? userName.split(' ').map((n) => n[0]).take(2).join('').toUpperCase() : 'TU';
-
     return Scaffold(
-      backgroundColor: const Color(0xFF131313),
+      backgroundColor: OrbitColors.background,
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+          onPressed: () => context.pop(),
+        ),
+        title: Text('Select Package', style: OrbitTypography.titleLarge),
+      ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // ── Top App Bar ────────────────────────────────────────────────
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
+          children: [
+            // ── Step Indicator Header ─────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: OrbitSpacing.space20, vertical: OrbitSpacing.space8),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xFF3C494E)),
-                          color: const Color(0xFF2A2A2A),
-                        ),
-                        child: Center(
-                          child: Text(
-                            userInitials,
-                            style: const TextStyle(
-                              color: Color(0xFFA5E7FF),
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
+                  Expanded(
+                    child: Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        gradient: OrbitColors.primaryGradient,
+                        borderRadius: OrbitRadius.roundedFull,
                       ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Text(
-                                'GOOD AFTERNOON',
-                                style: TextStyle(
-                                  color: Color(0xFFBBC9CF),
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF6E208C),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: const Text(
-                                  'CREATOR',
-                                  style: TextStyle(
-                                    color: Color(0xFFE498FF),
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Hi, $userName',
-                            style: const TextStyle(
-                              color: Color(0xFFA5E7FF),
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              fontFamily: 'Montserrat',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
-                  Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF201F1F),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.search, color: Color(0xFFE5E2E1), size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: OrbitColors.surfaceHighlight,
+                        borderRadius: OrbitRadius.roundedFull,
                       ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () => context.push('/notifications'),
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF201F1F),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.notifications_none, color: Color(0xFFE5E2E1), size: 18),
-                        ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: OrbitColors.surfaceHighlight,
+                        borderRadius: OrbitRadius.roundedFull,
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF201F1F),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.expand_more, color: Color(0xFFE5E2E1), size: 18),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 24),
-
-              // ── Hero Section ───────────────────────────────────────────────
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: const Color(0xFF00D2FF).withValues(alpha: 0.3)),
-                  color: const Color(0xFF00D2FF).withValues(alpha: 0.08),
-                ),
-                child: const Text(
-                  'CHOOSE YOUR PACKAGE',
-                  style: TextStyle(
-                    color: Color(0xFF00D2FF),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 2,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              RichText(
-                textAlign: TextAlign.center,
-                text: const TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'The Orbit ',
-                      style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    TextSpan(
-                      text: 'Edge.',
-                      style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        fontStyle: FontStyle.italic,
-                        color: Color(0xFF00D2FF),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  'Select the package that fits your needs. Both include professional express editing delivered in 60-120 minutes.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Color(0xFFBBC9CF),
-                    fontSize: 13,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ── Package 1: Personalized ────────────────────────────────────
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF18181B).withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Personalized',
-                      style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800, fontFamily: 'Montserrat'),
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      'Individual creators, personal events',
-                      style: TextStyle(color: Color(0xFF859399), fontSize: 13),
-                    ),
-                    const SizedBox(height: 16),
-
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: const [
-                        Text('₹1,999', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w800, fontFamily: 'Montserrat')),
-                        Text(' /session', style: TextStyle(color: Color(0xFF859399), fontSize: 13)),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-                    const Divider(color: Color(0xFF27272A)),
-                    const SizedBox(height: 16),
-
-                    _checkFeature('1 cinematic reel (30-60 sec)'),
-                    _checkFeature('Professional color grading'),
-                    _checkFeature('Background score licensing'),
-                    _checkFeature('Same-day delivery (60-90 mins)'),
-                    _checkFeature('1 revision round'),
-                    _checkFeature('Ideal for active content creators'),
-
-                    const SizedBox(height: 24),
-
-                    GestureDetector(
-                      onTap: () => _bookPackage({'id': 'pkg_creator_personalized', 'name': 'Personalized'}),
-                      child: Container(
-                        width: double.infinity,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFF3C494E)),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'Book Now',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // ── Package 2: Professional (UGC) - Most Popular ───────────────
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1C1B1B),
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: const Color(0xFF00D2FF).withValues(alpha: 0.3)),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(28),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFEDB1FF),
-                            borderRadius: BorderRadius.only(bottomLeft: Radius.circular(20)),
-                          ),
-                          child: const Text(
-                            'MOST POPULAR',
-                            style: TextStyle(
-                              color: Color(0xFF520070),
-                              fontWeight: FontWeight.w900,
-                              fontSize: 9,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Professional (UGC)',
-                              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800, fontFamily: 'Montserrat'),
-                            ),
-                            const SizedBox(height: 2),
-                            const Text(
-                              'Brands, businesses, template creators',
-                              style: TextStyle(color: Color(0xFF859399), fontSize: 13),
-                            ),
-                            const SizedBox(height: 16),
-
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
-                              children: const [
-                                Text('₹4,999', style: TextStyle(color: Color(0xFF00D2FF), fontSize: 32, fontWeight: FontWeight.w800, fontFamily: 'Montserrat')),
-                                Text(' /session', style: TextStyle(color: Color(0xFF859399), fontSize: 13)),
-                              ],
-                            ),
-
-                            const SizedBox(height: 16),
-                            const Divider(color: Color(0xFF27272A)),
-                            const SizedBox(height: 16),
-
-                            _checkFeature('3 cinematic reels (30-60 sec each)'),
-                            _checkFeature('Brand DNA integration (logo, palette, font)'),
-                            _checkFeature('Professional color grading & stabilization'),
-                            _checkFeature('Licensed premium sound scores'),
-                            _checkFeature('Same-day express delivery (90-120 mins)'),
-                            _checkFeature('2 revision rounds with master editor'),
-                            _checkFeature('Dedicated creator-editor sync'),
-
-                            const SizedBox(height: 24),
-
-                            GestureDetector(
-                              onTap: () => _bookPackage({'id': 'pkg_creator_ugc_pro', 'name': 'Professional (UGC)'}),
-                              child: Container(
-                                width: double.infinity,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFF00D2FF), Color(0xFF6E208C)],
-                                    begin: Alignment.centerLeft,
-                                    end: Alignment.centerRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(14),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFF00D2FF).withValues(alpha: 0.3),
-                                      blurRadius: 20,
-                                    ),
-                                  ],
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    'Book Now',
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ── Trust Badges Section ───────────────────────────────────────
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0E0E0E),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: const Color(0xFF3C494E).withValues(alpha: 0.4),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: const [
-                        Icon(Icons.verified_user_outlined, color: Color(0xFF00D2FF), size: 18),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'All videographers on the Orbit network match certified filming standards.',
-                            style: TextStyle(color: Color(0xFFBBC9CF), fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: const [
-                        Icon(Icons.lock_outline, color: Color(0xFFEDB1FF), size: 18),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'PCI compliance mock checkout secure links.',
-                            style: TextStyle(color: Color(0xFFBBC9CF), fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 32),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _checkFeature(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          const Icon(Icons.check, color: Color(0xFF00D2FF), size: 16),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(color: Color(0xFFBBC9CF), fontSize: 13),
             ),
-          ),
-        ],
+
+            const SizedBox(height: OrbitSpacing.space12),
+
+            // ── Packages List ─────────────────────────────────────────
+            Expanded(
+              child: _isLoading
+                  ? const Padding(
+                      padding: EdgeInsets.all(OrbitSpacing.space20),
+                      child: Column(
+                        children: [
+                          OrbitLoadingCard(height: 140),
+                          OrbitLoadingCard(height: 140),
+                          OrbitLoadingCard(height: 140),
+                        ],
+                      ),
+                    )
+                  : _packages.isEmpty
+                      ? OrbitEmptyState(
+                          icon: Icons.inventory_2_outlined,
+                          title: 'No packages available',
+                          description: 'Please check your connection and try again.',
+                          ctaLabel: 'Retry',
+                          onCtaPressed: _loadPackages,
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.symmetric(horizontal: OrbitSpacing.space20, vertical: OrbitSpacing.space12),
+                          itemCount: _packages.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: OrbitSpacing.space16),
+                          itemBuilder: (context, index) {
+                            final pkg = _packages[index];
+                            final isSelected = pkg['id'] == _selectedPackageId;
+                            final isPopular = pkg['popular'] == true;
+
+                            return OrbitCard(
+                              onTap: () {
+                                OrbitMotion.selectionChanged();
+                                setState(() => _selectedPackageId = pkg['id']);
+                              },
+                              backgroundColor: isSelected ? OrbitColors.surfaceElevated : OrbitColors.surface,
+                              border: Border.all(
+                                color: isSelected ? OrbitColors.secondary : OrbitColors.borderSubtle,
+                                width: isSelected ? 1.5 : 1.0,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                                            color: isSelected ? OrbitColors.secondary : OrbitColors.textDisabled,
+                                            size: 22,
+                                          ),
+                                          const SizedBox(width: OrbitSpacing.space12),
+                                          Text(pkg['name'] ?? '', style: OrbitTypography.titleMedium),
+                                        ],
+                                      ),
+                                      if (isPopular)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            gradient: OrbitColors.primaryGradient,
+                                            borderRadius: OrbitRadius.roundedFull,
+                                          ),
+                                          child: Text(
+                                            'RECOMMENDED',
+                                            style: OrbitTypography.labelSmall.copyWith(fontSize: 9, color: Colors.white),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: OrbitSpacing.space12),
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                                    textBaseline: TextBaseline.alphabetic,
+                                    children: [
+                                      Text(
+                                        '₹${pkg['priceDisplay'] ?? 999}',
+                                        style: OrbitTypography.displayLarge.copyWith(fontSize: 28),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text('• ${pkg['deliveryTime'] ?? 'Same Day'}', style: OrbitTypography.bodySmall),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(pkg['focus'] ?? '', style: OrbitTypography.bodySmall.copyWith(color: OrbitColors.textPrimary)),
+                                  if (pkg['features'] is List) ...[
+                                    const Divider(color: OrbitColors.borderSubtle, height: OrbitSpacing.space20),
+                                    ...((pkg['features'] as List).take(3).map((f) => Padding(
+                                          padding: const EdgeInsets.only(bottom: 4),
+                                          child: Row(
+                                            children: [
+                                              const Icon(Icons.check, size: 14, color: OrbitColors.success),
+                                              const SizedBox(width: 6),
+                                              Expanded(child: Text(f.toString(), style: OrbitTypography.bodySmall)),
+                                            ],
+                                          ),
+                                        ))),
+                                  ],
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+            ),
+
+            // ── Single Dominant CTA (Thumb Zone) ──────────────────────
+            Padding(
+              padding: const EdgeInsets.all(OrbitSpacing.space20),
+              child: OrbitPrimaryButton(
+                label: 'CONTINUE TO LOCATION',
+                icon: Icons.arrow_forward_rounded,
+                onPressed: _onContinue,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

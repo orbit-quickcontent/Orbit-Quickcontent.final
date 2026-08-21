@@ -10,7 +10,7 @@ export const logger = pino({
       'email', 'phone', 'password', 'passwordHash', 'otpHash', 'otp',
       'encryptedAccountNumber', 'panNumber', 'JWT', 'token', 'refreshToken',
       'authorization', 'req.headers.authorization', 'CASHFREE_CLIENT_SECRET',
-      'RAZORPAY_KEY_SECRET', 'SMTP_PASS',
+      'SMTP_PASS', 'ZAVU_API_KEY',
     ],
     censor: '[REDACTED]',
   },

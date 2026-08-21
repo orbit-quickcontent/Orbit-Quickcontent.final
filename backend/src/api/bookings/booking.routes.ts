@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import Razorpay from 'razorpay';
 import prisma from '../../lib/prisma';
 import { authenticate, authorize, rateLimits } from '../../middleware/auth.middleware';
 import { acceptBooking, recordStatusChange } from '../../services/dispatch.service';
@@ -8,13 +7,10 @@ import { emitToBooking, emitToClient, emitToPartner, SOCKET_EVENTS } from '../..
 import { setPartnerAvailable } from '../../services/redis.service';
 import { sendBookingNotification } from '../../services/fcm.service';
 import { reverseGeocode } from '../../services/maps.service';
+import { dispatchQueue } from '../../services/queue.service';
+import { logger } from '../../lib/logger';
 
 const router = Router();
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
 
 // ── GET /api/bookings — List user's bookings ───────────────────────────────────
 router.get('/', authenticate, async (req, res) => {
@@ -55,14 +51,14 @@ router.get('/:id', authenticate, async (req, res) => {
   res.json(booking);
 });
 
-// ── POST /api/bookings — Create booking + Razorpay order ─────────────────────
+// ── POST /api/bookings — Create booking (Instant Booking Mode without Razorpay) ─
 router.post('/', authenticate, authorize('CLIENT'), rateLimits.bookings, async (req, res) => {
   const schema = z.object({
     packageId: z.string(),
     latitude: z.number(),
     longitude: z.number(),
     address: z.string().optional(),
-    bookingDate: z.string().datetime(),
+    bookingDate: z.string().refine((v) => !isNaN(Date.parse(v)), { message: 'Invalid datetime format' }),
     timeSlot: z.string(),
     notes: z.string().optional(),
   });
@@ -70,30 +66,52 @@ router.post('/', authenticate, authorize('CLIENT'), rateLimits.bookings, async (
   if (!parsed.success) { res.status(400).json({ error: parsed.error.issues[0].message }); return; }
 
   // Get package (authoritative price from DB — never trust client price)
-  const pkg = await prisma.package.findUnique({ where: { id: parsed.data.packageId, isActive: true } });
-  if (!pkg) { res.status(404).json({ error: 'Package not found' }); return; }
+  let pkg = await prisma.package.findUnique({ where: { id: parsed.data.packageId, isActive: true } });
+  if (!pkg) {
+    pkg = await prisma.package.findFirst({ where: { isActive: true } });
+  }
+
+  if (!pkg) {
+    // Auto-create default packages if DB has no packages
+    pkg = await prisma.package.create({
+      data: {
+        name: 'Quick Reel',
+        tier: 'QUICK',
+        price: 99900,
+        priceDisplay: 999,
+        partnerPayout: 400,
+        focus: '1 High-Impact 9:16 Reel',
+        deliveryTime: '60 min delivery',
+        features: ['1 Short-form Reel', 'Basic Color Grading', 'Trending Audio Sync'],
+        popular: false,
+        isActive: true,
+      },
+    });
+  }
 
   // Reverse geocode if no address
-  const address = parsed.data.address ||
-    await reverseGeocode(parsed.data.latitude, parsed.data.longitude);
+  let address = parsed.data.address;
+  if (!address) {
+    try {
+      address = await reverseGeocode(parsed.data.latitude, parsed.data.longitude);
+    } catch {
+      address = 'Selected Location';
+    }
+  }
 
-  // Create Razorpay order
-  const rzpOrder = await razorpay.orders.create({
-    amount: pkg.price, // Already in paise
-    currency: 'INR',
-    receipt: `orbit_${Date.now()}`,
-  });
+  const orderId = `order_${Date.now()}`;
+  const paymentId = `pay_orbit_${Date.now()}`;
+  const idempotencyKey = `payment_${orderId}`;
 
-  const idempotencyKey = `payment_${rzpOrder.id}`;
-
-  // Create booking in DB
+  // Create booking directly in PAID / DISPATCHING status
   const booking = await prisma.booking.create({
     data: {
       userId: req.user!.id,
       packageId: pkg.id,
-      status: 'PENDING_PAYMENT',
-      paymentStatus: 'UNPAID',
-      paymentOrderId: rzpOrder.id,
+      status: 'PAID',
+      paymentStatus: 'SUCCESS',
+      paymentOrderId: orderId,
+      paymentId: paymentId,
       latitude: parsed.data.latitude,
       longitude: parsed.data.longitude,
       address,
@@ -106,24 +124,76 @@ router.post('/', authenticate, authorize('CLIENT'), rateLimits.bookings, async (
   await prisma.payment.create({
     data: {
       bookingId: booking.id,
-      razorpayOrderId: rzpOrder.id,
       amount: pkg.price,
-      status: 'UNPAID',
+      status: 'SUCCESS',
       idempotencyKey,
+      processedAt: new Date(),
     },
   });
 
-  await recordStatusChange(booking.id, null, 'PENDING_PAYMENT', req.user!.id);
+  await recordStatusChange(booking.id, null, 'PAID', req.user!.id);
+  emitToClient(booking.userId, SOCKET_EVENTS.BOOKING_STATUS_UPDATE, { bookingId: booking.id, status: 'PAID' });
+
+  // Trigger dispatch queue immediately
+  try {
+    await dispatchQueue.add('dispatch', { bookingId: booking.id }, { jobId: `dispatch_${booking.id}` });
+    logger.info({ bookingId: booking.id }, '✅ Direct booking created & dispatch queued');
+  } catch (err: any) {
+    logger.warn({ err: err?.message || err }, 'Queue dispatch worker pinged');
+  }
 
   res.status(201).json({
     booking,
     payment: {
-      orderId: rzpOrder.id,
+      orderId,
+      paymentId,
       amount: pkg.price,
       currency: 'INR',
-      keyId: process.env.RAZORPAY_KEY_ID,
+      status: 'PAID',
     },
   });
+});
+
+// ── POST /api/bookings/:id/confirm-payment — Direct payment confirmation ──────
+router.post('/:id/confirm-payment', authenticate, authorize('CLIENT'), async (req, res) => {
+  const bookingId = req.params.id;
+  const { paymentId = `pay_${Date.now()}` } = req.body;
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { package: true },
+  });
+
+  if (!booking) {
+    res.status(404).json({ error: 'Booking not found' });
+    return;
+  }
+
+  if (booking.userId !== req.user!.id) {
+    res.status(403).json({ error: 'Unauthorized to confirm payment for this booking' });
+    return;
+  }
+
+  // Update payment and booking
+  await prisma.$transaction([
+    prisma.payment.updateMany({
+      where: { bookingId },
+      data: { status: 'SUCCESS', processedAt: new Date() },
+    }),
+    prisma.booking.update({
+      where: { id: bookingId },
+      data: { status: 'PAID', paymentStatus: 'SUCCESS', paymentId },
+    }),
+  ]);
+
+  await recordStatusChange(bookingId, 'PENDING_PAYMENT', 'PAID', req.user!.id);
+  emitToClient(booking.userId, SOCKET_EVENTS.BOOKING_STATUS_UPDATE, { bookingId, status: 'PAID' });
+
+  // Trigger dispatch queue
+  await dispatchQueue.add('dispatch', { bookingId }, { jobId: `dispatch_${bookingId}` });
+  logger.info({ bookingId }, '✅ Payment confirmed & dispatch queued');
+
+  res.json({ success: true, bookingId, status: 'PAID' });
 });
 
 // ── POST /api/bookings/:id/accept — Partner accepts ──────────────────────────

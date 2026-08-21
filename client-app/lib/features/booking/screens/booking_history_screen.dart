@@ -96,7 +96,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                               Text('₹${pkg['priceDisplay'] ?? ''}', style: OrbitClientTheme.textTheme.bodySmall?.copyWith(color: OrbitClientTheme.onSurfaceVariant)),
                             ]),
                           ]),
-                        ).animate(delay: (i * 60).ms).fadeIn().slideY(begin: 0.1),
+                        ),
                       );
                     },
                   ),

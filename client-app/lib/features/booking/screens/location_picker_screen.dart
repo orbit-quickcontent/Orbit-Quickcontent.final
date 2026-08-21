@@ -236,14 +236,18 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                       Expanded(
                         flex: 2,
                         child: OrbitGradientButton(
-                          label: 'Confirm Location',
+                          label: 'Proceed to Review',
                           height: 46,
-                          onPressed: _address.isEmpty ? null : () {
+                          onPressed: () {
+                            OrbitMotion.lightTap();
+                            final confirmedAddress = _address.isNotEmpty && !_address.startsWith('Updating')
+                                ? _address
+                                : 'Connaught Place, New Delhi';
                             context.push('/review', extra: {
                               'packageId': widget.packageId,
                               'latitude': _selectedLocation.latitude,
                               'longitude': _selectedLocation.longitude,
-                              'address': _address,
+                              'address': confirmedAddress,
                             });
                           },
                         ),

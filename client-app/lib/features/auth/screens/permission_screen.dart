@@ -69,8 +69,8 @@ class _PermissionScreenState extends State<PermissionScreen> {
                 ),
               )
               .animate()
-              .scale(begin: const Offset(0.5, 0.5), duration: 500.ms, curve: Curves.easeOutBack)
-              .fadeIn(),
+              .scale(begin: const Offset(0.7, 0.7), duration: 300.ms, curve: Curves.easeOutCubic)
+              .fadeIn(duration: 250.ms),
 
               const SizedBox(height: 40),
 
@@ -82,7 +82,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
                   color: OrbitClientTheme.onSurface,
                 ),
               )
-              .animate(delay: 200.ms).fadeIn().slideY(begin: 0.2),
+              .animate(delay: 80.ms).fadeIn(duration: 250.ms).slideY(begin: 0.08, duration: 250.ms, curve: Curves.easeOutCubic),
 
               const SizedBox(height: 16),
 
@@ -93,7 +93,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
                   color: OrbitClientTheme.onSurfaceVariant,
                 ),
               )
-              .animate(delay: 400.ms).fadeIn().slideY(begin: 0.2),
+              .animate(delay: 140.ms).fadeIn(duration: 250.ms).slideY(begin: 0.08, duration: 250.ms, curve: Curves.easeOutCubic),
 
               const Spacer(),
 
@@ -121,7 +121,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                 ),
-              ).animate(delay: 600.ms).fadeIn().slideY(begin: 0.2),
+              ).animate(delay: 180.ms).fadeIn(duration: 250.ms).slideY(begin: 0.08, duration: 250.ms, curve: Curves.easeOutCubic),
 
               const SizedBox(height: 16),
 
@@ -135,7 +135,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
                     fontSize: 16,
                   ),
                 ),
-              ).animate(delay: 700.ms).fadeIn(),
+              ).animate(delay: 220.ms).fadeIn(duration: 250.ms),
             ],
           ),
         ),

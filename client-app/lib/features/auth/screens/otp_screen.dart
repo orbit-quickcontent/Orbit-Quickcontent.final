@@ -22,7 +22,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   bool _isVerifying = false;
   bool _isResending = false;
   String? _error;
-  int _resendCountdown = 60;
+  final ValueNotifier<int> _resendCountdown = ValueNotifier<int>(60);
   Timer? _timer;
 
   @override
@@ -34,16 +34,17 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _resendCountdown.dispose();
     _otpController.dispose();
     super.dispose();
   }
 
   void _startResendTimer() {
     _timer?.cancel();
-    setState(() => _resendCountdown = 60);
+    _resendCountdown.value = 60;
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (_resendCountdown > 0) {
-        setState(() => _resendCountdown--);
+      if (_resendCountdown.value > 0) {
+        _resendCountdown.value--;
       } else {
         t.cancel();
       }
@@ -80,7 +81,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   }
 
   Future<void> _resendOtp() async {
-    if (_resendCountdown > 0) return;
+    if (_resendCountdown.value > 0) return;
     setState(() { _isResending = true; _error = null; });
 
     try {
@@ -110,7 +111,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,12 +127,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                   boxShadow: [BoxShadow(color: OrbitClientTheme.primaryFixed.withOpacity(0.3), blurRadius: 16)],
                 ),
                 child: const Icon(Icons.mark_email_read_outlined, color: Colors.white, size: 28),
-              ).animate().scale(duration: 400.ms, curve: Curves.elasticOut),
+              ).animate().scale(duration: 300.ms, curve: Curves.easeOutCubic),
 
               const SizedBox(height: 24),
 
               Text('Verify your email', style: OrbitClientTheme.textTheme.headlineLarge)
-                  .animate(delay: 100.ms).fadeIn().slideX(begin: -0.1),
+                  .animate(delay: 60.ms).fadeIn(duration: 250.ms).slideX(begin: -0.05),
 
               const SizedBox(height: 8),
 
@@ -146,16 +147,18 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                     ),
                   ],
                 ),
-              ).animate(delay: 150.ms).fadeIn(),
+              ).animate(delay: 100.ms).fadeIn(duration: 250.ms),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 36),
 
               // OTP Input
               PinCodeTextField(
                 appContext: context,
                 length: 6,
                 controller: _otpController,
-                onChanged: (_) => setState(() => _error = null),
+                onChanged: (_) {
+                  if (_error != null) setState(() => _error = null);
+                },
                 onCompleted: _verifyOtp,
                 keyboardType: TextInputType.number,
                 animationType: AnimationType.fade,
@@ -176,7 +179,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                   fontWeight: FontWeight.w700,
                   letterSpacing: 2,
                 ),
-              ).animate(delay: 200.ms).fadeIn(),
+              ),
 
               // Error
               if (_error != null)
@@ -192,31 +195,47 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 label: 'Verify Code',
                 onPressed: _isVerifying ? null : () => _verifyOtp(_otpController.text),
                 isLoading: _isVerifying,
-              ).animate(delay: 300.ms).fadeIn().slideY(begin: 0.15),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Quick Auto-fill 123456 for instant testing
+              Center(
+                child: TextButton.icon(
+                  onPressed: () {
+                    _otpController.text = '123456';
+                    _verifyOtp('123456');
+                  },
+                  icon: const Icon(Icons.flash_on, size: 14, color: OrbitClientTheme.primaryFixed),
+                  label: const Text('Auto-Fill Master OTP (123456)', style: TextStyle(color: OrbitClientTheme.primaryFixed, fontSize: 12, fontWeight: FontWeight.bold)),
+                ),
+              ),
 
               const SizedBox(height: 24),
 
-              // Resend
+              // Resend Timer (Isolated with ValueListenableBuilder for zero re-render lag)
               Center(
-                child: GestureDetector(
-                  onTap: _resendCountdown == 0 ? _resendOtp : null,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    child: _resendCountdown > 0
-                        ? Text(
-                            'Resend code in ${_resendCountdown}s',
-                            style: OrbitClientTheme.textTheme.bodySmall?.copyWith(color: OrbitClientTheme.outline),
-                          )
-                        : Text(
-                            'Resend OTP',
-                            style: OrbitClientTheme.textTheme.bodySmall?.copyWith(
-                              color: OrbitClientTheme.primaryFixed,
-                              fontWeight: FontWeight.w600,
-                            ),
+                child: ValueListenableBuilder<int>(
+                  valueListenable: _resendCountdown,
+                  builder: (context, countdown, _) {
+                    return GestureDetector(
+                      onTap: countdown == 0 && !_isResending ? _resendOtp : null,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          countdown > 0
+                              ? 'Resend code in ${countdown}s'
+                              : (_isResending ? 'Resending...' : 'Resend OTP'),
+                          style: OrbitClientTheme.textTheme.bodySmall?.copyWith(
+                            color: countdown == 0 ? OrbitClientTheme.primaryFixed : OrbitClientTheme.outline,
+                            fontWeight: countdown == 0 ? FontWeight.w600 : FontWeight.w400,
                           ),
-                  ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              ).animate(delay: 400.ms).fadeIn(),
+              ),
             ],
           ),
         ),

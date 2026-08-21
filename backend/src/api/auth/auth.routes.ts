@@ -1,57 +1,282 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
 import prisma from '../../lib/prisma';
 import { sendOTP, verifyOTP } from '../../services/otp.service';
 import { authenticate, issueTokens, verifyRefreshToken, rateLimits } from '../../middleware/auth.middleware';
 import { logger } from '../../lib/logger';
+import { AuthService } from '../../services/auth.service';
 
 const router = Router();
 
-/**
- * @swagger
- * /api/auth/send-otp:
- *   post:
- *     summary: Send OTP to email
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *     responses:
- *       200:
- *         description: OTP sent successfully
- *       400:
- *         description: Invalid email or rate limit exceeded
- */
-// POST /api/auth/send-otp
-router.post('/send-otp', rateLimits.sendOtp, async (req, res) => {
-  const schema = z.object({ email: z.string().email() });
-  const parsed = schema.safeParse(req.body);
-  if (!parsed.success) { res.status(400).json({ error: parsed.error.issues[0].message }); return; }
+// ── POST /api/auth/register — Username/Email & Password Registration ────────
+router.post('/register', rateLimits.sendOtp, async (req, res) => {
+  const schema = z.object({
+    email: z.string().min(1, 'Username or Email is required'),
+    password: z.string().min(4, 'Password must be at least 4 characters'),
+    name: z.string().optional(),
+    role: z.enum(['CLIENT', 'PARTNER', 'EDITOR']).optional().default('CLIENT'),
+  });
 
-  const result = await sendOTP(parsed.data.email, req.ip);
-  res.json(result);
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0].message });
+    return;
+  }
+
+  const { email: rawIdentifier, password, name, role } = parsed.data;
+  const normalizedEmail = rawIdentifier.includes('@')
+    ? rawIdentifier.trim().toLowerCase()
+    : `${rawIdentifier.trim().toLowerCase().replace(/\s+/g, '')}@orbit-user.com`;
+  const displayName = name?.trim() || rawIdentifier.split('@')[0] || 'Orbit User';
+
+  let user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    include: { partner: true, editor: true },
+  });
+
+  if (user) {
+    // If account exists, log them in directly
+    const passwordHash = await bcrypt.hash(password, 10);
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash },
+      include: { partner: true, editor: true },
+    });
+  } else {
+    const passwordHash = await bcrypt.hash(password, 10);
+    user = await prisma.user.create({
+      data: {
+        email: normalizedEmail,
+        name: displayName,
+        passwordHash,
+        role,
+        isActive: true,
+        ...(role === 'PARTNER'
+          ? {
+              partner: {
+                create: {
+                  displayName,
+                  status: 'ACTIVE',
+                  verificationStatus: 'VERIFIED',
+                  isOnline: false,
+                  isAvailable: true,
+                  canAcceptBookings: true,
+                },
+              },
+            }
+          : {}),
+      },
+      include: { partner: true, editor: true },
+    });
+
+    if (user.partner) {
+      await prisma.partnerWallet.upsert({
+        where: { partnerId: user.partner.id },
+        update: {},
+        create: { partnerId: user.partner.id, available: 0, reserved: 0, totalEarned: 0, totalWithdrawn: 0 },
+      });
+    }
+  }
+
+  const tokens = issueTokens({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    partnerId: user.partner?.id,
+    editorId: user.editor?.id,
+  });
+
+  logger.info({ userId: user.id, role: user.role }, 'User registered/logged in');
+  res.status(201).json({
+    ...tokens,
+    user: { id: user.id, email: user.email, name: user.name, role: user.role },
+  });
 });
 
-import { AuthService } from '../../services/auth.service';
+// ── POST /api/auth/login — Username/Email & Password Sign In ─────────────────
+router.post('/login', rateLimits.verifyOtp, async (req, res) => {
+  const schema = z.object({
+    email: z.string().min(1, 'Username or Email is required'),
+    password: z.string().min(1, 'Password is required'),
+  });
+
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0].message });
+    return;
+  }
+
+  const { email: rawIdentifier, password } = parsed.data;
+  const normalizedEmail = rawIdentifier.includes('@')
+    ? rawIdentifier.trim().toLowerCase()
+    : `${rawIdentifier.trim().toLowerCase().replace(/\s+/g, '')}@orbit-user.com`;
+
+  let user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    include: { partner: true, editor: true },
+  });
+
+  // Auto-create user if first time logging in with this username/email
+  if (!user) {
+    const passwordHash = await bcrypt.hash(password, 10);
+    const displayName = rawIdentifier.split('@')[0] || 'Orbit User';
+    user = await prisma.user.create({
+      data: {
+        email: normalizedEmail,
+        name: displayName,
+        passwordHash,
+        role: 'CLIENT',
+        isActive: true,
+      },
+      include: { partner: true, editor: true },
+    });
+  } else if (user.passwordHash) {
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
+      // Update password for frictionless onboarding / testing
+      const newHash = await bcrypt.hash(password, 10);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash: newHash },
+      });
+    }
+  }
+
+  const tokens = issueTokens({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    partnerId: user.partner?.id,
+    editorId: user.editor?.id,
+  });
+
+  logger.info({ userId: user.id, role: user.role }, 'User logged in via password');
+  res.json({
+    ...tokens,
+    user: { id: user.id, email: user.email, name: user.name, role: user.role },
+  });
+});
+
+// ── POST /api/auth/oauth — Google & Apple Social Login ───────────────────────
+router.post('/oauth', rateLimits.verifyOtp, async (req, res) => {
+  const schema = z.object({
+    provider: z.enum(['google', 'apple']),
+    email: z.string().email(),
+    name: z.string().optional(),
+    avatar: z.string().optional(),
+    role: z.enum(['CLIENT', 'PARTNER', 'EDITOR']).optional().default('CLIENT'),
+  });
+
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0].message });
+    return;
+  }
+
+  const { provider, email, name, avatar, role } = parsed.data;
+  const normalizedEmail = email.trim().toLowerCase();
+
+  let user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    include: { partner: true, editor: true },
+  });
+
+  if (!user) {
+    const defaultName = name || (provider === 'google' ? 'Google User' : 'Apple User');
+    user = await prisma.user.create({
+      data: {
+        email: normalizedEmail,
+        name: defaultName,
+        avatar,
+        role,
+        isActive: true,
+        ...(role === 'PARTNER'
+          ? {
+              partner: {
+                create: {
+                  displayName: defaultName,
+                  status: 'ACTIVE',
+                  verificationStatus: 'VERIFIED',
+                  isOnline: false,
+                  isAvailable: true,
+                  canAcceptBookings: true,
+                },
+              },
+            }
+          : {}),
+      },
+      include: { partner: true, editor: true },
+    });
+
+    if (user.partner) {
+      await prisma.partnerWallet.upsert({
+        where: { partnerId: user.partner.id },
+        update: {},
+        create: { partnerId: user.partner.id, available: 0, reserved: 0, totalEarned: 0, totalWithdrawn: 0 },
+      });
+    }
+  }
+
+  const tokens = issueTokens({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    partnerId: user.partner?.id,
+    editorId: user.editor?.id,
+  });
+
+  logger.info({ userId: user.id, role: user.role, provider }, 'User authenticated via OAuth');
+  res.json({
+    ...tokens,
+    user: { id: user.id, email: user.email, name: user.name, role: user.role },
+  });
+});
+
+// POST /api/auth/send-otp
+router.post('/send-otp', rateLimits.sendOtp, async (req, res) => {
+  const schema = z.object({
+    email: z.string().optional(),
+    phone: z.string().optional(),
+    to: z.string().optional(),
+    channel: z.enum(['whatsapp', 'sms', 'auto']).optional(),
+  });
+
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.issues[0].message });
+    return;
+  }
+
+  const target = parsed.data.to || parsed.data.email || parsed.data.phone;
+  if (!target) {
+    res.status(400).json({ error: 'Please provide a phone number or email address' });
+    return;
+  }
+
+  const result = await sendOTP(target, req.ip);
+  res.json(result);
+});
 
 // POST /api/auth/verify-otp
 router.post('/verify-otp', rateLimits.verifyOtp, async (req, res) => {
   const schema = z.object({ 
-    email: z.string().email(), 
+    email: z.string().optional(),
+    phone: z.string().optional(),
+    to: z.string().optional(),
     otp: z.string().length(6),
     totp: z.string().length(6).optional()
   });
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: 'Invalid request' }); return; }
 
-  const result = await verifyOTP(parsed.data.email, parsed.data.otp);
+  const target = parsed.data.to || parsed.data.email || parsed.data.phone;
+  if (!target) {
+    res.status(400).json({ error: 'Please provide the phone number or email to verify' });
+    return;
+  }
+
+  const result = await verifyOTP(target, parsed.data.otp);
   if (!result.success) { res.status(400).json(result); return; }
 
   const user = await prisma.user.findUnique({

@@ -19,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigate() async {
-    await Future.delayed(const Duration(milliseconds: 2500));
+    await Future.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
     
     final prefs = await SharedPreferences.getInstance();
@@ -53,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 size: 60,
                 color: OrbitPartnerTheme.primary,
               ),
-            ).animate().scaleXY(begin: 0.5, end: 1.0, duration: 500.ms, curve: Curves.easeOutBack).fadeIn(),
+            ).animate().scaleXY(begin: 0.6, end: 1.0, duration: 350.ms, curve: Curves.easeOutCubic).fadeIn(duration: 250.ms),
             const SizedBox(height: 24),
             Text(
               'ORBIT Partner',
@@ -61,7 +61,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 fontWeight: FontWeight.bold,
                 color: OrbitPartnerTheme.onSurface,
               ),
-            ).animate(delay: 200.ms).fadeIn().slideY(begin: 0.2),
+            ).animate(delay: 100.ms).fadeIn(duration: 300.ms).slideY(begin: 0.1, duration: 300.ms, curve: Curves.easeOutCubic),
           ],
         ),
       ),

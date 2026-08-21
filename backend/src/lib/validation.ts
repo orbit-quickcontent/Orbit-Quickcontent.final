@@ -23,7 +23,7 @@ export const bookingSchema = z.object({
   timeSlot: z.string().min(1, "Time slot is required"),
   location: z.string().min(3, "Shoot location is required"),
   notes: z.string().max(500, "Notes cannot exceed 500 characters").optional(),
-  razorpayPaymentId: z.string().optional(),
+  paymentId: z.string().optional(),
 });
 
 // 3. Partner Onboarding Validation Schema

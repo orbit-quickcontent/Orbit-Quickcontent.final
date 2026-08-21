@@ -18,10 +18,10 @@ export const AVATAR_COLORS = [
 
 // 4 Creative human-like avatars for all categories of people
 export const AVATAR_PRESETS = [
-  { id: "creator", emoji: "🎬", label: "Creator", gradient: "from-orbit-cyan to-blue-500", description: "Content Creator", image: "/avatars/creator.png" },
-  { id: "professional", emoji: "💼", label: "Professional", gradient: "from-orbit-purple to-pink-500", description: "Business Professional", image: "/avatars/professional.png" },
-  { id: "artist", emoji: "🎨", label: "Artist", gradient: "from-orange-400 to-red-500", description: "Creative Artist", image: "/avatars/artist.png" },
-  { id: "explorer", emoji: "🌍", label: "Explorer", gradient: "from-green-400 to-emerald-500", description: "Adventurous Explorer", image: "/avatars/explorer.png" },
+  { id: "creator", emoji: "", label: "Creator", gradient: "from-orbit-cyan to-blue-500", description: "Content Creator", image: "/avatars/creator.png" },
+  { id: "professional", emoji: "", label: "Professional", gradient: "from-orbit-purple to-pink-500", description: "Business Professional", image: "/avatars/professional.png" },
+  { id: "artist", emoji: "", label: "Artist", gradient: "from-orange-400 to-red-500", description: "Creative Artist", image: "/avatars/artist.png" },
+  { id: "explorer", emoji: "", label: "Explorer", gradient: "from-green-400 to-emerald-500", description: "Adventurous Explorer", image: "/avatars/explorer.png" },
 ] as const;
 
 // Format currency in Indian Rupees (₹)

@@ -6,13 +6,13 @@ import 'package:google_fonts/google_fonts.dart';
 class OrbitPartnerTheme {
   OrbitPartnerTheme._();
 
-  // ── Core Palette ────────────────────────────────────────────────────────────
-  static const Color background = Color(0xFF050505);     // #050505 (from available_work)
-  static const Color surface = Color(0xFF111111);        // #121212
-  static const Color surfaceLow = Color(0xFF1A1A1A);    // #1A1A1A
-  static const Color surfaceHigh = Color(0xFF1E1E1E);   // #1E1E1E
-  static const Color surfaceBorder = Color(0xFF1F2937); // #1F2937
-  static const Color surfaceVariant = Color(0xFF353534);
+  // ── Core Palette (Total Pitch Black OLED Theme) ──────────────────────────
+  static const Color background = Color(0xFF000000);
+  static const Color surface = Color(0xFF0D0D0D);
+  static const Color surfaceLow = Color(0xFF141414);
+  static const Color surfaceHigh = Color(0xFF1C1C1C);
+  static const Color surfaceBorder = Color(0xFF222222);
+  static const Color surfaceVariant = Color(0xFF2A2A2A);
 
   // ── Primary (Neon Green) ───────────────────────────────────────────────────
   static const Color primary = Color(0xFF4BE277);       // #4be277

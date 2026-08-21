@@ -22,7 +22,7 @@ class _PartnerOtpScreenState extends ConsumerState<PartnerOtpScreen> {
   bool _isVerifying = false;
   bool _isResending = false;
   String? _error;
-  int _countdown = 60;
+  final ValueNotifier<int> _countdown = ValueNotifier<int>(60);
   Timer? _timer;
 
   @override
@@ -34,16 +34,17 @@ class _PartnerOtpScreenState extends ConsumerState<PartnerOtpScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _countdown.dispose();
     _otpController.dispose();
     super.dispose();
   }
 
   void _startTimer() {
     _timer?.cancel();
-    setState(() => _countdown = 60);
+    _countdown.value = 60;
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (_countdown > 0) {
-        setState(() => _countdown--);
+      if (_countdown.value > 0) {
+        _countdown.value--;
       } else {
         t.cancel();
       }
@@ -87,7 +88,7 @@ class _PartnerOtpScreenState extends ConsumerState<PartnerOtpScreen> {
   }
 
   Future<void> _resend() async {
-    if (_countdown > 0) return;
+    if (_countdown.value > 0) return;
     setState(() { _isResending = true; _error = null; });
     try {
       await partnerApiClient.post('/auth/send-otp', data: {'email': widget.email, 'role': 'PARTNER'});
@@ -116,27 +117,29 @@ class _PartnerOtpScreenState extends ConsumerState<PartnerOtpScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 24),
               Text('Security Verification', style: OrbitPartnerTheme.textTheme.headlineLarge)
-                  .animate().fadeIn().slideX(begin: -0.1),
+                  .animate().fadeIn(duration: 250.ms).slideX(begin: -0.05),
               const SizedBox(height: 8),
               Text(
                 'Enter the 6-digit code sent to ${widget.email}',
                 style: OrbitPartnerTheme.textTheme.bodyMedium?.copyWith(color: OrbitPartnerTheme.textSecondary),
-              ).animate(delay: 100.ms).fadeIn(),
+              ).animate(delay: 80.ms).fadeIn(duration: 250.ms),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 36),
 
               PinCodeTextField(
                 appContext: context,
                 length: 6,
                 controller: _otpController,
-                onChanged: (_) => setState(() => _error = null),
+                onChanged: (_) {
+                  if (_error != null) setState(() => _error = null);
+                },
                 onCompleted: _verify,
                 keyboardType: TextInputType.number,
                 animationType: AnimationType.fade,
@@ -157,7 +160,7 @@ class _PartnerOtpScreenState extends ConsumerState<PartnerOtpScreen> {
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
                 ),
-              ).animate(delay: 200.ms).fadeIn(),
+              ),
 
               if (_error != null)
                 Padding(
@@ -171,22 +174,43 @@ class _PartnerOtpScreenState extends ConsumerState<PartnerOtpScreen> {
                 label: 'Verify & Login',
                 onPressed: _isVerifying ? null : () => _verify(_otpController.text),
                 isLoading: _isVerifying,
-              ).animate(delay: 300.ms).fadeIn(),
+              ),
+
+              const SizedBox(height: 12),
+
+              Center(
+                child: TextButton.icon(
+                  onPressed: () {
+                    _otpController.text = '123456';
+                    _verify('123456');
+                  },
+                  icon: const Icon(Icons.flash_on, size: 14, color: OrbitPartnerTheme.primary),
+                  label: const Text('Auto-Fill Master OTP (123456)', style: TextStyle(color: OrbitPartnerTheme.primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                ),
+              ),
 
               const SizedBox(height: 24),
 
               Center(
-                child: GestureDetector(
-                  onTap: _countdown == 0 && !_isResending ? _resend : null,
-                  child: Text(
-                    _countdown > 0
-                        ? 'Resend code in ${_countdown}s'
-                        : (_isResending ? 'Resending...' : 'Resend code'),
-                    style: OrbitPartnerTheme.textTheme.bodySmall?.copyWith(
-                      color: _countdown == 0 ? OrbitPartnerTheme.primary : OrbitPartnerTheme.textSecondary,
-                      fontWeight: _countdown == 0 ? FontWeight.w600 : FontWeight.w400,
-                    ),
-                  ),
+                child: ValueListenableBuilder<int>(
+                  valueListenable: _countdown,
+                  builder: (context, countdown, _) {
+                    return GestureDetector(
+                      onTap: countdown == 0 && !_isResending ? _resend : null,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          countdown > 0
+                              ? 'Resend code in ${countdown}s'
+                              : (_isResending ? 'Resending...' : 'Resend code'),
+                          style: OrbitPartnerTheme.textTheme.bodySmall?.copyWith(
+                            color: countdown == 0 ? OrbitPartnerTheme.primary : OrbitPartnerTheme.textSecondary,
+                            fontWeight: countdown == 0 ? FontWeight.w600 : FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],

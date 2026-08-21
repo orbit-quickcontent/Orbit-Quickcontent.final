@@ -1,6 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../../core/theme.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/theme/orbit_theme.dart';
 import '../../../core/api_client.dart';
+import '../../../shared/widgets/orbit_button.dart';
+import '../../../shared/widgets/orbit_card.dart';
+import '../../../shared/widgets/orbit_status.dart';
+import '../../../shared/widgets/orbit_loading.dart';
+import '../../../shared/widgets/orbit_empty_state.dart';
+import '../../../analytics/analytics_service.dart';
 
 class ActiveJobScreen extends StatefulWidget {
   final String bookingId;
@@ -14,11 +22,27 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
   Map<String, dynamic>? _booking;
   bool _isLoading = true;
   bool _isActionRunning = false;
+  Timer? _shootTimer;
+  int _shootSeconds = 0;
 
   @override
   void initState() {
     super.initState();
+    partnerAnalytics.trackScreenView('partner_active_job');
     _loadJob();
+  }
+
+  @override
+  void dispose() {
+    _shootTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startShootTimer() {
+    _shootTimer?.cancel();
+    _shootTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _shootSeconds++);
+    });
   }
 
   Future<void> _loadJob() async {
@@ -28,6 +52,9 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
         setState(() {
           _booking = res.data;
           _isLoading = false;
+          if (_booking?['status'] == 'SHOOTING' && _shootTimer == null) {
+            _startShootTimer();
+          }
         });
       }
     } catch (_) {
@@ -37,201 +64,265 @@ class _ActiveJobScreenState extends State<ActiveJobScreen> {
 
   Future<void> _updateStatus(String action, {Map<String, dynamic>? payload}) async {
     setState(() => _isActionRunning = true);
+    OrbitMotion.lightTap();
+
     try {
+      if (action == 'en-route') {
+        partnerAnalytics.trackNavigationStarted(bookingId: widget.bookingId);
+      } else if (action == 'arrived') {
+        partnerAnalytics.trackArrival(bookingId: widget.bookingId);
+      } else if (action == 'start-shoot') {
+        partnerAnalytics.trackShootStarted(bookingId: widget.bookingId);
+        _startShootTimer();
+      } else if (action == 'complete-shoot') {
+        _shootTimer?.cancel();
+        partnerAnalytics.trackShootCompleted(bookingId: widget.bookingId, durationMinutes: (_shootSeconds / 60).ceil());
+      }
+
       await partnerApiClient.post('/bookings/${widget.bookingId}/$action', data: payload);
       await _loadJob();
-    } catch (_) {
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update job status. Please retry.')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isActionRunning = false);
     }
   }
 
-  void _showPinDialog() {
-    final pinController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: OrbitPartnerTheme.surface,
-        title: Text('Enter Client PIN', style: OrbitPartnerTheme.textTheme.titleMedium),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Ask the client for their 4-digit shoot PIN to begin.',
-              style: OrbitPartnerTheme.textTheme.bodySmall,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: pinController,
-              keyboardType: TextInputType.number,
-              maxLength: 4,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontSize: 24, letterSpacing: 12),
-              decoration: InputDecoration(
-                hintText: '0000',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
-                counterText: '',
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: OrbitPartnerTheme.outlineFaint),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: OrbitPartnerTheme.primary),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: OrbitPartnerTheme.primary,
-              foregroundColor: Colors.black,
-            ),
-            onPressed: () {
-              final pin = pinController.text.trim();
-              if (pin.length == 4) {
-                Navigator.pop(ctx);
-                _updateStatus('start-shoot', payload: {'pin': pin});
-              }
-            },
-            child: const Text('Verify & Start'),
-          ),
-        ],
-      ),
-    );
+  String _formatTimer(int totalSeconds) {
+    final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+    final seconds = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
   }
-
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
-        backgroundColor: OrbitPartnerTheme.background,
-        appBar: AppBar(title: const Text('Active Job'), backgroundColor: Colors.transparent),
-        body: const Center(child: CircularProgressIndicator(color: OrbitPartnerTheme.primary)),
+      return const Scaffold(
+        backgroundColor: OrbitColors.background,
+        body: Center(child: OrbitLoadingSkeleton(width: 200, height: 200)),
       );
     }
 
-    final status = _booking?['status'] ?? '';
-    final pkg = _booking?['package'] ?? {};
+    if (_booking == null) {
+      return Scaffold(
+        backgroundColor: OrbitColors.background,
+        appBar: AppBar(leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/work'))),
+        body: OrbitErrorState(onRetry: _loadJob),
+      );
+    }
 
-    return Scaffold(
-      backgroundColor: OrbitPartnerTheme.background,
-      appBar: AppBar(
-        title: Text(pkg['name'] ?? 'Active Shoot'),
-        backgroundColor: Colors.transparent,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: OrbitPartnerTheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: OrbitPartnerTheme.primary.withValues(alpha: 0.4)),
-            ),
+    final status = _booking!['status'] as String? ?? 'PENDING';
+    final pkg = _booking!['package'] as Map<String, dynamic>? ?? {};
+    final address = _booking!['address'] ?? 'Client Location';
+    final payout = _booking!['partnerSalary'] ?? 500;
+
+    // Peak-End Screen (Completed State)
+    if (['DELIVERED', 'COMPLETED', 'PAYOUT_COMPLETED'].contains(status)) {
+      return Scaffold(
+        backgroundColor: OrbitColors.background,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(OrbitSpacing.space24),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('STATUS', style: OrbitPartnerTheme.textTheme.labelSmall),
-                    Text('₹500 Payout', style: TextStyle(color: OrbitPartnerTheme.primary, fontWeight: FontWeight.bold)),
-                  ],
+                Container(
+                  width: 88,
+                  height: 88,
+                  decoration: BoxDecoration(
+                    color: OrbitColors.success.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: OrbitColors.success.withValues(alpha: 0.4), width: 2),
+                  ),
+                  child: const Icon(Icons.check_rounded, size: 48, color: OrbitColors.success),
                 ),
-                const SizedBox(height: 8),
-                Text(status.replaceAll('_', ' '), style: OrbitPartnerTheme.textTheme.headlineMedium),
-                const SizedBox(height: 16),
-                const Divider(color: OrbitPartnerTheme.outlineFaint),
-                const SizedBox(height: 12),
-                Text('CLIENT LOCATION', style: OrbitPartnerTheme.textTheme.labelSmall),
-                const SizedBox(height: 4),
-                Text(_booking?['address'] ?? 'No address provided', style: OrbitPartnerTheme.textTheme.bodyMedium),
+                const SizedBox(height: OrbitSpacing.space24),
+                Text('Job Completed!', style: OrbitTypography.displayLarge.copyWith(fontSize: 32)),
+                const SizedBox(height: OrbitSpacing.space8),
+                Text('You earned ₹$payout for this shoot.', style: OrbitTypography.bodyLarge),
+                const SizedBox(height: OrbitSpacing.space32),
+                OrbitMetricCard(
+                  title: 'Wallet Credit',
+                  value: '₹$payout',
+                  subtitle: 'Added to your available balance',
+                  icon: Icons.account_balance_wallet_rounded,
+                  iconColor: OrbitColors.success,
+                ),
+                const Spacer(),
+                OrbitPrimaryButton(
+                  label: 'VIEW EARNINGS',
+                  icon: Icons.account_balance_wallet_outlined,
+                  onPressed: () => context.go('/earnings'),
+                ),
+                const SizedBox(height: OrbitSpacing.space12),
+                OrbitSecondaryButton(
+                  label: 'Back to Work',
+                  onPressed: () => context.go('/work'),
+                ),
               ],
             ),
           ),
+        ),
+      );
+    }
 
-          const SizedBox(height: 32),
-
-          // Action Workflow based on state
-          if (status == 'PARTNER_ASSIGNED') ...[
-            PartnerButton(
-              label: 'Start Navigating to Client',
-              color: OrbitPartnerTheme.primary,
-              isLoading: _isActionRunning,
-              onPressed: () => _updateStatus('en-route'),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Navigate to the client location then confirm arrival',
-              style: OrbitPartnerTheme.textTheme.bodySmall,
-              textAlign: TextAlign.center,
-            ),
-          ] else if (status == 'EN_ROUTE') ...[
-            PartnerButton(
-              label: 'I Have Arrived at Location',
-              color: OrbitPartnerTheme.primary,
-              isLoading: _isActionRunning,
-              onPressed: () => _updateStatus('arrived'),
-            ),
-          ] else if (status == 'ARRIVED') ...[
-            PartnerButton(
-              label: 'Start Video Shoot',
-              color: OrbitPartnerTheme.primary,
-              isLoading: _isActionRunning,
-              onPressed: _showPinDialog,
-            ),
-          ] else if (status == 'SHOOTING') ...[
-            PartnerButton(
-              label: 'Complete Shoot & Start Upload',
-              color: OrbitPartnerTheme.primary,
-              isLoading: _isActionRunning,
-              onPressed: () => _updateStatus('complete-shoot'),
-            ),
-          ] else if (status == 'UPLOADING') ...[
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: OrbitPartnerTheme.surface,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  const CircularProgressIndicator(color: OrbitPartnerTheme.primary),
-                  const SizedBox(height: 16),
-                  Text('Uploading Footage to Cloud...', style: OrbitPartnerTheme.textTheme.titleMedium),
-                  const SizedBox(height: 8),
-                  Text('Keep the app open until transfer completes.', style: OrbitPartnerTheme.textTheme.bodySmall),
-                ],
-              ),
-            ),
-          ] else if (status == 'SYNCED' || status == 'EDITING' || status == 'DELIVERED') ...[
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: OrbitPartnerTheme.surface,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  Icon(Icons.check_circle, color: OrbitPartnerTheme.primary, size: 48),
-                  const SizedBox(height: 12),
-                  Text('Shoot Completed!', style: OrbitPartnerTheme.textTheme.headlineMedium),
-                  const SizedBox(height: 6),
-                  Text('Footage sent to editing team. ₹500 credited on delivery.', style: OrbitPartnerTheme.textTheme.bodySmall),
-                ],
-              ),
-            ),
-          ],
+    return Scaffold(
+      backgroundColor: OrbitColors.background,
+      appBar: AppBar(
+        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18), onPressed: () => context.go('/work')),
+        title: Text('Job Execution', style: OrbitTypography.titleLarge),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: OrbitSpacing.space16),
+            child: OrbitStatusPill.fromStatus(status),
+          ),
         ],
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(OrbitSpacing.space20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ── Header Card ──────────────────────────────────────────
+              OrbitCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(pkg['name'] ?? 'Reel Shoot', style: OrbitTypography.titleLarge),
+                    const SizedBox(height: 4),
+                    Text(address, style: OrbitTypography.bodySmall),
+                    const Divider(color: OrbitColors.borderSubtle, height: OrbitSpacing.space24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Earnings for Shoot', style: OrbitTypography.bodySmall),
+                        Text('₹$payout', style: OrbitTypography.titleLarge.copyWith(color: OrbitColors.success)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: OrbitSpacing.space24),
+
+              // ── Stage Specific Content ───────────────────────────────
+              Expanded(
+                child: Center(
+                  child: status == 'SHOOTING'
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 14,
+                              height: 14,
+                              decoration: const BoxDecoration(
+                                color: OrbitColors.danger,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(height: OrbitSpacing.space16),
+                            Text('SHOOTING IN PROGRESS', style: OrbitTypography.labelSmall.copyWith(color: OrbitColors.danger, letterSpacing: 2)),
+                            const SizedBox(height: OrbitSpacing.space12),
+                            Text(
+                              _formatTimer(_shootSeconds),
+                              style: OrbitTypography.displayLarge.copyWith(fontSize: 56, letterSpacing: 2),
+                            ),
+                            const SizedBox(height: OrbitSpacing.space8),
+                            Text('Capture standard 9:16 reels for creator', style: OrbitTypography.bodySmall),
+                          ],
+                        )
+                      : status == 'UPLOADING'
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const CircularProgressIndicator(color: OrbitColors.secondary),
+                                const SizedBox(height: OrbitSpacing.space20),
+                                Text('Uploading Raw Footage', style: OrbitTypography.titleMedium),
+                                const SizedBox(height: 6),
+                                Text('Syncing files to editor queue...', style: OrbitTypography.bodySmall),
+                              ],
+                            )
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 72,
+                                  height: 72,
+                                  decoration: BoxDecoration(
+                                    color: OrbitColors.surfaceHighlight,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.navigation_rounded, size: 36, color: OrbitColors.secondary),
+                                ),
+                                const SizedBox(height: OrbitSpacing.space16),
+                                Text(
+                                  status == 'PARTNER_ASSIGNED'
+                                      ? 'Ready to head to client'
+                                      : status == 'EN_ROUTE'
+                                          ? 'Navigating to destination'
+                                          : 'You have arrived at shoot location',
+                                  style: OrbitTypography.titleMedium,
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  address,
+                                  style: OrbitTypography.bodySmall,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                ),
+              ),
+
+              // ── Progressive Disclosure Primary CTA (Thumb Zone) ───────
+              if (status == 'PARTNER_ASSIGNED') ...[
+                OrbitPrimaryButton(
+                  label: 'START NAVIGATION',
+                  icon: Icons.navigation_rounded,
+                  isLoading: _isActionRunning,
+                  onPressed: () => _updateStatus('en-route'),
+                ),
+              ] else if (status == 'EN_ROUTE') ...[
+                OrbitPrimaryButton(
+                  label: 'I\'M HERE (ARRIVED)',
+                  icon: Icons.pin_drop_rounded,
+                  isLoading: _isActionRunning,
+                  onPressed: () => _updateStatus('arrived'),
+                ),
+              ] else if (status == 'ARRIVED') ...[
+                OrbitPrimaryButton(
+                  label: 'START SHOOT',
+                  icon: Icons.fiber_manual_record_rounded,
+                  gradient: const LinearGradient(colors: [OrbitColors.primary, OrbitColors.danger]),
+                  isLoading: _isActionRunning,
+                  onPressed: () => _updateStatus('start-shoot'),
+                ),
+              ] else if (status == 'SHOOTING') ...[
+                OrbitPrimaryButton(
+                  label: 'FINISH SHOOT',
+                  icon: Icons.stop_circle_rounded,
+                  gradient: const LinearGradient(colors: [OrbitColors.danger, Color(0xFF991B1B)]),
+                  isLoading: _isActionRunning,
+                  onPressed: () => _updateStatus('complete-shoot'),
+                ),
+              ] else if (status == 'UPLOADING') ...[
+                OrbitPrimaryButton(
+                  label: 'COMPLETE JOB',
+                  icon: Icons.check_circle_outline_rounded,
+                  isLoading: _isActionRunning,
+                  onPressed: () => _updateStatus('complete-shoot'),
+                ),
+              ],
+              const SizedBox(height: OrbitSpacing.space8),
+            ],
+          ),
+        ),
       ),
     );
   }

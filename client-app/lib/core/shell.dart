@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'theme.dart';
+import 'theme/orbit_theme.dart';
+import '../analytics/analytics_service.dart';
 
 class MainShell extends StatelessWidget {
   final Widget child;
@@ -9,17 +10,30 @@ class MainShell extends StatelessWidget {
   int _locationToIndex(String location) {
     if (location.startsWith('/home')) return 0;
     if (location.startsWith('/history')) return 1;
-    if (location.startsWith('/notifications')) return 2;
+    if (location.startsWith('/activity') || location.startsWith('/notifications')) return 2;
     if (location.startsWith('/profile')) return 3;
     return 0;
   }
 
   void _onItemTapped(BuildContext context, int index) {
+    OrbitMotion.lightTap();
     switch (index) {
-      case 0: context.go('/home'); break;
-      case 1: context.go('/history'); break;
-      case 2: context.go('/history'); break; // Routes to history for now since tracking requires an active ID
-      case 3: context.go('/profile'); break;
+      case 0:
+        analytics.trackButtonClick('nav_home');
+        context.go('/home');
+        break;
+      case 1:
+        analytics.trackButtonClick('nav_bookings');
+        context.go('/history');
+        break;
+      case 2:
+        analytics.trackButtonClick('nav_activity');
+        context.go('/history');
+        break;
+      case 3:
+        analytics.trackButtonClick('nav_profile');
+        context.go('/profile');
+        break;
     }
   }
 
@@ -29,6 +43,7 @@ class MainShell extends StatelessWidget {
     final currentIndex = _locationToIndex(location);
 
     return Scaffold(
+      backgroundColor: OrbitColors.background,
       body: child,
       extendBody: true,
       bottomNavigationBar: _OrbitBottomNav(
@@ -48,20 +63,26 @@ class _OrbitBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: OrbitClientTheme.surfaceContainerLowest.withOpacity(0.92),
-        border: const Border(top: BorderSide(color: OrbitClientTheme.outlineVariant, width: 0.5)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 20)],
+        color: OrbitColors.surface.withValues(alpha: 0.95),
+        border: const Border(top: BorderSide(color: OrbitColors.borderMedium, width: 1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 24,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: OrbitSpacing.space12, vertical: OrbitSpacing.space8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home', index: 0, currentIndex: currentIndex, onTap: onTap),
-              _NavItem(icon: Icons.history_outlined, activeIcon: Icons.history, label: 'Bookings', index: 1, currentIndex: currentIndex, onTap: onTap),
-              _NavItem(icon: Icons.location_on_outlined, activeIcon: Icons.location_on, label: 'Tracking', index: 2, currentIndex: currentIndex, onTap: onTap),
-              _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile', index: 3, currentIndex: currentIndex, onTap: onTap),
+              _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Home', index: 0, currentIndex: currentIndex, onTap: onTap),
+              _NavItem(icon: Icons.confirmation_number_outlined, activeIcon: Icons.confirmation_number_rounded, label: 'Bookings', index: 1, currentIndex: currentIndex, onTap: onTap),
+              _NavItem(icon: Icons.bolt_outlined, activeIcon: Icons.bolt_rounded, label: 'Activity', index: 2, currentIndex: currentIndex, onTap: onTap),
+              _NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profile', index: 3, currentIndex: currentIndex, onTap: onTap),
             ],
           ),
         ),
@@ -75,7 +96,15 @@ class _NavItem extends StatelessWidget {
   final String label;
   final int index, currentIndex;
   final ValueChanged<int> onTap;
-  const _NavItem({required this.icon, required this.activeIcon, required this.label, required this.index, required this.currentIndex, required this.onTap});
+
+  const _NavItem({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.index,
+    required this.currentIndex,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -84,33 +113,36 @@ class _NavItem extends StatelessWidget {
       onTap: () => onTap(index),
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 64,
+        width: 68,
+        height: 52,
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Active indicator line
             AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              height: 2,
-              width: isActive ? 24 : 0,
-              margin: const EdgeInsets.only(bottom: 6),
+              duration: OrbitMotion.micro,
+              curve: OrbitMotion.standard,
+              height: 3,
+              width: isActive ? 20 : 0,
+              margin: const EdgeInsets.only(bottom: 4),
               decoration: BoxDecoration(
-                gradient: isActive ? OrbitClientTheme.primaryGradient : null,
-                borderRadius: BorderRadius.circular(2),
+                gradient: isActive ? OrbitColors.primaryGradient : null,
+                borderRadius: OrbitRadius.roundedFull,
               ),
             ),
             Icon(
               isActive ? activeIcon : icon,
-              color: isActive ? OrbitClientTheme.primaryFixed : OrbitClientTheme.outline,
+              color: isActive ? OrbitColors.secondary : OrbitColors.textMuted,
               size: 22,
             ),
             const SizedBox(height: 3),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-                color: isActive ? OrbitClientTheme.primaryFixed : OrbitClientTheme.outline,
+              style: OrbitTypography.labelSmall.copyWith(
+                fontSize: 11,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                color: isActive ? OrbitColors.textPrimary : OrbitColors.textMuted,
+                letterSpacing: 0,
               ),
             ),
           ],

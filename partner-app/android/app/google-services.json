@@ -14,34 +14,13 @@
       },
       "oauth_client": [
         {
-          "client_id": "753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyC4JpCOQqRrx_kXu0WoRM12K42h6ZC89yc"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:753333113627:android:0c837b402fcec13fecf9be",
-        "android_client_info": {
-          "package_name": "com.orbitplatform.client"
-        }
-      },
-      "oauth_client": [
+          "client_id": "753333113627-4ulv97fe9qs60pgg9aihgcosq2vrkgqq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.orbit.client",
+            "certificate_hash": "5ec1f33face1197fad268fdeec69fc30394bef41"
+          }
+        },
         {
           "client_id": "753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com",
           "client_type": 3
@@ -58,6 +37,13 @@
             {
               "client_id": "753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "753333113627-bjctev1ji81nsijp5nhtgar9hmiid3la.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.orbit.client"
+              }
             }
           ]
         }
@@ -72,34 +58,13 @@
       },
       "oauth_client": [
         {
-          "client_id": "753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyC4JpCOQqRrx_kXu0WoRM12K42h6ZC89yc"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:753333113627:android:23cd3305fa9fba7becf9be",
-        "android_client_info": {
-          "package_name": "com.orbitplatform.partner"
-        }
-      },
-      "oauth_client": [
+          "client_id": "753333113627-jv4p9ultnsnet94g5k6d83dsnb5iod5e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.orbit.partner",
+            "certificate_hash": "44326fc6a032639a5091877589419c8c0c48fd4b"
+          }
+        },
         {
           "client_id": "753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com",
           "client_type": 3
@@ -116,6 +81,13 @@
             {
               "client_id": "753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "753333113627-bjctev1ji81nsijp5nhtgar9hmiid3la.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.orbit.client"
+              }
             }
           ]
         }
