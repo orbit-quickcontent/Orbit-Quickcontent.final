@@ -19,13 +19,15 @@ try {
 const PORT = process.env.PORT || 5000;
 
 // ── CORS ────────────────────────────────────────────────────────────────────
+const isProduction = process.env.NODE_ENV === 'production';
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001')
   .split(',')
-  .map(o => o.trim());
+  .map(o => o.trim())
+  .filter(o => !isProduction || o !== '*');
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+    if (!origin || allowedOrigins.includes(origin) || (!isProduction && allowedOrigins.includes('*'))) {
       callback(null, true);
     } else {
       callback(new Error(`CORS blocked: ${origin}`));

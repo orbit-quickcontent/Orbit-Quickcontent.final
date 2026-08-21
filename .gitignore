@@ -37,9 +37,17 @@ Thumbs.db
 .vscode/
 .idea/
 
-# ── Local Databases ───────────────────────────────────────────
-*.db
-*.sqlite*
+# ── Flutter / Android Signing Secrets ─────────────────────────
+*.keystore
+*.jks
+key.properties
+local.properties
+**/android/app/key.properties
+**/android/key.properties
+**/orbit.keystore
+*.p8
+*.p12
+*.mobileprovision
 
 # ── Logs ──────────────────────────────────────────────────────
 *.log

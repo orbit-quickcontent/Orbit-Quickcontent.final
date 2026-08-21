@@ -8,9 +8,7 @@ const eslintConfig = [
       "**/.next/**",
       "**/out/**",
       "**/build/**",
-      "**/next-env.d.ts",
-      "**/examples/**",
-      "**/skills/**"
+      "**/next-env.d.ts"
     ]
   },
   {
