@@ -178,3 +178,4 @@ class AnalyticsService {
 }
 
 final partnerAnalytics = AnalyticsService();
+final analytics = partnerAnalytics;

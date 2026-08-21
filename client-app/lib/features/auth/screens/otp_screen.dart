@@ -69,7 +69,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           refreshToken: data['refreshToken'],
           user: data['user'],
         );
-        context.go('/personal-info');
+        if (mounted) context.go('/personal-info');
       } else {
         setState(() => _error = data['message'] ?? 'Invalid OTP');
       }
@@ -124,7 +124,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 decoration: BoxDecoration(
                   gradient: OrbitClientTheme.primaryGradient,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [BoxShadow(color: OrbitClientTheme.primaryFixed.withOpacity(0.3), blurRadius: 16)],
+                  boxShadow: [BoxShadow(color: OrbitClientTheme.primaryFixed.withValues(alpha: 0.3), blurRadius: 16)],
                 ),
                 child: const Icon(Icons.mark_email_read_outlined, color: Colors.white, size: 28),
               ).animate().scale(duration: 300.ms, curve: Curves.easeOutCubic),
@@ -133,14 +133,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
               Text('Verify your email', style: OrbitClientTheme.textTheme.headlineLarge)
                   .animate(delay: 60.ms).fadeIn(duration: 250.ms).slideX(begin: -0.05),
-
               const SizedBox(height: 8),
 
               RichText(
                 text: TextSpan(
-                  style: OrbitClientTheme.textTheme.bodyMedium?.copyWith(color: OrbitClientTheme.onSurfaceVariant),
+                  style: OrbitClientTheme.textTheme.bodyMedium,
                   children: [
-                    const TextSpan(text: 'We sent a 6-digit code to '),
+                    const TextSpan(text: 'Enter the 6-digit code sent to '),
                     TextSpan(
                       text: widget.email,
                       style: const TextStyle(color: OrbitClientTheme.primaryFixed, fontWeight: FontWeight.w600),
@@ -151,33 +150,56 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
               const SizedBox(height: 36),
 
-              // OTP Input
+              // Pin code input
               PinCodeTextField(
                 appContext: context,
                 length: 6,
                 controller: _otpController,
-                onChanged: (_) {
-                  if (_error != null) setState(() => _error = null);
-                },
-                onCompleted: _verifyOtp,
                 keyboardType: TextInputType.number,
                 animationType: AnimationType.fade,
                 pinTheme: PinTheme(
                   shape: PinCodeFieldShape.box,
                   borderRadius: BorderRadius.circular(12),
-                  fieldHeight: 56,
-                  fieldWidth: 48,
+                  fieldHeight: 52,
+                  fieldWidth: 44,
                   activeColor: OrbitClientTheme.primaryFixed,
-                  activeFillColor: OrbitClientTheme.surface,
                   selectedColor: OrbitClientTheme.primaryFixed,
-                  selectedFillColor: OrbitClientTheme.surfaceHigh,
                   inactiveColor: OrbitClientTheme.outlineVariant,
-                  inactiveFillColor: OrbitClientTheme.surfaceContainerLowest,
+                  activeFillColor: OrbitClientTheme.surfaceHigh,
+                  selectedFillColor: OrbitClientTheme.surfaceHigh,
+                  inactiveFillColor: OrbitClientTheme.surfaceHigh,
                 ),
                 enableActiveFill: true,
-                textStyle: OrbitClientTheme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 2,
+                cursorColor: OrbitClientTheme.primaryFixed,
+                textStyle: const TextStyle(
+                  color: OrbitClientTheme.onSurface,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+                onChanged: (_) => setState(() => _error = null),
+                onCompleted: _verifyOtp,
+              ),
+
+              const SizedBox(height: 8),
+
+              // Universal Sandbox Hint
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: OrbitClientTheme.surfaceHigh,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: OrbitClientTheme.outlineVariant),
+                ),
+                child: const Text(
+                  'Development & Test Master Bypass OTP: 123456',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: OrbitClientTheme.outline,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
 
@@ -185,7 +207,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               if (_error != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: Text(_error!, style: TextStyle(color: OrbitClientTheme.error, fontSize: 13)),
+                  child: Text(_error!, style: const TextStyle(color: OrbitClientTheme.error, fontSize: 13)),
                 ),
 
               const SizedBox(height: 24),

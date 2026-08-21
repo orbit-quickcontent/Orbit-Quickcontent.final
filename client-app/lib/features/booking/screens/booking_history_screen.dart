@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme.dart';
 import '../../../core/api_client.dart';
@@ -81,7 +80,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                           child: Row(children: [
                             Container(
                               width: 46, height: 46,
-                              decoration: BoxDecoration(shape: BoxShape.circle, color: _statusColor(status).withOpacity(0.1), border: Border.all(color: _statusColor(status).withOpacity(0.3))),
+                              decoration: BoxDecoration(shape: BoxShape.circle, color: _statusColor(status).withValues(alpha: 0.1), border: Border.all(color: _statusColor(status).withValues(alpha: 0.3))),
                               child: Icon(status == 'DELIVERED' ? Icons.play_circle_outline : Icons.videocam_outlined, color: _statusColor(status), size: 20),
                             ),
                             const SizedBox(width: 14),
@@ -91,7 +90,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                               Text(b['address'] ?? '', style: OrbitClientTheme.textTheme.bodySmall?.copyWith(color: OrbitClientTheme.outline), maxLines: 1, overflow: TextOverflow.ellipsis),
                             ])),
                             Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                              OrbitStatusChip(label: status.replaceAll('_', ' '), color: _statusColor(status), backgroundColor: _statusColor(status).withOpacity(0.1)),
+                              OrbitStatusChip(label: status.replaceAll('_', ' '), color: _statusColor(status), backgroundColor: _statusColor(status).withValues(alpha: 0.1)),
                               const SizedBox(height: 4),
                               Text('₹${pkg['priceDisplay'] ?? ''}', style: OrbitClientTheme.textTheme.bodySmall?.copyWith(color: OrbitClientTheme.onSurfaceVariant)),
                             ]),

@@ -153,7 +153,7 @@ class _BookingStatusScreenState extends State<BookingStatusScreen> {
                                 Container(
                                   width: 64,
                                   height: 64,
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                     gradient: OrbitColors.primaryGradient,
                                     shape: BoxShape.circle,
                                   ),
@@ -271,7 +271,7 @@ class _BookingStatusScreenState extends State<BookingStatusScreen> {
                                 Container(
                                   width: 36,
                                   height: 36,
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                     gradient: OrbitColors.primaryGradient,
                                     shape: BoxShape.circle,
                                   ),

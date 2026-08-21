@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+export 'theme/orbit_theme.dart';
 
 /// ORBIT Client App — Kinetic Noir Design System
 /// Colors extracted from stitch_universal_app_creator DESIGN.md
@@ -239,7 +240,7 @@ class OrbitGradientButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: onPressed == null
               ? []
-              : [BoxShadow(color: const Color(0xFF00C2FF).withOpacity(0.25), blurRadius: 16, offset: const Offset(0, 4))],
+              : [BoxShadow(color: const Color(0xFF00C2FF).withValues(alpha: 0.25), blurRadius: 16, offset: const Offset(0, 4))],
         ),
         child: ElevatedButton(
           onPressed: isLoading ? null : onPressed,
@@ -272,7 +273,7 @@ class OrbitGlassCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF0E0E0E),
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: Colors.white.withOpacity(0.10), width: 1.0),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10), width: 1.0),
       ),
       child: child,
     );
@@ -316,7 +317,7 @@ class OrbitStatusChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
         label,

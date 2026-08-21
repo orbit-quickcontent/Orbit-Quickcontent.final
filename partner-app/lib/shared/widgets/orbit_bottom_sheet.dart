@@ -54,7 +54,7 @@ class OrbitBottomSheet extends StatelessWidget {
             child: Container(
               width: 44,
               height: 4,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: OrbitColors.textDisabled,
                 borderRadius: OrbitRadius.roundedFull,
               ),

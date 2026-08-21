@@ -22,7 +22,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   List<Map<String, dynamic>> _recentBookings = [];
   Map<String, dynamic>? _activeBooking;
   bool _isLoading = true;
-  String _currentLocation = 'Connaught Place, New Delhi';
+  final String _currentLocation = 'Connaught Place, New Delhi';
 
   @override
   void initState() {
@@ -92,7 +92,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           child: Container(
                             width: 44,
                             height: 44,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               gradient: OrbitColors.primaryGradient,
                               shape: BoxShape.circle,
                             ),
@@ -301,7 +301,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             Container(
                               width: 44,
                               height: 44,
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 color: OrbitColors.surfaceHighlight,
                                 borderRadius: OrbitRadius.rounded12,
                               ),
@@ -363,7 +363,7 @@ class _ServiceCard extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(OrbitSpacing.space8),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: OrbitColors.surfaceHighlight,
               borderRadius: OrbitRadius.rounded12,
             ),

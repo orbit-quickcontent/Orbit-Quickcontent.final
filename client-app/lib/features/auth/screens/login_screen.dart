@@ -32,6 +32,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  bool _isValidEmail(String email) => RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+
   Future<void> _submitPasswordAuth() async {
     final identifier = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -208,9 +210,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   borderRadius: BorderRadius.circular(14),
                   side: const BorderSide(color: OrbitColors.borderSubtle),
                 ),
-                leading: CircleAvatar(
+                leading: const CircleAvatar(
                   backgroundColor: OrbitColors.surfaceElevated,
-                  child: const Icon(Icons.person_add_outlined, color: OrbitColors.textSecondary, size: 20),
+                  child: Icon(Icons.person_add_outlined, color: OrbitColors.textSecondary, size: 20),
                 ),
                 title: Text(
                   'Use another $brandName account',
@@ -407,9 +409,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: Container(
                           height: OrbitSpacing.minTouchTarget,
                           alignment: Alignment.center,
-                          child: Row(
+                          child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
+                            children: [
                               Icon(Icons.g_mobiledata, color: Colors.black, size: 28),
                               SizedBox(width: 4),
                               Text('Google', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 14)),
@@ -423,9 +425,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Expanded(
                     child: Material(
                       color: OrbitColors.surfaceElevated,
-                      shape: RoundedRectangleBorder(
+                      shape: const RoundedRectangleBorder(
                         borderRadius: OrbitRadius.rounded16,
-                        side: const BorderSide(color: OrbitColors.borderSubtle),
+                        side: BorderSide(color: OrbitColors.borderSubtle),
                       ),
                       child: InkWell(
                         onTap: _isLoading ? null : () => _showSocialLoginModal('apple'),
@@ -433,9 +435,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: Container(
                           height: OrbitSpacing.minTouchTarget,
                           alignment: Alignment.center,
-                          child: Row(
+                          child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
+                            children: [
                               Icon(Icons.apple, color: Colors.white, size: 22),
                               SizedBox(width: 6),
                               Text('Apple', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
@@ -562,16 +564,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         controller: _nameController,
                         textCapitalization: TextCapitalization.words,
                         style: const TextStyle(color: Colors.white, fontSize: 14),
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           hintText: 'Alex Morgan',
-                          hintStyle: const TextStyle(color: OrbitColors.textDisabled, fontSize: 14),
-                          prefixIcon: const Icon(Icons.person_outline, color: OrbitColors.textSecondary, size: 18),
+                          hintStyle: TextStyle(color: OrbitColors.textDisabled, fontSize: 14),
+                          prefixIcon: Icon(Icons.person_outline, color: OrbitColors.textSecondary, size: 18),
                           filled: true,
                           fillColor: OrbitColors.surfaceElevated,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          border: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
-                          enabledBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
-                          focusedBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.secondary)),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          border: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                          enabledBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                          focusedBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.secondary)),
                         ),
                       ),
                       const SizedBox(height: OrbitSpacing.space16),
@@ -587,16 +589,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       controller: _emailController,
                       keyboardType: TextInputType.text,
                       style: const TextStyle(color: Colors.white, fontSize: 14),
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: 'Enter username or email',
-                        hintStyle: const TextStyle(color: OrbitColors.textDisabled, fontSize: 14),
-                        prefixIcon: const Icon(Icons.person_outline, color: OrbitColors.textSecondary, size: 18),
+                        hintStyle: TextStyle(color: OrbitColors.textDisabled, fontSize: 14),
+                        prefixIcon: Icon(Icons.person_outline, color: OrbitColors.textSecondary, size: 18),
                         filled: true,
                         fillColor: OrbitColors.surfaceElevated,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        border: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
-                        enabledBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
-                        focusedBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.secondary)),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                        enabledBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                        focusedBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.secondary)),
                       ),
                     ),
 
@@ -627,9 +629,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         filled: true,
                         fillColor: OrbitColors.surfaceElevated,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        border: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
-                        enabledBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
-                        focusedBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.secondary)),
+                        border: const OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                        enabledBorder: const OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                        focusedBorder: const OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.secondary)),
                       ),
                     ),
                   ],
@@ -711,7 +713,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 44),
                   side: BorderSide(color: OrbitColors.secondary.withValues(alpha: 0.4)),
-                  shape: RoundedRectangleBorder(borderRadius: OrbitRadius.rounded16),
+                  shape: const RoundedRectangleBorder(borderRadius: OrbitRadius.rounded16),
                 ),
               ),
 

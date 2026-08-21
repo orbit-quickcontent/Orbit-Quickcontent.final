@@ -237,9 +237,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(color: const Color(0xFF00D2FF).withValues(alpha: 0.3)),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
+                        children: [
                           Icon(Icons.movie_outlined, color: Color(0xFF00D2FF), size: 14),
                           SizedBox(width: 4),
                           Text(
@@ -257,9 +257,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                     const SizedBox(height: 8),
 
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Icon(Icons.style_outlined, color: Color(0xFFBBC9CF), size: 14),
                         SizedBox(width: 4),
                         Text(
@@ -319,8 +319,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: const Color(0xFF3C494E)),
                             ),
-                            child: Row(
-                              children: const [
+                            child: const Row(
+                              children: [
                                 Icon(Icons.edit_outlined, color: Colors.white, size: 14),
                                 SizedBox(width: 4),
                                 Text('Edit', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
@@ -396,7 +396,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               GestureDetector(
                 onTap: () async {
                   await ref.read(authStateProvider.notifier).logout();
-                  if (mounted) context.go('/login');
+                  if (context.mounted) context.go('/login');
                 },
                 child: Container(
                   width: double.infinity,
@@ -406,9 +406,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     border: Border.all(color: const Color(0xFFFFB4AB).withValues(alpha: 0.3)),
                     color: const Color(0xFFFFB4AB).withValues(alpha: 0.05),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
+                    children: [
                       Icon(Icons.logout, color: Color(0xFFFFB4AB), size: 18),
                       SizedBox(width: 8),
                       Text(

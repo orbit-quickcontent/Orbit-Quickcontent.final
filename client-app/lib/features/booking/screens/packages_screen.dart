@@ -115,7 +115,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                   Expanded(
                     child: Container(
                       height: 4,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         gradient: OrbitColors.primaryGradient,
                         borderRadius: OrbitRadius.roundedFull,
                       ),
@@ -125,7 +125,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                   Expanded(
                     child: Container(
                       height: 4,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: OrbitColors.surfaceHighlight,
                         borderRadius: OrbitRadius.roundedFull,
                       ),
@@ -135,7 +135,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                   Expanded(
                     child: Container(
                       height: 4,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: OrbitColors.surfaceHighlight,
                         borderRadius: OrbitRadius.roundedFull,
                       ),
@@ -207,7 +207,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                                       if (isPopular)
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                          decoration: BoxDecoration(
+                                          decoration: const BoxDecoration(
                                             gradient: OrbitColors.primaryGradient,
                                             borderRadius: OrbitRadius.roundedFull,
                                           ),

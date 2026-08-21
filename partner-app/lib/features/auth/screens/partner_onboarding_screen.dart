@@ -47,7 +47,7 @@ class _PartnerOnboardingScreenState extends ConsumerState<PartnerOnboardingScree
       if (!mounted) return;
       if (res.data['success'] == true) {
         await ref.read(partnerAuthProvider.notifier).completedOnboarding();
-        context.go('/work');
+        if (mounted) context.go('/work');
       } else {
         setState(() => _error = res.data['error'] ?? 'Verification failed');
       }
@@ -66,23 +66,24 @@ class _PartnerOnboardingScreenState extends ConsumerState<PartnerOnboardingScree
       backgroundColor: OrbitPartnerTheme.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: Text('Partner Onboarding', style: OrbitPartnerTheme.textTheme.headlineMedium),
+        title: Text('Creator Activation', style: OrbitPartnerTheme.textTheme.headlineMedium),
         automaticallyImplyLeading: false,
       ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(24),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: OrbitPartnerTheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: OrbitPartnerTheme.primary.withOpacity(0.3)),
+                border: Border.all(color: OrbitPartnerTheme.primary.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.verified_outlined, color: OrbitPartnerTheme.primary, size: 28),
+                  const Icon(Icons.verified_outlined, color: OrbitPartnerTheme.primary, size: 28),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(

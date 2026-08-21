@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme.dart';
@@ -104,7 +103,7 @@ class _ReviewBodyState extends State<_ReviewBody> {
               surface: Color(0xFF1E1E1E),
               onSurface: Colors.white,
             ),
-            dialogBackgroundColor: const Color(0xFF141414),
+            dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF141414)),
           ),
           child: child!,
         );
@@ -129,7 +128,7 @@ class _ReviewBodyState extends State<_ReviewBody> {
               surface: Color(0xFF1E1E1E),
               onSurface: Colors.white,
             ),
-            dialogBackgroundColor: const Color(0xFF141414),
+            dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF141414)),
           ),
           child: child!,
         );
@@ -378,7 +377,7 @@ class _ReviewBodyState extends State<_ReviewBody> {
                                   boxShadow: isSelected
                                       ? [
                                           BoxShadow(
-                                            color: OrbitClientTheme.primaryFixed.withOpacity(0.35),
+                                            color: OrbitClientTheme.primaryFixed.withValues(alpha: 0.35),
                                             blurRadius: 10,
                                             offset: const Offset(0, 3),
                                           ),
@@ -400,10 +399,10 @@ class _ReviewBodyState extends State<_ReviewBody> {
                                     const SizedBox(height: 2),
                                     Text(
                                       dayNumber,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w800,
-                                        color: isSelected ? Colors.white : Colors.white,
+                                        color: Colors.white,
                                       ),
                                     ),
                                     Text(
@@ -411,7 +410,7 @@ class _ReviewBodyState extends State<_ReviewBody> {
                                       style: TextStyle(
                                         fontSize: 9,
                                         fontWeight: FontWeight.w500,
-                                        color: isSelected ? Colors.white.withOpacity(0.9) : OrbitClientTheme.onSurfaceVariant,
+                                        color: isSelected ? Colors.white.withValues(alpha: 0.9) : OrbitClientTheme.onSurfaceVariant,
                                       ),
                                     ),
                                   ],
@@ -457,7 +456,7 @@ class _ReviewBodyState extends State<_ReviewBody> {
                       ],
 
                       // Morning Slots
-                      Text('Morning Slots', style: TextStyle(color: OrbitClientTheme.onSurfaceVariant, fontSize: 11, fontWeight: FontWeight.w600)),
+                      const Text('Morning Slots', style: TextStyle(color: OrbitClientTheme.onSurfaceVariant, fontSize: 11, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 6),
                       Wrap(
                         spacing: 8, runSpacing: 8,
@@ -467,7 +466,7 @@ class _ReviewBodyState extends State<_ReviewBody> {
                       const SizedBox(height: 12),
 
                       // Afternoon Slots
-                      Text('Afternoon Slots', style: TextStyle(color: OrbitClientTheme.onSurfaceVariant, fontSize: 11, fontWeight: FontWeight.w600)),
+                      const Text('Afternoon Slots', style: TextStyle(color: OrbitClientTheme.onSurfaceVariant, fontSize: 11, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 6),
                       Wrap(
                         spacing: 8, runSpacing: 8,
@@ -477,7 +476,7 @@ class _ReviewBodyState extends State<_ReviewBody> {
                       const SizedBox(height: 12),
 
                       // Evening / Golden Hour Slots
-                      Text('Evening & Golden Hour', style: TextStyle(color: OrbitClientTheme.onSurfaceVariant, fontSize: 11, fontWeight: FontWeight.w600)),
+                      const Text('Evening & Golden Hour', style: TextStyle(color: OrbitClientTheme.onSurfaceVariant, fontSize: 11, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 6),
                       Wrap(
                         spacing: 8, runSpacing: 8,
@@ -486,7 +485,7 @@ class _ReviewBodyState extends State<_ReviewBody> {
 
                       if (_isCustomTime) ...[
                         const SizedBox(height: 12),
-                        Text('Custom Time Selected', style: TextStyle(color: OrbitClientTheme.primaryFixed, fontSize: 11, fontWeight: FontWeight.w600)),
+                        const Text('Custom Time Selected', style: TextStyle(color: OrbitClientTheme.primaryFixed, fontSize: 11, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 6),
                         _buildTimeChip(_selectedSlot, _selectedSlot),
                       ],
@@ -500,9 +499,9 @@ class _ReviewBodyState extends State<_ReviewBody> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: OrbitClientTheme.primaryFixed.withOpacity(0.08),
+                    color: OrbitClientTheme.primaryFixed.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: OrbitClientTheme.primaryFixed.withOpacity(0.3)),
+                    border: Border.all(color: OrbitClientTheme.primaryFixed.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
@@ -512,7 +511,7 @@ class _ReviewBodyState extends State<_ReviewBody> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('SHOOT SCHEDULED FOR', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: OrbitClientTheme.primaryFixed, letterSpacing: 0.8)),
+                            const Text('SHOOT SCHEDULED FOR', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: OrbitClientTheme.primaryFixed, letterSpacing: 0.8)),
                             const SizedBox(height: 2),
                             Text(
                               '$dateLabel • $_selectedSlot',
@@ -589,7 +588,7 @@ class _ReviewBodyState extends State<_ReviewBody> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: OrbitClientTheme.primaryFixed.withOpacity(0.3),
+                    color: OrbitClientTheme.primaryFixed.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),

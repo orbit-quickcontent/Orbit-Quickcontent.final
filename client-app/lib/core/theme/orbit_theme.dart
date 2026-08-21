@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'orbit_colors.dart';
-import 'orbit_typography.dart';
-import 'orbit_spacing.dart';
 
 export 'orbit_colors.dart';
 export 'orbit_typography.dart';

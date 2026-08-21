@@ -284,7 +284,7 @@ class _PulsingOrbitRadarState extends State<_PulsingOrbitRadar>
                     gradient: OrbitClientTheme.primaryGradient,
                     boxShadow: [
                       BoxShadow(
-                        color: OrbitClientTheme.primaryFixed.withOpacity(0.4),
+                        color: OrbitClientTheme.primaryFixed.withValues(alpha: 0.4),
                         blurRadius: 24,
                       ),
                     ],

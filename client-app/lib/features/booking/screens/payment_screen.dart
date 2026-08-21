@@ -80,7 +80,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ).animate(delay: 80.ms).fadeIn(duration: 250.ms),
                   const SizedBox(height: 24),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Icon(Icons.verified_outlined, size: 14, color: OrbitClientTheme.success),
+                    const Icon(Icons.verified_outlined, size: 14, color: OrbitClientTheme.success),
                     const SizedBox(width: 6),
                     Text('Direct Instant Booking Enabled', style: OrbitClientTheme.textTheme.bodySmall?.copyWith(color: OrbitClientTheme.success)),
                   ]),

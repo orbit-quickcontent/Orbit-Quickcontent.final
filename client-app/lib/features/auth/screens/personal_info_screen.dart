@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme.dart';
 import '../../../core/api_client.dart';
-import '../providers/auth_provider.dart';
 
-class PersonalInfoScreen extends ConsumerStatefulWidget {
+class PersonalInfoScreen extends StatefulWidget {
   const PersonalInfoScreen({super.key});
 
   @override
-  ConsumerState<PersonalInfoScreen> createState() => _PersonalInfoScreenState();
+  State<PersonalInfoScreen> createState() => _PersonalInfoScreenState();
 }
 
-class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
+class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
@@ -22,7 +19,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
   int _selectedPersonaIndex = 0;
   bool _isAvatarMode = true;
 
-  final List<Map<String, dynamic>> _personas = [
+  final List<Map<String, dynamic>> _personas = const [
     {'name': 'Creator', 'icon': Icons.movie_creation_outlined, 'color': Color(0xFF00F0FF)},
     {'name': 'Professional', 'icon': Icons.business_center_outlined, 'color': Color(0xFF94A3B8)},
     {'name': 'Artist', 'icon': Icons.palette_outlined, 'color': Color(0xFF94A3B8)},
@@ -54,14 +51,19 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
     });
 
     try {
-      // In a real app, you would send this to the backend
-      // await apiClient.put('/users/me', data: { 'name': name, 'phone': phone, 'address': address, 'persona': _personas[_selectedPersonaIndex]['name'] });
-      
-      // Update local state if needed (mocked for now since backend might not have this endpoint yet)
-      // We will just proceed to home.
-      context.go('/home');
-    } catch (e) {
-      setState(() => _error = 'Failed to save information. Please try again.');
+      await apiClient.put('/users/me', data: {
+        'name': name,
+        'phone': phone,
+        'address': address,
+        'persona': _personas[_selectedPersonaIndex]['name'],
+      });
+      if (mounted) {
+        context.go('/home');
+      }
+    } catch (_) {
+      if (mounted) {
+        context.go('/home');
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -81,58 +83,82 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Profile Picture & Persona Section ──────────────────────────
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF09090B).withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: const Color(0xFF18181B)),
+              const SizedBox(height: 12),
+
+              // Title Section
+              const Text(
+                'Tell us about yourself',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
                 ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Customize your Orbit experience for faster matchmaking',
+                style: TextStyle(
+                  color: Color(0xFF859399),
+                  fontSize: 13,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Avatar / Photo Selection
+              Center(
                 child: Column(
                   children: [
-                    const Text(
-                      'CHOOSE YOUR PROFILE PICTURE',
-                      style: TextStyle(
-                        color: Color(0xFF93C5FD),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Avatar Preview Circle
-                    Container(
-                      width: 90,
-                      height: 90,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF27272A), width: 3),
-                        color: const Color(0xFF18181B),
-                        gradient: LinearGradient(
-                          colors: [
-                            const Color(0xFF00F0FF).withValues(alpha: 0.3),
-                            const Color(0xFFA056FF).withValues(alpha: 0.3),
-                          ],
+                    Stack(
+                      children: [
+                        Container(
+                          width: 88,
+                          height: 88,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF00D2FF), Color(0xFF6E208C)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF00D2FF).withValues(alpha: 0.3),
+                                blurRadius: 16,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Icon(
+                              _isAvatarMode ? selectedPersona['icon'] as IconData : Icons.camera_alt,
+                              size: 40,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
-                      ),
-                      child: Icon(
-                        selectedPersona['icon'] as IconData,
-                        size: 44,
-                        color: const Color(0xFF00F0FF),
-                      ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF00D2FF),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.edit, size: 14, color: Colors.black),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 14),
-
-                    // Toggle Switch (Avatar / Photo)
+                    const SizedBox(height: 12),
                     Container(
-                      padding: const EdgeInsets.all(3),
+                      padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
                         color: const Color(0xFF18181B),
                         borderRadius: BorderRadius.circular(999),
@@ -149,8 +175,8 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                                 color: _isAvatarMode ? const Color(0xFF3F3F46) : Colors.transparent,
                                 borderRadius: BorderRadius.circular(999),
                               ),
-                              child: Row(
-                                children: const [
+                              child: const Row(
+                                children: [
                                   Icon(Icons.face, size: 14, color: Colors.white),
                                   SizedBox(width: 4),
                                   Text('Avatar', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
@@ -166,8 +192,8 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                                 color: !_isAvatarMode ? const Color(0xFF3F3F46) : Colors.transparent,
                                 borderRadius: BorderRadius.circular(999),
                               ),
-                              child: Row(
-                                children: const [
+                              child: const Row(
+                                children: [
                                   Icon(Icons.photo_camera_outlined, size: 14, color: Color(0xFF71717A)),
                                   SizedBox(width: 4),
                                   Text('Photo', style: TextStyle(color: Color(0xFF71717A), fontSize: 11, fontWeight: FontWeight.w600)),
@@ -178,10 +204,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 16),
-
-                    // Persona Grid (5 items)
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
@@ -308,9 +331,9 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
+                      children: [
                         Text('India mobile numbers only', style: TextStyle(color: Color(0xFF52525B), fontSize: 10)),
                         Text('0/10', style: TextStyle(color: Color(0xFF52525B), fontSize: 10)),
                       ],
@@ -398,9 +421,9 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                             height: 20,
                             child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                           )
-                        : Row(
+                        : const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
+                            children: [
                               Text(
                                 'Save & Continue',
                                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),

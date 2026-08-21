@@ -1,10 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../../core/api_client.dart';
 
 const _kAccessToken = 'orbit_access_token';
 const _kRefreshToken = 'orbit_refresh_token';
-const _kUserData = 'orbit_user_data';
 
 class AuthState {
   final bool isLoggedIn;

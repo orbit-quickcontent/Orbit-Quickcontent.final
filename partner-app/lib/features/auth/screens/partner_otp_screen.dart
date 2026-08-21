@@ -72,6 +72,7 @@ class _PartnerOtpScreenState extends ConsumerState<PartnerOtpScreen> {
           partner: data['partner'],
         );
 
+        if (!mounted) return;
         if (data['partner'] == null || data['partner']['status'] != 'ACTIVE') {
           context.go('/onboarding');
         } else {

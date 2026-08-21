@@ -20,10 +20,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _navigate() async {
     await Future.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
-    
     final prefs = await SharedPreferences.getInstance();
     final hasSeenPermissions = prefs.getBool('has_seen_permissions') ?? false;
+    
+    if (!mounted) return;
     
     if (!hasSeenPermissions) {
       context.go('/permissions');
@@ -57,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   gradient: OrbitClientTheme.primaryGradient,
                   boxShadow: [
                     BoxShadow(
-                      color: OrbitClientTheme.primaryFixed.withOpacity(0.4),
+                      color: OrbitClientTheme.primaryFixed.withValues(alpha: 0.4),
                       blurRadius: 32,
                       spreadRadius: 4,
                     ),
@@ -116,7 +116,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   Container(
                     width: 6, height: 6,
                     margin: const EdgeInsets.symmetric(horizontal: 3),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: OrbitClientTheme.primaryGradient,
                     ),

@@ -143,7 +143,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                           width: 40, height: 40,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: OrbitClientTheme.surfaceContainerLowest.withOpacity(0.9),
+                            color: OrbitClientTheme.surfaceContainerLowest.withValues(alpha: 0.9),
                             border: Border.all(color: OrbitClientTheme.outlineVariant),
                           ),
                           child: const Icon(Icons.arrow_back_ios, size: 16, color: OrbitClientTheme.onSurface),
@@ -154,16 +154,16 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                         child: Container(
                           height: 44,
                           decoration: BoxDecoration(
-                            color: OrbitClientTheme.surfaceContainerLowest.withOpacity(0.95),
+                            color: OrbitClientTheme.surfaceContainerLowest.withValues(alpha: 0.95),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: OrbitClientTheme.outlineVariant),
                           ),
-                          child: Row(
+                          child: const Row(
                             children: [
-                              const SizedBox(width: 12),
-                              const Icon(Icons.search, size: 18, color: OrbitClientTheme.outline),
-                              const SizedBox(width: 8),
-                              const Text('Tap on map to select location', style: TextStyle(fontSize: 13, color: OrbitClientTheme.outline)),
+                              SizedBox(width: 12),
+                              Icon(Icons.search, size: 18, color: OrbitClientTheme.outline),
+                              SizedBox(width: 8),
+                              Text('Tap on map to select location', style: TextStyle(fontSize: 13, color: OrbitClientTheme.outline)),
                             ],
                           ),
                         ),
@@ -181,7 +181,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             child: Container(
               padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).padding.bottom + 20),
               decoration: BoxDecoration(
-                color: OrbitClientTheme.surfaceContainerLowest.withOpacity(0.95),
+                color: OrbitClientTheme.surfaceContainerLowest.withValues(alpha: 0.95),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                 border: const Border(top: BorderSide(color: OrbitClientTheme.outlineVariant, width: 0.5)),
               ),
@@ -193,7 +193,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                     children: [
                       Container(
                         width: 36, height: 36,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: OrbitClientTheme.primaryGradient,
                         ),

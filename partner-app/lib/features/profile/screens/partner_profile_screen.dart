@@ -521,7 +521,7 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
                       GestureDetector(
                         onTap: () async {
                           await ref.read(partnerAuthProvider.notifier).logout();
-                          if (mounted) context.go('/login');
+                          if (context.mounted) context.go('/login');
                         },
                         child: Container(
                           width: double.infinity,
@@ -531,9 +531,9 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: const Color(0xFF2D303A)),
                           ),
-                          child: Row(
+                          child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
+                            children: [
                               Icon(Icons.logout, color: Color(0xFFF87171), size: 18),
                               SizedBox(width: 8),
                               Text(

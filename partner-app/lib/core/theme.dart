@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+export 'theme/orbit_theme.dart';
 
 /// ORBIT Partner App — Luminous Dark Design System
 /// Colors extracted from stitch_professional_ui_ux_replication DESIGN.md
@@ -223,7 +224,7 @@ class OnlineStatusDot extends StatelessWidget {
         shape: BoxShape.circle,
         color: isOnline ? OrbitPartnerTheme.primary : OrbitPartnerTheme.offline,
         boxShadow: isOnline
-            ? [BoxShadow(color: OrbitPartnerTheme.primary.withOpacity(0.6), blurRadius: 6, spreadRadius: 1)]
+            ? [BoxShadow(color: OrbitPartnerTheme.primary.withValues(alpha: 0.6), blurRadius: 6, spreadRadius: 1)]
             : [],
       ),
     );

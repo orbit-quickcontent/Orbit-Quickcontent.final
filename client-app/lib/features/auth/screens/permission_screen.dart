@@ -19,7 +19,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
     setState(() => _isLoading = true);
 
     // Request Location and Notification
-    final statuses = await [
+    await [
       Permission.locationWhenInUse,
       Permission.notification,
     ].request();
@@ -128,7 +128,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
               // Skip Button
               TextButton(
                 onPressed: _skip,
-                child: Text(
+                child: const Text(
                   'Maybe Later',
                   style: TextStyle(
                     color: OrbitClientTheme.onSurfaceVariant,

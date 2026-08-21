@@ -36,7 +36,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         title: Text('Notifications', style: OrbitClientTheme.textTheme.headlineMedium),
         automaticallyImplyLeading: false,
         actions: [
-          TextButton(onPressed: _markAllRead, child: Text('Mark all read', style: TextStyle(color: OrbitClientTheme.primaryFixed, fontSize: 13))),
+          TextButton(onPressed: _markAllRead, child: const Text('Mark all read', style: TextStyle(color: OrbitClientTheme.primaryFixed, fontSize: 13))),
         ],
       ),
       body: _isLoading
