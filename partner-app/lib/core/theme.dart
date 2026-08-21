@@ -1,77 +1,73 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'theme/orbit_colors.dart';
+import 'theme/orbit_typography.dart';
+
 export 'theme/orbit_theme.dart';
 
-/// ORBIT Partner App — Luminous Dark Design System
-/// Colors extracted from stitch_professional_ui_ux_replication DESIGN.md
+/// ORBIT Partner App — Operational Dark Design System
 class OrbitPartnerTheme {
   OrbitPartnerTheme._();
 
-  // ── Core Palette (Total Pitch Black OLED Theme) ──────────────────────────
-  static const Color background = Color(0xFF000000);
-  static const Color surface = Color(0xFF0D0D0D);
-  static const Color surfaceLow = Color(0xFF141414);
-  static const Color surfaceHigh = Color(0xFF1C1C1C);
-  static const Color surfaceBorder = Color(0xFF222222);
-  static const Color surfaceVariant = Color(0xFF2A2A2A);
+  // ── Core Palette ──────────────────────────────────────────────────────────
+  static const Color background = OrbitColors.background;
+  static const Color surface = OrbitColors.surface;
+  static const Color surfaceLow = OrbitColors.surfaceContainerLowest;
+  static const Color surfaceHigh = OrbitColors.surfaceElevated;
+  static const Color surfaceBorder = OrbitColors.borderSubtle;
+  static const Color surfaceVariant = OrbitColors.surfaceHighlight;
 
-  // ── Primary (Neon Green) ───────────────────────────────────────────────────
-  static const Color primary = Color(0xFF4BE277);       // #4be277
-  static const Color primaryDim = Color(0xFF22C55E);    // #22c55e
-  static const Color primaryContainer = Color(0xFF003915);
-  static const Color onPrimary = Colors.black;
+  // ── Brand Accent & Semantics ──────────────────────────────────────────────
+  static const Color primary = OrbitColors.primary;
+  static const Color primaryDim = OrbitColors.primaryDark;
+  static const Color primaryContainer = Color(0xFF1E1838);
+  static const Color onPrimary = Colors.white;
 
-  // ── Secondary (Purple) ─────────────────────────────────────────────────────
-  static const Color secondary = Color(0xFFDDB7FF);    // #ddb7ff
-  static const Color secondaryContainer = Color(0xFF6F00BE);
-  static const Color onSecondary = Color(0xFF490080);
+  static const Color secondary = OrbitColors.primaryLight;
+  static const Color secondaryContainer = Color(0xFF2A204E);
+  static const Color onSecondary = Colors.white;
 
-  // ── Tertiary (Tech Blue) ───────────────────────────────────────────────────
-  static const Color tertiary = Color(0xFFAFC7FF);     // #afc7ff
-  static const Color tertiaryContainer = Color(0xFF003D88);
+  static const Color tertiary = OrbitColors.info;
+  static const Color tertiaryContainer = OrbitColors.surfaceHighlight;
 
-  // ── Text ───────────────────────────────────────────────────────────────────
-  static const Color onSurface = Color(0xFFE5E2E1);    // #e5e2e1
-  static const Color textSecondary = Color(0xFF94A3B8); // Mid-gray
-  static const Color onSurfaceVariant = textSecondary;
-  static const Color onBackground = onSurface;
+  // ── Text Hierarchy ────────────────────────────────────────────────────────
+  static const Color onSurface = OrbitColors.textPrimary;
+  static const Color textSecondary = OrbitColors.textSecondary;
+  static const Color onSurfaceVariant = OrbitColors.textSecondary;
+  static const Color onBackground = OrbitColors.textPrimary;
+  static const Color textMuted = OrbitColors.textMuted;
 
-  // ── Semantic ───────────────────────────────────────────────────────────────
-  static const Color error = Color(0xFFFFB4AB);
-  static const Color online = Color(0xFF10B981);       // Emerald for ONLINE dot
-  static const Color offline = Color(0xFF6B7280);
+  // ── Status & State ────────────────────────────────────────────────────────
+  static const Color error = OrbitColors.danger;
+  static const Color online = OrbitColors.success;
+  static const Color offline = OrbitColors.textDisabled;
+  static const Color warning = OrbitColors.warning;
 
-  // ── Border ─────────────────────────────────────────────────────────────────
-  static const Color outline = Color(0xFF374151);
-  static const Color outlineFaint = Color(0xFF1F2937);
-  static const Color border = outlineFaint;
+  // ── Borders & Outlines ────────────────────────────────────────────────────
+  static const Color outline = OrbitColors.borderMedium;
+  static const Color outlineFaint = OrbitColors.borderSubtle;
+  static const Color border = OrbitColors.borderSubtle;
 
-  // ── Gradient ───────────────────────────────────────────────────────────────
-  static const LinearGradient partnerGradient = LinearGradient(
-    colors: [Color(0xFF4BE277), Color(0xFF22C55E)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+  // ── Gradients ─────────────────────────────────────────────────────────────
+  static const LinearGradient partnerGradient = OrbitColors.primaryGradient;
+  static const LinearGradient purpleGradient = OrbitColors.primaryGradient;
 
-  static const LinearGradient purpleGradient = LinearGradient(
-    colors: [Color(0xFF6F00BE), Color(0xFF9D50FF)],
-  );
-
-  // ── TextTheme (Plus Jakarta Sans + Geist) ──────────────────────────────────
+  // ── TextTheme (Inter) ─────────────────────────────────────────────────────
   static TextTheme get textTheme => TextTheme(
-    displayLarge: GoogleFonts.plusJakartaSans(fontSize: 32, fontWeight: FontWeight.w800, color: onSurface),
-    headlineLarge: GoogleFonts.plusJakartaSans(fontSize: 24, fontWeight: FontWeight.w700, color: onSurface),
-    headlineMedium: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w700, color: onSurface),
-    headlineSmall: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700, color: onSurface),
-    titleLarge: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w600, color: onSurface),
-    titleMedium: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w600, color: onSurface),
-    bodyLarge: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w400, color: onSurface),
-    bodyMedium: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w400, color: onSurface),
-    bodySmall: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w400, color: textSecondary),
-    // Geist for labels/metadata
-    labelLarge: GoogleFonts.spaceGrotesk(fontSize: 13, fontWeight: FontWeight.w600, color: onSurface, letterSpacing: 0.5),
-    labelMedium: GoogleFonts.spaceGrotesk(fontSize: 12, fontWeight: FontWeight.w600, color: textSecondary, letterSpacing: 1.0),
-    labelSmall: GoogleFonts.spaceGrotesk(fontSize: 11, fontWeight: FontWeight.w600, color: textSecondary, letterSpacing: 1.2),
+    displayLarge: OrbitTypography.displayLarge,
+    displayMedium: OrbitTypography.displayMedium,
+    headlineLarge: OrbitTypography.headingLarge,
+    headlineMedium: OrbitTypography.headingMedium,
+    headlineSmall: OrbitTypography.titleLarge,
+    titleLarge: OrbitTypography.titleLarge,
+    titleMedium: OrbitTypography.titleMedium,
+    titleSmall: OrbitTypography.titleSmall,
+    bodyLarge: OrbitTypography.bodyLarge,
+    bodyMedium: OrbitTypography.bodyMedium,
+    bodySmall: OrbitTypography.bodySmall,
+    labelLarge: OrbitTypography.labelLarge,
+    labelMedium: OrbitTypography.labelMedium,
+    labelSmall: OrbitTypography.labelSmall,
   );
 
   static ThemeData get theme => ThemeData(
@@ -83,17 +79,17 @@ class OrbitPartnerTheme {
       primary: primary,
       onPrimary: onPrimary,
       primaryContainer: primaryContainer,
-      onPrimaryContainer: Color(0xFF6BFF8F),
+      onPrimaryContainer: Color(0xFFE0D8FF),
       secondary: secondary,
       onSecondary: onSecondary,
       secondaryContainer: secondaryContainer,
-      onSecondaryContainer: Color(0xFFF0DBFF),
+      onSecondaryContainer: Color(0xFFF0EBFF),
       tertiary: tertiary,
-      onTertiary: Color(0xFF002E6A),
+      onTertiary: Colors.black,
       surface: surface,
       onSurface: onSurface,
       error: error,
-      onError: Color(0xFF690005),
+      onError: Colors.white,
       outline: outline,
       outlineVariant: outlineFaint,
     ),
@@ -102,7 +98,7 @@ class OrbitPartnerTheme {
       backgroundColor: background,
       elevation: 0,
       scrolledUnderElevation: 0,
-      titleTextStyle: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w700, color: onSurface),
+      titleTextStyle: OrbitTypography.titleLarge,
       iconTheme: const IconThemeData(color: onSurface),
     ),
     cardTheme: CardThemeData(
@@ -110,121 +106,128 @@ class OrbitPartnerTheme {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: outlineFaint, width: 1),
+        side: const BorderSide(color: border, width: 1),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: const Color(0xFF0A0A0A),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: outline)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: outline)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: primary, width: 1.5)),
-      hintStyle: GoogleFonts.plusJakartaSans(fontSize: 14, color: textSecondary),
+      fillColor: surfaceHigh,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: border)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: border)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: primary, width: 1.5)),
+      hintStyle: OrbitTypography.bodyMedium.copyWith(color: textMuted),
     ),
-    dividerTheme: const DividerThemeData(color: outlineFaint, thickness: 1),
-    snackBarTheme: SnackBarThemeData(
-      backgroundColor: surfaceLow,
-      contentTextStyle: GoogleFonts.plusJakartaSans(color: onSurface),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      behavior: SnackBarBehavior.floating,
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: OrbitTypography.titleSmall.copyWith(fontWeight: FontWeight.w700),
+      ),
     ),
   );
 }
 
-// ── Shared Partner Widgets ───────────────────────────────────────────────────
+/// Glass / elevated card container
+class OrbitGlassCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final double borderRadius;
+  final Color? backgroundColor;
+  final Border? customBorder;
 
-/// Primary action button (white bg, black text — per Luminous Dark spec)
-class PartnerButton extends StatelessWidget {
-  final String label;
-  final VoidCallback? onPressed;
-  final bool isLoading;
-  final bool isOutlined;
-  final Color? color;
-  final double height;
-
-  const PartnerButton({
+  const OrbitGlassCard({
     super.key,
-    required this.label,
-    this.onPressed,
-    this.isLoading = false,
-    this.isOutlined = false,
-    this.color,
-    this.height = 52,
+    required this.child,
+    this.padding,
+    this.borderRadius = 16,
+    this.backgroundColor,
+    this.customBorder,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: height,
-      width: double.infinity,
-      child: isOutlined
-          ? OutlinedButton(
-              onPressed: isLoading ? null : onPressed,
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: color ?? OrbitPartnerTheme.outline),
-                foregroundColor: color ?? OrbitPartnerTheme.onSurface,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: _child,
-            )
-          : ElevatedButton(
-              onPressed: isLoading ? null : onPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: color ?? Colors.white,
-                foregroundColor: Colors.black,
-                elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: _child,
-            ),
+    return Container(
+      padding: padding ?? const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: backgroundColor ?? OrbitColors.surface,
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: customBorder ?? Border.all(color: OrbitColors.borderSubtle, width: 1.0),
+      ),
+      child: child,
     );
   }
-
-  Widget get _child => isLoading
-      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-      : Text(label, style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700));
 }
 
-/// Dark card for Partner app
-class PartnerCard extends StatelessWidget {
-  final Widget child;
-  final EdgeInsetsGeometry? padding;
-  final VoidCallback? onTap;
+/// Gradient text widget
+class OrbitGradientText extends StatelessWidget {
+  final String text;
+  final TextStyle? style;
 
-  const PartnerCard({super.key, required this.child, this.padding, this.onTap});
+  const OrbitGradientText(this.text, {super.key, this.style});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: padding ?? const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: OrbitPartnerTheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: OrbitPartnerTheme.outlineFaint, width: 1),
+    return ShaderMask(
+      blendMode: BlendMode.srcIn,
+      shaderCallback: (bounds) => OrbitColors.primaryGradient.createShader(bounds),
+      child: Text(text, style: style),
+    );
+  }
+}
+
+/// Status chip
+class OrbitStatusChip extends StatelessWidget {
+  final String label;
+  final Color color;
+  final Color backgroundColor;
+
+  const OrbitStatusChip({
+    super.key,
+    required this.label,
+    required this.color,
+    required this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: color,
+          letterSpacing: 0.5,
         ),
-        child: child,
       ),
     );
   }
 }
 
-/// Online status indicator
-class OnlineStatusDot extends StatelessWidget {
+/// Live pulse status dot
+class OrbitLivePulseDot extends StatelessWidget {
   final bool isOnline;
-  const OnlineStatusDot({super.key, required this.isOnline});
+  const OrbitLivePulseDot({super.key, required this.isOnline});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 8, height: 8,
+      width: 8,
+      height: 8,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isOnline ? OrbitPartnerTheme.primary : OrbitPartnerTheme.offline,
+        color: isOnline ? OrbitColors.success : OrbitColors.textDisabled,
         boxShadow: isOnline
-            ? [BoxShadow(color: OrbitPartnerTheme.primary.withValues(alpha: 0.6), blurRadius: 6, spreadRadius: 1)]
+            ? [BoxShadow(color: OrbitColors.success.withValues(alpha: 0.5), blurRadius: 6, spreadRadius: 1)]
             : [],
       ),
     );

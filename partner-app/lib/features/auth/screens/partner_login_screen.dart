@@ -188,9 +188,9 @@ class _PartnerLoginScreenState extends ConsumerState<PartnerLoginScreen> {
                   borderRadius: BorderRadius.circular(14),
                   side: const BorderSide(color: OrbitColors.borderSubtle),
                 ),
-                leading: CircleAvatar(
+                leading: const CircleAvatar(
                   backgroundColor: OrbitColors.surfaceElevated,
-                  child: const Icon(Icons.person_add_outlined, color: OrbitColors.textSecondary, size: 20),
+                  child: Icon(Icons.person_add_outlined, color: OrbitColors.textSecondary, size: 20),
                 ),
                 title: Text(
                   'Use another $brandName account',
@@ -258,7 +258,7 @@ class _PartnerLoginScreenState extends ConsumerState<PartnerLoginScreen> {
           'role': 'PARTNER',
         },
         partner: {
-          'id': 'oauth_partner_${provider}',
+          'id': 'oauth_partner_$provider',
           'displayName': name,
           'status': 'ACTIVE',
         },
@@ -405,9 +405,9 @@ class _PartnerLoginScreenState extends ConsumerState<PartnerLoginScreen> {
                         child: Container(
                           height: OrbitSpacing.minTouchTarget,
                           alignment: Alignment.center,
-                          child: Row(
+                          child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
+                            children: [
                               Icon(Icons.g_mobiledata, color: Colors.black, size: 28),
                               SizedBox(width: 4),
                               Text('Google', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 14)),
@@ -421,9 +421,9 @@ class _PartnerLoginScreenState extends ConsumerState<PartnerLoginScreen> {
                   Expanded(
                     child: Material(
                       color: OrbitColors.surfaceElevated,
-                      shape: RoundedRectangleBorder(
+                      shape: const RoundedRectangleBorder(
                         borderRadius: OrbitRadius.rounded16,
-                        side: const BorderSide(color: OrbitColors.borderSubtle),
+                        side: BorderSide(color: OrbitColors.borderSubtle),
                       ),
                       child: InkWell(
                         onTap: _isLoading ? null : () => _showSocialLoginModal('apple'),
@@ -431,9 +431,9 @@ class _PartnerLoginScreenState extends ConsumerState<PartnerLoginScreen> {
                         child: Container(
                           height: OrbitSpacing.minTouchTarget,
                           alignment: Alignment.center,
-                          child: Row(
+                          child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
+                            children: [
                               Icon(Icons.apple, color: Colors.white, size: 22),
                               SizedBox(width: 6),
                               Text('Apple', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
@@ -539,15 +539,15 @@ class _PartnerLoginScreenState extends ConsumerState<PartnerLoginScreen> {
                       TextField(
                         controller: _nameController,
                         style: const TextStyle(color: Colors.white, fontSize: 14),
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           hintText: 'Jordan Miller',
-                          hintStyle: const TextStyle(color: OrbitColors.textDisabled, fontSize: 14),
+                          hintStyle: TextStyle(color: OrbitColors.textDisabled, fontSize: 14),
                           filled: true,
                           fillColor: OrbitColors.surfaceElevated,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          border: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
-                          enabledBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
-                          focusedBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.secondary)),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          border: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                          enabledBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                          focusedBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.secondary)),
                         ),
                       ),
                       const SizedBox(height: OrbitSpacing.space16),
@@ -560,16 +560,16 @@ class _PartnerLoginScreenState extends ConsumerState<PartnerLoginScreen> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       style: const TextStyle(color: Colors.white, fontSize: 14),
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: 'creator@example.com',
-                        hintStyle: const TextStyle(color: OrbitColors.textDisabled, fontSize: 14),
-                        prefixIcon: const Icon(Icons.mail_outline, color: OrbitColors.textSecondary, size: 18),
+                        hintStyle: TextStyle(color: OrbitColors.textDisabled, fontSize: 14),
+                        prefixIcon: Icon(Icons.mail_outline, color: OrbitColors.textSecondary, size: 18),
                         filled: true,
                         fillColor: OrbitColors.surfaceElevated,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        border: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
-                        enabledBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
-                        focusedBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.secondary)),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                        enabledBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                        focusedBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.secondary)),
                       ),
                     ),
 
@@ -597,9 +597,9 @@ class _PartnerLoginScreenState extends ConsumerState<PartnerLoginScreen> {
                         filled: true,
                         fillColor: OrbitColors.surfaceElevated,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        border: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
-                        enabledBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
-                        focusedBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: const BorderSide(color: OrbitColors.secondary)),
+                        border: const OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                        enabledBorder: const OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                        focusedBorder: const OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.secondary)),
                       ),
                     ),
                   ],

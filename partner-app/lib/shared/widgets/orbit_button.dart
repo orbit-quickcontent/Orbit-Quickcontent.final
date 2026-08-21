@@ -8,7 +8,8 @@ class OrbitPrimaryButton extends StatelessWidget {
   final bool isLoading;
   final IconData? icon;
   final double height;
-  final Gradient? gradient;
+  final Color? backgroundColor;
+  final Color? textColor;
 
   const OrbitPrimaryButton({
     super.key,
@@ -17,7 +18,8 @@ class OrbitPrimaryButton extends StatelessWidget {
     this.isLoading = false,
     this.icon,
     this.height = OrbitSpacing.primaryCtaHeight,
-    this.gradient,
+    this.backgroundColor,
+    this.textColor,
   });
 
   @override
@@ -32,15 +34,14 @@ class OrbitPrimaryButton extends StatelessWidget {
         height: height,
         constraints: const BoxConstraints(minWidth: double.infinity, minHeight: OrbitSpacing.minTouchTarget),
         decoration: BoxDecoration(
-          gradient: isEnabled ? (gradient ?? OrbitColors.primaryGradient) : null,
-          color: isEnabled ? null : OrbitColors.surfaceHighlight,
-          borderRadius: OrbitRadius.roundedFull,
+          color: isEnabled ? (backgroundColor ?? OrbitColors.primary) : OrbitColors.surfaceHighlight,
+          borderRadius: BorderRadius.circular(14),
           boxShadow: isEnabled
               ? [
                   BoxShadow(
-                    color: OrbitColors.primary.withValues(alpha: 0.35),
-                    blurRadius: 18,
-                    offset: const Offset(0, 6),
+                    color: (backgroundColor ?? OrbitColors.primary).withValues(alpha: 0.3),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
                   ),
                 ]
               : null,
@@ -48,7 +49,7 @@ class OrbitPrimaryButton extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: OrbitRadius.roundedFull,
+            borderRadius: BorderRadius.circular(14),
             onTap: isEnabled
                 ? () {
                     OrbitMotion.lightTap();
@@ -70,13 +71,13 @@ class OrbitPrimaryButton extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (icon != null) ...[
-                          Icon(icon, size: 20, color: isEnabled ? Colors.white : OrbitColors.textDisabled),
+                          Icon(icon, size: 20, color: textColor ?? Colors.white),
                           const SizedBox(width: OrbitSpacing.space8),
                         ],
                         Text(
                           label,
                           style: OrbitTypography.titleSmall.copyWith(
-                            color: isEnabled ? Colors.white : OrbitColors.textDisabled,
+                            color: isEnabled ? (textColor ?? Colors.white) : OrbitColors.textDisabled,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.2,
                           ),
@@ -91,7 +92,38 @@ class OrbitPrimaryButton extends StatelessWidget {
   }
 }
 
-/// Secondary Outlined / Subtle Action Button for Partner App
+/// Accept Booking Button (Dominant Operational Green)
+class OrbitAcceptButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+  final bool isLoading;
+  final IconData? icon;
+  final double height;
+
+  const OrbitAcceptButton({
+    super.key,
+    this.label = 'ACCEPT BOOKING',
+    required this.onPressed,
+    this.isLoading = false,
+    this.icon = Icons.check_circle_outline_rounded,
+    this.height = OrbitSpacing.primaryCtaHeight,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return OrbitPrimaryButton(
+      label: label,
+      onPressed: onPressed,
+      isLoading: isLoading,
+      icon: icon,
+      height: height,
+      backgroundColor: OrbitColors.success,
+      textColor: Colors.black,
+    );
+  }
+}
+
+/// Secondary Outlined / Muted Action Button for Partner App
 class OrbitSecondaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -121,13 +153,13 @@ class OrbitSecondaryButton extends StatelessWidget {
         constraints: const BoxConstraints(minWidth: double.infinity, minHeight: OrbitSpacing.minTouchTarget),
         decoration: BoxDecoration(
           color: OrbitColors.surfaceElevated,
-          borderRadius: OrbitRadius.roundedFull,
-          border: Border.all(color: OrbitColors.borderMedium, width: 1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: OrbitColors.borderSubtle, width: 1),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: OrbitRadius.roundedFull,
+            borderRadius: BorderRadius.circular(14),
             onTap: isEnabled
                 ? () {
                     OrbitMotion.lightTap();
@@ -147,6 +179,71 @@ class OrbitSecondaryButton extends StatelessWidget {
                     label,
                     style: OrbitTypography.titleSmall.copyWith(
                       color: textColor ?? OrbitColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Danger / Decline Action Button (Subtle Red Outline)
+class OrbitDangerButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+  final IconData? icon;
+  final double height;
+
+  const OrbitDangerButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    this.height = OrbitSpacing.primaryCtaHeight,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      enabled: onPressed != null,
+      label: label,
+      child: Container(
+        height: height,
+        constraints: const BoxConstraints(minWidth: double.infinity, minHeight: OrbitSpacing.minTouchTarget),
+        decoration: BoxDecoration(
+          color: OrbitColors.danger.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: OrbitColors.danger.withValues(alpha: 0.25), width: 1),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: onPressed != null
+                ? () {
+                    OrbitMotion.lightTap();
+                    onPressed!();
+                  }
+                : null,
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 20, color: OrbitColors.danger),
+                    const SizedBox(width: OrbitSpacing.space8),
+                  ],
+                  Text(
+                    label,
+                    style: OrbitTypography.titleSmall.copyWith(
+                      color: OrbitColors.danger,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

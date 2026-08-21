@@ -7,6 +7,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:dio/dio.dart';
 import '../../../core/theme.dart';
 import '../../../core/api_client.dart';
+import '../../../shared/widgets/orbit_button.dart';
 import '../providers/partner_auth_provider.dart';
 
 class PartnerOtpScreen extends ConsumerStatefulWidget {
@@ -166,12 +167,12 @@ class _PartnerOtpScreenState extends ConsumerState<PartnerOtpScreen> {
               if (_error != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: Text(_error!, style: TextStyle(color: OrbitPartnerTheme.error, fontSize: 13)),
+                  child: Text(_error!, style: const TextStyle(color: OrbitPartnerTheme.error, fontSize: 13)),
                 ),
 
               const SizedBox(height: 24),
 
-              PartnerButton(
+              OrbitPrimaryButton(
                 label: 'Verify & Login',
                 onPressed: _isVerifying ? null : () => _verify(_otpController.text),
                 isLoading: _isVerifying,

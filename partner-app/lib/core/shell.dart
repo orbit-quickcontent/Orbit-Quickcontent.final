@@ -8,10 +8,10 @@ class PartnerShell extends StatelessWidget {
   const PartnerShell({super.key, required this.child});
 
   int _indexFor(String loc) {
-    if (loc.startsWith('/work') || loc.startsWith('/home')) return 0;
-    if (loc.startsWith('/jobs') || loc.startsWith('/history')) return 1;
+    if (loc.startsWith('/work-history') || loc.startsWith('/jobs') || loc.startsWith('/history')) return 1;
     if (loc.startsWith('/earnings')) return 2;
     if (loc.startsWith('/profile')) return 3;
+    if (loc.startsWith('/work') || loc.startsWith('/available-work') || loc.startsWith('/home')) return 0;
     return 0;
   }
 
@@ -19,12 +19,12 @@ class PartnerShell extends StatelessWidget {
     OrbitMotion.lightTap();
     switch (index) {
       case 0:
-        partnerAnalytics.trackButtonClick('nav_work');
+        partnerAnalytics.trackButtonClick('nav_home');
         context.go('/work');
         break;
       case 1:
         partnerAnalytics.trackButtonClick('nav_jobs');
-        context.go('/work');
+        context.go('/work-history');
         break;
       case 2:
         partnerAnalytics.trackButtonClick('nav_earnings');
@@ -47,24 +47,17 @@ class PartnerShell extends StatelessWidget {
       body: child,
       extendBody: true,
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: OrbitColors.surface.withValues(alpha: 0.95),
-          border: const Border(top: BorderSide(color: OrbitColors.borderMedium, width: 1)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.5),
-              blurRadius: 24,
-              offset: const Offset(0, -4),
-            ),
-          ],
+        decoration: const BoxDecoration(
+          color: OrbitColors.surface,
+          border: Border(top: BorderSide(color: OrbitColors.borderSubtle, width: 1)),
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: OrbitSpacing.space12, vertical: OrbitSpacing.space8),
+            padding: const EdgeInsets.symmetric(horizontal: OrbitSpacing.space16, vertical: OrbitSpacing.space8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _Tab(icon: Icons.radar_outlined, activeIcon: Icons.radar_rounded, label: 'Work', index: 0, current: currentIndex, onTap: (i) => _onTap(context, i)),
+                _Tab(icon: Icons.radar_outlined, activeIcon: Icons.radar_rounded, label: 'Home', index: 0, current: currentIndex, onTap: (i) => _onTap(context, i)),
                 _Tab(icon: Icons.assignment_outlined, activeIcon: Icons.assignment_rounded, label: 'Jobs', index: 1, current: currentIndex, onTap: (i) => _onTap(context, i)),
                 _Tab(icon: Icons.account_balance_wallet_outlined, activeIcon: Icons.account_balance_wallet_rounded, label: 'Earnings', index: 2, current: currentIndex, onTap: (i) => _onTap(context, i)),
                 _Tab(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profile', index: 3, current: currentIndex, onTap: (i) => _onTap(context, i)),
@@ -100,25 +93,14 @@ class _Tab extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 68,
-        height: 52,
+        height: 48,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            AnimatedContainer(
-              duration: OrbitMotion.micro,
-              curve: OrbitMotion.standard,
-              height: 3,
-              width: isActive ? 20 : 0,
-              margin: const EdgeInsets.only(bottom: 4),
-              decoration: BoxDecoration(
-                gradient: isActive ? OrbitColors.primaryGradient : null,
-                borderRadius: OrbitRadius.roundedFull,
-              ),
-            ),
             Icon(
               isActive ? activeIcon : icon,
-              color: isActive ? OrbitColors.secondary : OrbitColors.textMuted,
+              color: isActive ? OrbitColors.primary : OrbitColors.textMuted,
               size: 22,
             ),
             const SizedBox(height: 3),

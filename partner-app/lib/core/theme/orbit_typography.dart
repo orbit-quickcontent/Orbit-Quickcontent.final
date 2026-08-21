@@ -3,31 +3,32 @@ import 'package:google_fonts/google_fonts.dart';
 import 'orbit_colors.dart';
 
 /// ORBIT Typography System for Partner App
+/// Strict operational hierarchy based on Inter with high legibility & tabular figures
 class OrbitTypography {
   OrbitTypography._();
 
-  // Display (32 - 40)
+  // ── Display / Amounts (28 - 32px) ──────────────────────────────────────────
   static TextStyle displayLarge = GoogleFonts.inter(
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: FontWeight.w800,
-    letterSpacing: -0.8,
+    letterSpacing: -0.6,
     color: OrbitColors.textPrimary,
     height: 1.15,
   );
 
   static TextStyle displayMedium = GoogleFonts.inter(
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: FontWeight.w700,
-    letterSpacing: -0.6,
+    letterSpacing: -0.4,
     color: OrbitColors.textPrimary,
     height: 1.2,
   );
 
-  // Heading (24 - 28)
+  // ── Large / Headings (22 - 26px) ───────────────────────────────────────────
   static TextStyle headingLarge = GoogleFonts.inter(
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: FontWeight.w700,
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
     color: OrbitColors.textPrimary,
     height: 1.25,
   );
@@ -40,9 +41,9 @@ class OrbitTypography {
     height: 1.3,
   );
 
-  // Title (18 - 20)
+  // ── Section / Titles (16 - 18px) ───────────────────────────────────────────
   static TextStyle titleLarge = GoogleFonts.inter(
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: FontWeight.w600,
     letterSpacing: -0.1,
     color: OrbitColors.textPrimary,
@@ -50,20 +51,20 @@ class OrbitTypography {
   );
 
   static TextStyle titleMedium = GoogleFonts.inter(
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: FontWeight.w600,
     color: OrbitColors.textPrimary,
     height: 1.35,
   );
 
   static TextStyle titleSmall = GoogleFonts.inter(
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: FontWeight.w600,
     color: OrbitColors.textPrimary,
     height: 1.4,
   );
 
-  // Body (14 - 16)
+  // ── Body (14 - 16px) ───────────────────────────────────────────────────────
   static TextStyle bodyLarge = GoogleFonts.inter(
     fontSize: 16,
     fontWeight: FontWeight.w400,
@@ -85,11 +86,11 @@ class OrbitTypography {
     height: 1.4,
   );
 
-  // Caption / Label (11 - 13)
+  // ── Captions & Labels (12 - 13px) ──────────────────────────────────────────
   static TextStyle labelLarge = GoogleFonts.inter(
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: FontWeight.w600,
-    letterSpacing: 0.2,
+    letterSpacing: 0.3,
     color: OrbitColors.textPrimary,
   );
 
@@ -103,7 +104,15 @@ class OrbitTypography {
   static TextStyle labelSmall = GoogleFonts.inter(
     fontSize: 11,
     fontWeight: FontWeight.w700,
-    letterSpacing: 1.2,
+    letterSpacing: 1.0,
     color: OrbitColors.textMuted,
+  );
+
+  // ── High-Contrast Metric Amounts ───────────────────────────────────────────
+  static TextStyle metricValue = GoogleFonts.inter(
+    fontSize: 26,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.5,
+    color: OrbitColors.textPrimary,
   );
 }

@@ -17,7 +17,7 @@ class IncomingBookingScreen extends StatefulWidget {
 }
 
 class _IncomingBookingScreenState extends State<IncomingBookingScreen> {
-  final ValueNotifier<int> _countdown = ValueNotifier<int>(45);
+  final ValueNotifier<int> _countdown = ValueNotifier<int>(20);
   Timer? _timer;
   bool _isResponding = false;
   late final DateTime _receivedAt;
@@ -62,7 +62,7 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen> {
     _timer?.cancel();
 
     final booking = widget.dispatch['booking'] as Map<String, dynamic>? ?? widget.dispatch;
-    final bookingId = booking['id']?.toString() ?? widget.dispatch['bookingId']?.toString();
+    final bookingId = booking['id']?.toString() ?? widget.dispatch['bookingId']?.toString() ?? widget.dispatch['id']?.toString();
     if (bookingId == null) {
       if (mounted) context.go('/work');
       return;
@@ -86,12 +86,14 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.response?.data['message'] ?? 'Failed to respond. Job may no longer be available.'),
+            content: Text(e.response?.data['message'] ?? 'Job no longer available or assigned to another creator.'),
             backgroundColor: OrbitColors.danger,
           ),
         );
         context.go('/work');
       }
+    } catch (_) {
+      if (mounted) context.go('/work');
     }
   }
 
@@ -99,10 +101,10 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen> {
   Widget build(BuildContext context) {
     final booking = widget.dispatch['booking'] as Map<String, dynamic>? ?? widget.dispatch;
     final pkg = booking['package'] as Map<String, dynamic>? ?? {};
-    final packageName = pkg['name'] ?? booking['packageName'] ?? 'Professional Reel Shoot';
-    final payout = booking['earning'] ?? booking['partnerSalary'] ?? 500;
-    final distanceKm = booking['distanceKm'] ?? 2.5;
-    final clientArea = booking['address'] ?? booking['clientArea'] ?? 'Nearby Area (Within 3 km)';
+    final packageName = pkg['name'] ?? booking['packageName'] ?? 'Content Creator Shoot';
+    final payout = booking['earning'] ?? booking['partnerSalary'] ?? 499;
+    final distanceKm = booking['distanceKm'] ?? '2.4';
+    final clientArea = booking['address'] ?? booking['clientArea'] ?? 'Sector 62, Noida';
 
     return Scaffold(
       backgroundColor: OrbitColors.background,
@@ -110,143 +112,172 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: OrbitSpacing.space20, vertical: OrbitSpacing.space16),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: OrbitSpacing.space16),
-
-              // ── Circular Isolated Countdown ─────────────────────────
-              ValueListenableBuilder<int>(
-                valueListenable: _countdown,
-                builder: (context, count, _) {
-                  final progress = count / 45.0;
-                  final color = count > 15
-                      ? OrbitColors.secondary
-                      : count > 5
-                          ? OrbitColors.warning
-                          : OrbitColors.danger;
-
-                  return SizedBox(
-                    width: 120,
-                    height: 120,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        CircularProgressIndicator(
-                          value: progress,
-                          strokeWidth: 6,
-                          backgroundColor: OrbitColors.surfaceHighlight,
-                          valueColor: AlwaysStoppedAnimation<Color>(color),
+              // ── Header & Countdown ─────────────────────────────────────────
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: OrbitColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: OrbitColors.primary.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(
+                      'NEW BOOKING REQUEST',
+                      style: OrbitTypography.labelSmall.copyWith(
+                        color: OrbitColors.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  ValueListenableBuilder<int>(
+                    valueListenable: _countdown,
+                    builder: (context, count, _) {
+                      final isUrgent = count <= 5;
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: isUrgent ? OrbitColors.danger.withValues(alpha: 0.15) : OrbitColors.surfaceElevated,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: isUrgent ? OrbitColors.danger : OrbitColors.borderSubtle),
                         ),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
+                        child: Row(
                           children: [
+                            Icon(
+                              Icons.timer_outlined,
+                              size: 14,
+                              color: isUrgent ? OrbitColors.danger : OrbitColors.textSecondary,
+                            ),
+                            const SizedBox(width: 4),
                             Text(
-                              '$count',
-                              style: OrbitTypography.displayLarge.copyWith(
-                                color: color,
-                                fontSize: 36,
-                                fontWeight: FontWeight.w800,
+                              '${count}s',
+                              style: OrbitTypography.labelSmall.copyWith(
+                                color: isUrgent ? OrbitColors.danger : OrbitColors.textPrimary,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
-                            Text('SECONDS', style: OrbitTypography.labelSmall.copyWith(fontSize: 9)),
                           ],
                         ),
-                      ],
-                    ),
-                  );
-                },
+                      );
+                    },
+                  ),
+                ],
               ),
 
               const SizedBox(height: OrbitSpacing.space24),
-              Text('NEW SHOOT REQUEST', style: OrbitTypography.headingLarge),
-              const SizedBox(height: 4),
-              Text('Client is ready for immediate shoot', style: OrbitTypography.bodyMedium),
 
-              const SizedBox(height: OrbitSpacing.space24),
-
-              // ── Request Details Card ────────────────────────────────
-              Expanded(
-                child: ListView(
+              // ── Big High-Scannability Payout Amount ────────────────────────
+              OrbitCard(
+                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+                backgroundColor: OrbitColors.surfaceElevated,
+                border: Border.all(color: OrbitColors.borderMedium),
+                child: Column(
                   children: [
-                    OrbitCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Guaranteed Payout', style: OrbitTypography.bodySmall),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: OrbitColors.success.withValues(alpha: 0.15),
-                                  borderRadius: OrbitRadius.roundedFull,
-                                ),
-                                child: Text(
-                                  'INSTANT PAY',
-                                  style: OrbitTypography.labelSmall.copyWith(color: OrbitColors.success),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: OrbitSpacing.space8),
-                          Text('₹$payout', style: OrbitTypography.displayLarge.copyWith(color: OrbitColors.success)),
-                          const Divider(color: OrbitColors.borderSubtle, height: OrbitSpacing.space24),
-
-                          // Package info
-                          Row(
-                            children: [
-                              const Icon(Icons.videocam_rounded, size: 20, color: OrbitColors.secondary),
-                              const SizedBox(width: OrbitSpacing.space12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Package', style: OrbitTypography.labelSmall),
-                                    Text(packageName, style: OrbitTypography.titleSmall),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: OrbitSpacing.space16),
-
-                          // Location info
-                          Row(
-                            children: [
-                              const Icon(Icons.location_on_rounded, size: 20, color: OrbitColors.primaryLight),
-                              const SizedBox(width: OrbitSpacing.space12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Client Location', style: OrbitTypography.labelSmall),
-                                    Text(clientArea, style: OrbitTypography.bodyMedium),
-                                    const SizedBox(height: 2),
-                                    Text('$distanceKm km away • ~15 min travel time', style: OrbitTypography.bodySmall),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                    Text(
+                      'GUARANTEED PAYOUT',
+                      style: OrbitTypography.labelSmall.copyWith(
+                        letterSpacing: 1.2,
+                        color: OrbitColors.textSecondary,
                       ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '₹$payout',
+                      style: OrbitTypography.displayLarge.copyWith(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w800,
+                        color: OrbitColors.success,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      packageName,
+                      style: OrbitTypography.titleSmall.copyWith(color: OrbitColors.textPrimary),
                     ),
                   ],
                 ),
               ),
 
-              // ── Thumb Zone Actions (Von Restorff Single Dominant CTA) ─
               const SizedBox(height: OrbitSpacing.space16),
-              OrbitPrimaryButton(
-                label: 'ACCEPT JOB',
-                icon: Icons.check_circle_outline_rounded,
+
+              // ── Distance & Operational Route Details ───────────────────────
+              OrbitCard(
+                padding: const EdgeInsets.all(OrbitSpacing.space16),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: OrbitColors.info.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.location_on_rounded, size: 20, color: OrbitColors.info),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'CLIENT LOCATION',
+                                style: OrbitTypography.labelSmall.copyWith(fontSize: 10),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                clientArea,
+                                style: OrbitTypography.titleSmall.copyWith(fontWeight: FontWeight.w600),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: OrbitSpacing.space12),
+                    const Divider(color: OrbitColors.borderSubtle, height: 1),
+                    const SizedBox(height: OrbitSpacing.space12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            Text('DISTANCE', style: OrbitTypography.labelSmall.copyWith(fontSize: 10)),
+                            const SizedBox(height: 2),
+                            Text('$distanceKm km', style: OrbitTypography.titleMedium.copyWith(fontWeight: FontWeight.w700)),
+                          ],
+                        ),
+                        Container(width: 1, height: 28, color: OrbitColors.borderSubtle),
+                        Column(
+                          children: [
+                            Text('ESTIMATED TIME', style: OrbitTypography.labelSmall.copyWith(fontSize: 10)),
+                            const SizedBox(height: 2),
+                            Text('15-20 min', style: OrbitTypography.titleMedium.copyWith(fontWeight: FontWeight.w700)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const Spacer(),
+
+              // ── Thumb-Zone Action Buttons (Dominant Accept + Secondary Decline) ──
+              OrbitAcceptButton(
+                label: 'ACCEPT BOOKING',
                 isLoading: _isResponding,
-                onPressed: () => _respond(accept: true),
+                onPressed: _isResponding ? null : () => _respond(accept: true),
               ),
               const SizedBox(height: OrbitSpacing.space12),
-              OrbitSecondaryButton(
-                label: 'Decline',
-                textColor: OrbitColors.textMuted,
+              OrbitDangerButton(
+                label: 'DECLINE',
                 onPressed: _isResponding ? null : () => _respond(accept: false),
               ),
               const SizedBox(height: OrbitSpacing.space8),

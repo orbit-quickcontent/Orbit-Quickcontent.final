@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme.dart';
 import '../../../core/api_client.dart';
+import '../../../shared/widgets/orbit_button.dart';
 import '../providers/partner_auth_provider.dart';
 
 class PartnerOnboardingScreen extends ConsumerStatefulWidget {
@@ -143,7 +144,7 @@ class _PartnerOnboardingScreenState extends ConsumerState<PartnerOnboardingScree
 
             const SizedBox(height: 36),
 
-            PartnerButton(
+            OrbitPrimaryButton(
               label: 'Activate Partner Account',
               onPressed: _isLoading ? null : _submitVerification,
               isLoading: _isLoading,
