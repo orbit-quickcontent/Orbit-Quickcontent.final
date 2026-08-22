@@ -29,6 +29,8 @@ jobs:
         run: npm ci
 
       - name: Prisma Client Generation
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/orbit_ci?schema=public"
         run: npm run db:generate
 
       - name: Lint Verification
