@@ -10,6 +10,7 @@ import '../../../shared/widgets/orbit_loading.dart';
 import '../../../shared/widgets/orbit_empty_state.dart';
 import '../../../analytics/analytics_service.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../widgets/reel_showcase_carousel.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -242,7 +243,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
 
-              const SizedBox(height: OrbitSpacing.space32),
+              const SizedBox(height: OrbitSpacing.space24),
+
+              // ── Auto-Rotating Reels Showcase & Ratings Strip ──────────
+              OrbitReelShowcaseCarousel(
+                onBookNow: _onBookShootPressed,
+              ),
+
+              const SizedBox(height: OrbitSpacing.space24),
 
               // ── Services Section ──────────────────────────────────────
               Text('Services', style: OrbitTypography.headingMedium),
