@@ -70,7 +70,7 @@ jobs:
 
       - name: Start Backend API & Socket.IO Server in Background
         env:
-          NODE_ENV: test
+          NODE_ENV: development
           PORT: 5000
           DATABASE_URL: "postgresql://orbit_user:orbit_password@localhost:5432/orbit_test_db?schema=public"
           JWT_SECRET: "orbit_super_secret_jwt_key_for_testing_min_32_chars"

@@ -137,7 +137,7 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // ── Start HTTP Server ────────────────────────────────────────────────────────
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.JEST_WORKER_ID === undefined) {
   app.listen(PORT, () => {
     logger.info(`🚀 ORBIT Backend running on port ${PORT} [env: ${process.env.NODE_ENV || 'development'}]`);
   });
