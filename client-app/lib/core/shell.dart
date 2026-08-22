@@ -9,8 +9,8 @@ class MainShell extends StatelessWidget {
 
   int _locationToIndex(String location) {
     if (location.startsWith('/home')) return 0;
-    if (location.startsWith('/history')) return 1;
-    if (location.startsWith('/activity') || location.startsWith('/notifications')) return 2;
+    if (location.startsWith('/packages')) return 1;
+    if (location.startsWith('/history') || location.startsWith('/activity') || location.startsWith('/notifications') || location.startsWith('/booking')) return 2;
     if (location.startsWith('/profile')) return 3;
     return 0;
   }
@@ -23,8 +23,8 @@ class MainShell extends StatelessWidget {
         context.go('/home');
         break;
       case 1:
-        analytics.trackButtonClick('nav_bookings');
-        context.go('/history');
+        analytics.trackButtonClick('nav_packages');
+        context.go('/packages');
         break;
       case 2:
         analytics.trackButtonClick('nav_activity');
@@ -80,7 +80,7 @@ class _OrbitBottomNav extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Home', index: 0, currentIndex: currentIndex, onTap: onTap),
-              _NavItem(icon: Icons.confirmation_number_outlined, activeIcon: Icons.confirmation_number_rounded, label: 'Bookings', index: 1, currentIndex: currentIndex, onTap: onTap),
+              _NavItem(icon: Icons.movie_outlined, activeIcon: Icons.movie_rounded, label: 'Packages', index: 1, currentIndex: currentIndex, onTap: onTap),
               _NavItem(icon: Icons.bolt_outlined, activeIcon: Icons.bolt_rounded, label: 'Activity', index: 2, currentIndex: currentIndex, onTap: onTap),
               _NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profile', index: 3, currentIndex: currentIndex, onTap: onTap),
             ],

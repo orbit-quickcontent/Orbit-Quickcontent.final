@@ -102,6 +102,62 @@ class _BookingStatusScreenState extends State<BookingStatusScreen> {
     );
   }
 
+  void _confirmCancelBooking() {
+    OrbitMotion.lightTap();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: OrbitColors.surface,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: OrbitColors.danger, size: 24),
+            SizedBox(width: 8),
+            Text('Cancel Shoot?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        content: const Text(
+          'Are you sure you want to cancel this shoot booking? 100% refund will be processed to your original payment method immediately.',
+          style: TextStyle(color: OrbitColors.textSecondary, fontSize: 13, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Keep Booking', style: TextStyle(color: OrbitColors.textMuted)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: OrbitColors.danger,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              _cancelBooking();
+            },
+            child: const Text('Yes, Cancel', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _cancelBooking() async {
+    try {
+      await apiClient.post('/bookings/${widget.bookingId}/cancel');
+    } catch (_) {}
+
+    if (mounted) {
+      OrbitMotion.successHaptic();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Shoot cancelled. Refund initiated to your wallet/card.'),
+          backgroundColor: OrbitColors.danger,
+        ),
+      );
+      context.go('/home');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -312,6 +368,23 @@ class _BookingStatusScreenState extends State<BookingStatusScreen> {
                   label: 'TRACK CREATOR LIVE',
                   icon: Icons.navigation_rounded,
                   onPressed: () => context.push('/tracking/${widget.bookingId}'),
+                ),
+                const SizedBox(height: OrbitSpacing.space12),
+                TextButton.icon(
+                  onPressed: _confirmCancelBooking,
+                  icon: const Icon(Icons.cancel_outlined, color: OrbitColors.danger, size: 16),
+                  label: const Text('Cancel Shoot Booking', style: TextStyle(color: OrbitColors.danger, fontWeight: FontWeight.w600, fontSize: 13)),
+                ),
+              ] else if (['PENDING', 'DISPATCHING', 'CONFIRMED'].contains(status)) ...[
+                OrbitPrimaryButton(
+                  label: 'CANCEL SHOOT',
+                  icon: Icons.cancel_outlined,
+                  onPressed: _confirmCancelBooking,
+                ),
+                const SizedBox(height: OrbitSpacing.space12),
+                OrbitSecondaryButton(
+                  label: 'Back to Home',
+                  onPressed: () => context.go('/home'),
                 ),
               ] else ...[
                 OrbitSecondaryButton(

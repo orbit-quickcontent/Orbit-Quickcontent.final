@@ -67,13 +67,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (ctx, state, child) => MainShell(child: child),
         routes: [
           GoRoute(path: '/home', builder: (ctx, state) => const HomeScreen()),
+          GoRoute(path: '/packages', builder: (ctx, state) => const PackagesScreen()),
           GoRoute(path: '/history', builder: (ctx, state) => const BookingHistoryScreen()),
           GoRoute(path: '/notifications', builder: (ctx, state) => const NotificationsScreen()),
           GoRoute(path: '/profile', builder: (ctx, state) => const ProfileScreen()),
         ],
       ),
       // Booking flow
-      GoRoute(path: '/packages', builder: (ctx, state) => const PackagesScreen()),
       GoRoute(
         path: '/location',
         builder: (ctx, state) => LocationPickerScreen(packageId: (state.extra is String ? state.extra as String : (state.extra as Map?)?['packageId']?.toString()) ?? 'pkg_standard'),

@@ -284,285 +284,148 @@ class _OrbitReelShowcaseCarouselState extends State<OrbitReelShowcaseCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    // Infinite loop list by multiplying items
     final displayList = [...widget.reels, ...widget.reels, ...widget.reels, ...widget.reels];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ── Header & Live Badge ───────────────────────────────────────
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+    return Listener(
+      onPointerDown: (_) => _pauseAutoScroll(),
+      onPointerUp: (_) => _resumeAutoScrollAfterDelay(),
+      child: SizedBox(
+        height: 205,
+        child: ListView.builder(
+          controller: _scrollController,
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          itemCount: displayList.length,
+          itemBuilder: (context, index) {
+            final reel = displayList[index];
+            return Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: GestureDetector(
+                onTap: () => _openReelModal(context, reel),
+                child: Container(
+                  width: 145,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    gradient: LinearGradient(
+                      colors: reel.gradient,
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    border: Border.all(
+                      color: OrbitColors.borderMedium,
+                      width: 1.2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.35),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
                     children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: OrbitColors.secondary,
-                          boxShadow: [
-                            BoxShadow(
-                              color: OrbitColors.secondary.withValues(alpha: 0.6),
-                              blurRadius: 6,
+                      // Top Badges
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        right: 8,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.65),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                reel.duration,
+                                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.65),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.star_rounded, size: 10, color: Colors.amber),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    '${reel.rating}',
+                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'TRENDING CREATOR REELS',
-                        style: OrbitTypography.labelSmall.copyWith(
-                          color: OrbitColors.secondary,
-                          letterSpacing: 1.2,
-                          fontWeight: FontWeight.w800,
+
+                      // Center Glowing Play Button
+                      Center(
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withValues(alpha: 0.45),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1.5),
+                          ),
+                          child: const Icon(
+                            Icons.play_arrow_rounded,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
+                      ),
+
+                      // Bottom Info
+                      Positioned(
+                        bottom: 8,
+                        left: 8,
+                        right: 8,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              reel.category.toUpperCase(),
+                              style: TextStyle(
+                                color: OrbitColors.secondary.withValues(alpha: 0.9),
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              reel.title,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                height: 1.15,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Real footage shot by nearby Orbit creators',
-                    style: OrbitTypography.bodySmall.copyWith(fontSize: 12),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: OrbitColors.surfaceElevated,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: OrbitColors.borderSubtle),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.swipe_outlined, size: 12, color: OrbitColors.textMuted),
-                    SizedBox(width: 4),
-                    Text('Auto', style: TextStyle(color: OrbitColors.textMuted, fontSize: 10, fontWeight: FontWeight.w600)),
-                  ],
                 ),
               ),
-            ],
-          ),
+            );
+          },
         ),
-
-        const SizedBox(height: OrbitSpacing.space16),
-
-        // ── Horizontal Smooth Auto-Rotating Reels Showcase ─────────────
-        Listener(
-          onPointerDown: (_) => _pauseAutoScroll(),
-          onPointerUp: (_) => _resumeAutoScrollAfterDelay(),
-          child: SizedBox(
-            height: 220,
-            child: ListView.builder(
-              controller: _scrollController,
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: displayList.length,
-              itemBuilder: (context, index) {
-                final reel = displayList[index];
-                return Padding(
-                  padding: const EdgeInsets.only(right: 14),
-                  child: GestureDetector(
-                    onTap: () => _openReelModal(context, reel),
-                    child: Container(
-                      width: 140,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(18),
-                        gradient: LinearGradient(
-                          colors: reel.gradient,
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                        border: Border.all(
-                          color: OrbitColors.borderMedium,
-                          width: 1.2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.35),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Stack(
-                        children: [
-                          // Category Icon Watermark
-                          Positioned(
-                            top: -10,
-                            right: -10,
-                            child: Icon(
-                              reel.categoryIcon,
-                              size: 70,
-                              color: Colors.white.withValues(alpha: 0.05),
-                            ),
-                          ),
-
-                          // Top Info Badges
-                          Positioned(
-                            top: 10,
-                            left: 10,
-                            right: 10,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.6),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    reel.duration,
-                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.6),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.star_rounded, size: 10, color: Colors.amber),
-                                      const SizedBox(width: 2),
-                                      Text(
-                                        '${reel.rating}',
-                                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Center Glowing Play Button
-                          Center(
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.black.withValues(alpha: 0.4),
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
-                              ),
-                              child: const Icon(
-                                Icons.play_arrow_rounded,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ),
-                          ),
-
-                          // Bottom Title & Views
-                          Positioned(
-                            bottom: 10,
-                            left: 10,
-                            right: 10,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  reel.category.toUpperCase(),
-                                  style: TextStyle(
-                                    color: OrbitColors.secondary.withValues(alpha: 0.9),
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.6,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  reel.title,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.2,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.visibility_outlined, size: 11, color: OrbitColors.textMuted),
-                                    const SizedBox(width: 3),
-                                    Text(
-                                      '${reel.views} views',
-                                      style: const TextStyle(color: OrbitColors.textMuted, fontSize: 10, fontWeight: FontWeight.w500),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-
-        const SizedBox(height: OrbitSpacing.space20),
-
-        // ── Social Proof / Rating & Performance Strip ────────────────
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: OrbitColors.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: OrbitColors.borderSubtle),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
-                  const SizedBox(width: 4),
-                  RichText(
-                    text: const TextSpan(
-                      children: [
-                        TextSpan(text: '4.9 ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
-                        TextSpan(text: '(1.2K+ shoots)', style: TextStyle(color: OrbitColors.textSecondary, fontSize: 11)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              Container(width: 1, height: 16, color: OrbitColors.borderSubtle),
-              const Row(
-                children: [
-                  Icon(Icons.bolt_rounded, color: OrbitColors.secondary, size: 16),
-                  SizedBox(width: 4),
-                  Text('~15 min arrival', style: TextStyle(color: OrbitColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600)),
-                ],
-              ),
-              Container(width: 1, height: 16, color: OrbitColors.borderSubtle),
-              const Row(
-                children: [
-                  Icon(Icons.hd_rounded, color: Colors.white70, size: 16),
-                  SizedBox(width: 4),
-                  Text('4K Master Delivery', style: TextStyle(color: OrbitColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600)),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

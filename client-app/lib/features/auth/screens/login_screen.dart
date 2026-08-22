@@ -105,13 +105,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _quickGuestLogin() async {
     setState(() => _isLoading = true);
+    final enteredName = _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : 'Utkarsh';
     await ref.read(authStateProvider.notifier).setAuthenticated(
       accessToken: 'demo_token_${DateTime.now().millisecondsSinceEpoch}',
       refreshToken: 'demo_refresh_token',
       user: {
         'id': 'client_demo_${DateTime.now().millisecondsSinceEpoch}',
-        'email': 'creator@orbit-quickcontent.com',
-        'name': 'Orbit Creator',
+        'email': 'utkarsh@orbit-quickcontent.com',
+        'name': enteredName,
         'role': 'CLIENT',
       },
     );
@@ -125,16 +126,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void _showSocialLoginModal(String provider) {
     final isGoogle = provider == 'google';
     final brandName = isGoogle ? 'Google' : 'Apple';
+    final enteredName = _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : 'Utkarsh';
+    final enteredEmail = _emailController.text.trim().isNotEmpty && _emailController.text.contains('@')
+        ? _emailController.text.trim()
+        : (isGoogle ? 'utkarsh@gmail.com' : 'utkarsh@icloud.com');
 
     showModalBottomSheet(
       context: context,
       backgroundColor: OrbitColors.surface,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 16,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -164,74 +175,128 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Select an account to continue to ORBIT',
+                'Instant 1-tap authentication with your $brandName account',
                 style: OrbitTypography.bodySmall,
               ),
               const SizedBox(height: 20),
 
-              // Mock 1-tap Account Choice
+              // 1-tap Account Choice
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
-                  side: const BorderSide(color: OrbitColors.borderSubtle),
+                  side: const BorderSide(color: OrbitColors.secondary, width: 1.2),
                 ),
                 leading: CircleAvatar(
-                  backgroundColor: OrbitColors.primary.withValues(alpha: 0.3),
+                  backgroundColor: OrbitColors.secondary.withValues(alpha: 0.2),
                   child: Text(
-                    isGoogle ? 'G' : 'A',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    enteredName.isNotEmpty ? enteredName[0].toUpperCase() : 'U',
+                    style: const TextStyle(color: OrbitColors.secondary, fontWeight: FontWeight.bold),
                   ),
                 ),
                 title: Text(
-                  isGoogle ? 'Alex Morgan' : 'Apple User',
+                  enteredName,
                   style: OrbitTypography.titleSmall,
                 ),
                 subtitle: Text(
-                  isGoogle ? 'alex.morgan@gmail.com' : 'user@privaterelay.appleid.com',
+                  enteredEmail,
                   style: OrbitTypography.bodySmall,
                 ),
-                trailing: const Icon(Icons.check_circle, color: OrbitColors.secondary, size: 20),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, color: OrbitColors.secondary, size: 16),
                 onTap: () {
                   Navigator.pop(ctx);
                   _executeSocialLogin(
                     provider: provider,
-                    email: isGoogle ? 'alex.morgan@gmail.com' : 'user@privaterelay.appleid.com',
-                    name: isGoogle ? 'Alex Morgan' : 'Apple User',
+                    email: enteredEmail,
+                    name: enteredName,
                   );
                 },
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
+              // Custom Account Input Dialog Option
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                   side: const BorderSide(color: OrbitColors.borderSubtle),
                 ),
                 leading: const CircleAvatar(
                   backgroundColor: OrbitColors.surfaceElevated,
-                  child: Icon(Icons.person_add_outlined, color: OrbitColors.textSecondary, size: 20),
+                  child: Icon(Icons.edit_note_rounded, color: OrbitColors.textSecondary, size: 20),
                 ),
                 title: Text(
-                  'Use another $brandName account',
+                  'Enter Custom $brandName Details',
                   style: OrbitTypography.titleSmall,
+                ),
+                subtitle: Text(
+                  'Specify your custom display name and email',
+                  style: OrbitTypography.bodySmall.copyWith(fontSize: 11),
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
-                  _executeSocialLogin(
-                    provider: provider,
-                    email: isGoogle ? 'creator.client@gmail.com' : 'client@icloud.com',
-                    name: isGoogle ? 'Orbit Creator' : 'Orbit Apple User',
-                  );
+                  _showCustomSocialInputDialog(provider);
                 },
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showCustomSocialInputDialog(String provider) {
+    final customNameCtrl = TextEditingController(text: _nameController.text.trim());
+    final customEmailCtrl = TextEditingController(text: _emailController.text.trim());
+
+    showDialog(
+      context: context,
+      builder: (dlgCtx) => AlertDialog(
+        backgroundColor: OrbitColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Connect $provider Account', style: OrbitTypography.titleMedium),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: customNameCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Your Full Name',
+                hintText: 'e.g. Utkarsh Sharma',
+                prefixIcon: Icon(Icons.person_outline),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: customEmailCtrl,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                labelText: '$provider Email Address',
+                hintText: 'e.g. yourname@gmail.com',
+                prefixIcon: const Icon(Icons.email_outlined),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dlgCtx),
+            child: const Text('Cancel', style: TextStyle(color: OrbitColors.textMuted)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: OrbitColors.secondary),
+            onPressed: () {
+              final n = customNameCtrl.text.trim().isNotEmpty ? customNameCtrl.text.trim() : 'Utkarsh';
+              final e = customEmailCtrl.text.trim().isNotEmpty ? customEmailCtrl.text.trim() : 'utkarsh@gmail.com';
+              Navigator.pop(dlgCtx);
+              _executeSocialLogin(provider: provider, email: e, name: n);
+            },
+            child: const Text('Continue', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }
@@ -553,31 +618,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Full Name (Only for Sign Up)
-                    if (_isSignUp) ...[
-                      Text(
-                        'FULL NAME *',
-                        style: OrbitTypography.labelSmall.copyWith(color: OrbitColors.secondary, letterSpacing: 1.2),
+                    // Full Name (Display Name)
+                    Text(
+                      'YOUR NAME (DISPLAY NAME AT TOP)',
+                      style: OrbitTypography.labelSmall.copyWith(color: OrbitColors.secondary, letterSpacing: 1.2),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _nameController,
+                      textCapitalization: TextCapitalization.words,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      decoration: const InputDecoration(
+                        hintText: 'e.g. Utkarsh Sharma',
+                        hintStyle: TextStyle(color: OrbitColors.textDisabled, fontSize: 14),
+                        prefixIcon: Icon(Icons.badge_outlined, color: OrbitColors.secondary, size: 18),
+                        filled: true,
+                        fillColor: OrbitColors.surfaceElevated,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                        enabledBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                        focusedBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.secondary)),
                       ),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: _nameController,
-                        textCapitalization: TextCapitalization.words,
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                        decoration: const InputDecoration(
-                          hintText: 'Alex Morgan',
-                          hintStyle: TextStyle(color: OrbitColors.textDisabled, fontSize: 14),
-                          prefixIcon: Icon(Icons.person_outline, color: OrbitColors.textSecondary, size: 18),
-                          filled: true,
-                          fillColor: OrbitColors.surfaceElevated,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          border: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
-                          enabledBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
-                          focusedBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.secondary)),
-                        ),
-                      ),
-                      const SizedBox(height: OrbitSpacing.space16),
-                    ],
+                    ),
+                    const SizedBox(height: OrbitSpacing.space16),
 
                     // Username / Email Address
                     Text(
