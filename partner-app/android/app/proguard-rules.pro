@@ -1,10 +1,19 @@
 # Flutter Wrapper Rules
 -keep class io.flutter.app.** { *; }
--keep class io.flutter.plugin.**  { *; }
--keep class io.flutter.util.**  { *; }
--keep class io.flutter.view.**  { *; }
--keep class io.flutter.**  { *; }
--keep class io.flutter.plugins.**  { *; }
+-keep class io.flutter.plugin.** { *; }
+-keep class io.flutter.util.** { *; }
+-keep class io.flutter.view.** { *; }
+-keep class io.flutter.** { *; }
+-keep class io.flutter.plugins.** { *; }
+
+# Flutter Deferred Components & Google Play Core
+-dontwarn com.google.android.play.core.**
+-dontwarn io.flutter.embedding.engine.deferredcomponents.**
+-dontwarn com.google.android.gms.**
+-dontwarn javax.annotation.**
+-dontwarn org.checkerframework.**
+-dontwarn com.google.errorprone.annotations.**
+-dontwarn org.codehaus.mojo.animal_sniffer.**
 
 # Firebase & Google Play Services
 -keepattributes *Annotation*
@@ -22,8 +31,6 @@
 -keep class androidx.security.crypto.** { *; }
 
 # Optimization & Size Reduction
--repackageclasses
--allowaccessmodification
 -dontusemixedcaseclassnames
 -dontskipnonpubliclibraryclasses
 -verbose
