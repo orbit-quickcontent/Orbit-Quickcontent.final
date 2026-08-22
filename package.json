@@ -28,6 +28,7 @@
     "type-check:editor": "cd editor-web-app && npm run type-check",
     "test": "npm run test:backend",
     "test:backend": "cd backend && npm test",
+    "test:fullstack": "ts-node scripts/test-fullstack-workflow.ts",
     "db:generate": "cd backend && npx prisma generate",
     "db:migrate": "cd backend && npx prisma migrate deploy",
     "db:migrate:dev": "cd backend && npx prisma migrate dev",

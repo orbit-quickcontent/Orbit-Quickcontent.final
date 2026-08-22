@@ -1,0 +1,134 @@
+name: Full-Stack Multi-App Integration Workflow
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+jobs:
+  # ── 1. Backend Core & Live Multi-App Connection Action ─────────────────────
+  backend-and-connected-apps:
+    name: Backend, Client, Partner, Editor & Admin Live Action
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: orbit_user
+          POSTGRES_PASSWORD: orbit_password
+          POSTGRES_DB: orbit_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Monorepo Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client & Migrate Test DB
+        env:
+          DATABASE_URL: "postgresql://orbit_user:orbit_password@localhost:5432/orbit_test_db?schema=public"
+          JWT_SECRET: "orbit_super_secret_jwt_key_for_testing_min_32_chars"
+          JWT_REFRESH_SECRET: "orbit_super_refresh_jwt_key_testing_min_32"
+          ENCRYPTION_KEY: "orbit_bank_secret_enc_key_2026_x"
+          REDIS_URL: "redis://localhost:6379"
+          VALKEY_URL: "redis://localhost:6379"
+        run: |
+          npm run db:generate
+          cd backend && npx prisma db push --force-reset
+          npm run db:seed
+
+      - name: Start Backend API & Socket.IO Server in Background
+        env:
+          NODE_ENV: test
+          PORT: 5000
+          DATABASE_URL: "postgresql://orbit_user:orbit_password@localhost:5432/orbit_test_db?schema=public"
+          JWT_SECRET: "orbit_super_secret_jwt_key_for_testing_min_32_chars"
+          JWT_REFRESH_SECRET: "orbit_super_refresh_jwt_key_testing_min_32"
+          ENCRYPTION_KEY: "orbit_bank_secret_enc_key_2026_x"
+          REDIS_URL: "redis://localhost:6379"
+          VALKEY_URL: "redis://localhost:6379"
+          ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:3001,http://localhost:5000"
+        run: |
+          cd backend && npm run dev &
+          npx wait-on http://localhost:5000/health --timeout 30000
+
+      - name: Execute Full-Stack Connected Workflow (Client -> Partner -> Editor -> Admin)
+        env:
+          API_URL: "http://localhost:5000/api"
+          ROOT_URL: "http://localhost:5000"
+        run: |
+          npx ts-node scripts/test-fullstack-workflow.ts
+
+      - name: Build & Validate Admin Dashboard Web App
+        run: |
+          npm run type-check:dashboard
+          npm run build:dashboard
+
+      - name: Build & Validate Editor Web App
+        run: |
+          npm run type-check:editor
+          npm run build:editor
+
+  # ── 2. Flutter Mobile Applications (Client App & Partner App) ──────────────
+  flutter-mobile-apps:
+    name: Client & Partner Flutter Mobile Apps Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Validate Client App (Flutter Analyze & Build Verification)
+        working-directory: ./client-app
+        run: |
+          flutter pub get
+          flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: Validate Partner App (Flutter Analyze & Build Verification)
+        working-directory: ./partner-app
+        run: |
+          flutter pub get
+          flutter analyze --no-fatal-warnings --no-fatal-infos
