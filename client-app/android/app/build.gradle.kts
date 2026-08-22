@@ -11,8 +11,7 @@ plugins {
 
 android {
     namespace = "com.orbit.client"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 35
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
