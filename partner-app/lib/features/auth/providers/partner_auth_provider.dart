@@ -49,7 +49,10 @@ class PartnerAuthState {
 
 class PartnerAuthNotifier extends StateNotifier<PartnerAuthState> {
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      resetOnError: true,
+    ),
   );
 
   PartnerAuthNotifier() : super(const PartnerAuthState()) {
@@ -57,17 +60,23 @@ class PartnerAuthNotifier extends StateNotifier<PartnerAuthState> {
   }
 
   Future<void> _load() async {
-    final token = await _storage.read(key: 'orbit_partner_token');
-    if (token == null) return;
-    state = PartnerAuthState(
-      isLoggedIn: true,
-      accessToken: token,
-      userId: await _storage.read(key: 'orbit_partner_user_id'),
-      partnerId: await _storage.read(key: 'orbit_partner_id'),
-      name: await _storage.read(key: 'orbit_partner_name'),
-      email: await _storage.read(key: 'orbit_partner_email'),
-      needsOnboarding: (await _storage.read(key: 'orbit_partner_onboarded')) != 'true',
-    );
+    try {
+      final token = await _storage.read(key: 'orbit_partner_token');
+      if (token == null) return;
+      state = PartnerAuthState(
+        isLoggedIn: true,
+        accessToken: token,
+        userId: await _storage.read(key: 'orbit_partner_user_id'),
+        partnerId: await _storage.read(key: 'orbit_partner_id'),
+        name: await _storage.read(key: 'orbit_partner_name'),
+        email: await _storage.read(key: 'orbit_partner_email'),
+        needsOnboarding: (await _storage.read(key: 'orbit_partner_onboarded')) != 'true',
+      );
+    } catch (_) {
+      try {
+        await _storage.deleteAll();
+      } catch (_) {}
+    }
   }
 
   Future<void> setAuthenticated({

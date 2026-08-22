@@ -40,7 +40,10 @@ class AuthState {
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      resetOnError: true,
+    ),
   );
 
   AuthNotifier() : super(const AuthState()) {
@@ -48,20 +51,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> _loadFromStorage() async {
-    final token = await _storage.read(key: _kAccessToken);
-    if (token != null) {
-      final userId = await _storage.read(key: 'orbit_user_id');
-      final email = await _storage.read(key: 'orbit_user_email');
-      final name = await _storage.read(key: 'orbit_user_name');
-      final role = await _storage.read(key: 'orbit_user_role');
-      state = AuthState(
-        isLoggedIn: true,
-        accessToken: token,
-        userId: userId,
-        email: email,
-        name: name,
-        role: role,
-      );
+    try {
+      final token = await _storage.read(key: _kAccessToken);
+      if (token != null) {
+        final userId = await _storage.read(key: 'orbit_user_id');
+        final email = await _storage.read(key: 'orbit_user_email');
+        final name = await _storage.read(key: 'orbit_user_name');
+        final role = await _storage.read(key: 'orbit_user_role');
+        state = AuthState(
+          isLoggedIn: true,
+          accessToken: token,
+          userId: userId,
+          email: email,
+          name: name,
+          role: role,
+        );
+      }
+    } catch (_) {
+      try {
+        await _storage.deleteAll();
+      } catch (_) {}
     }
   }
 
