@@ -109,6 +109,168 @@ class _AvailableWorkScreenState extends ConsumerState<AvailableWorkScreen>
     );
   }
 
+  void _showNearbyClientsModal() {
+    OrbitMotion.lightTap();
+    final nearbyClients = [
+      {
+        'name': 'The Loft Cafe',
+        'category': 'Cafe & Dining',
+        'address': 'Baner High Street (0.4 km)',
+        'pkg': 'Personalized Reel',
+        'payout': '₹1,999',
+        'urgency': 'Immediate (15 min)',
+        'icon': Icons.local_cafe_outlined,
+      },
+      {
+        'name': 'Aura Luxury Salon & Spa',
+        'category': 'Beauty & Lifestyle',
+        'address': 'Koregaon Park (0.7 km)',
+        'pkg': 'Product & Styling Video',
+        'payout': '₹4,999',
+        'urgency': 'Scheduled: 2:00 PM',
+        'icon': Icons.spa_outlined,
+      },
+      {
+        'name': 'CrossFit Iron Arena',
+        'category': 'Fitness & Sports',
+        'address': 'Aundh Main Road (1.1 km)',
+        'pkg': 'Quick Impact Reel',
+        'payout': '₹999',
+        'urgency': 'Immediate (30 min)',
+        'icon': Icons.fitness_center_outlined,
+      },
+      {
+        'name': 'Urban Craft Brewery',
+        'category': 'Nightlife & Events',
+        'address': 'Viman Nagar (1.5 km)',
+        'pkg': 'Event Highlights Reel',
+        'payout': '₹2,999',
+        'urgency': 'Today 6:00 PM',
+        'icon': Icons.nightlife_outlined,
+      },
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF15181D),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade700, borderRadius: BorderRadius.circular(2))),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.groups_rounded, color: Color(0xFF38BDF8), size: 22),
+                    SizedBox(width: 8),
+                    Text('Nearby Clients & Shoots', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: const Color(0xFF22C55E).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+                  child: const Text('4 Active Leads', style: TextStyle(color: Color(0xFF22C55E), fontSize: 11, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            const Text('Clients near your current location seeking on-demand videography.', style: TextStyle(color: OrbitColors.textSecondary, fontSize: 12.5)),
+            const SizedBox(height: 16),
+
+            ...nearbyClients.map((cl) => Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1C2027),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFF252B33)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(color: const Color(0xFF15181D), borderRadius: BorderRadius.circular(10)),
+                            child: Icon(cl['icon'] as IconData, color: const Color(0xFF38BDF8), size: 18),
+                          ),
+                          const SizedBox(width: 10),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(cl['name'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                              Text(cl['category'] as String, style: const TextStyle(color: OrbitColors.textSecondary, fontSize: 11)),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Text(cl['payout'] as String, style: const TextStyle(color: Color(0xFF22C55E), fontWeight: FontWeight.w900, fontSize: 16)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on_outlined, color: Colors.grey, size: 14),
+                          const SizedBox(width: 4),
+                          Text(cl['address'] as String, style: const TextStyle(color: Colors.grey, fontSize: 11.5)),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(color: const Color(0xFF15181D), borderRadius: BorderRadius.circular(4)),
+                        child: Text(cl['urgency'] as String, style: const TextStyle(color: Color(0xFF38BDF8), fontSize: 10, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 40,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF15181D),
+                        side: const BorderSide(color: Color(0xFF38BDF8), width: 1.2),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _showIncomingJobPreview();
+                      },
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Request Dispatch / View Job', style: TextStyle(color: Color(0xFF38BDF8), fontWeight: FontWeight.bold, fontSize: 13)),
+                          SizedBox(width: 6),
+                          Icon(Icons.arrow_forward_rounded, color: Color(0xFF38BDF8), size: 15),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showIncomingJobPreview() {
     context.push('/incoming', extra: {
       'id': 'booking_demo_882',
@@ -139,6 +301,7 @@ class _AvailableWorkScreenState extends ConsumerState<AvailableWorkScreen>
             isOnline: _isOnline,
             onMenuPressed: () => context.push('/profile'),
             onSafetyPressed: _showSafetyModal,
+            onNearbyClientsPressed: _showNearbyClientsModal,
             onRecenterPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('GPS Centered at your live coordinates'), duration: Duration(seconds: 1)),

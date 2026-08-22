@@ -8,6 +8,7 @@ class OrbitMapWorkspace extends StatefulWidget {
   final VoidCallback? onSearchPressed;
   final VoidCallback? onSafetyPressed;
   final VoidCallback? onRecenterPressed;
+  final VoidCallback? onNearbyClientsPressed;
   final List<DemandZone>? demandZones;
 
   const OrbitMapWorkspace({
@@ -19,6 +20,7 @@ class OrbitMapWorkspace extends StatefulWidget {
     this.onSearchPressed,
     this.onSafetyPressed,
     this.onRecenterPressed,
+    this.onNearbyClientsPressed,
     this.demandZones,
   });
 
@@ -135,6 +137,46 @@ class _OrbitMapWorkspaceState extends State<OrbitMapWorkspace> with SingleTicker
                   ),
                   const SizedBox(height: 10),
                 ],
+                // Floating Nearby Clients Button
+                GestureDetector(
+                  onTap: widget.onNearbyClientsPressed,
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF15181D),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFF38BDF8), width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF38BDF8).withValues(alpha: 0.35),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        const Center(
+                          child: Icon(Icons.groups_rounded, color: Color(0xFF38BDF8), size: 22),
+                        ),
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF22C55E),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
                 GestureDetector(
                   onTap: () {
                     setState(() {
@@ -363,7 +405,48 @@ class _DarkMapPainter extends CustomPainter {
       canvas.drawCircle(Offset(destX, destY), 4, Paint()..color = Colors.white);
     }
 
-    // 6. User / Partner Location Indicator & Pulse
+    // 6. Nearby Client Location Pins on the Map
+    final clientLocations = [
+      {'name': 'The Loft Cafe', 'x': w * 0.35, 'y': h * 0.40, 'pkg': '₹1,999'},
+      {'name': 'Aura Salon', 'x': w * 0.65, 'y': h * 0.44, 'pkg': '₹4,999'},
+      {'name': 'CrossFit Studio', 'x': w * 0.25, 'y': h * 0.62, 'pkg': '₹999'},
+      {'name': 'Urban Brewery', 'x': w * 0.72, 'y': h * 0.60, 'pkg': '₹2,999'},
+    ];
+
+    for (final cl in clientLocations) {
+      final cx = (cl['x'] as double) + offset.dx;
+      final cy = (cl['y'] as double) + offset.dy;
+
+      // Glowing base circle
+      canvas.drawCircle(
+        Offset(cx, cy),
+        8,
+        Paint()..color = const Color(0xFF38BDF8).withValues(alpha: 0.3),
+      );
+      // Center pin
+      canvas.drawCircle(
+        Offset(cx, cy),
+        5,
+        Paint()..color = const Color(0xFF38BDF8),
+      );
+      canvas.drawCircle(
+        Offset(cx, cy),
+        2,
+        Paint()..color = Colors.white,
+      );
+
+      // Client Pill Tag
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '${cl['name']} (${cl['pkg']})',
+          style: const TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.bold, backgroundColor: Color(0xCC15181D)),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      textPainter.paint(canvas, Offset(cx - (textPainter.width / 2), cy + 8));
+    }
+
+    // 7. User / Partner Location Indicator & Pulse
     final userX = (w * 0.5) + offset.dx;
     final userY = (h * 0.52) + offset.dy;
 
