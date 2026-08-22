@@ -81,7 +81,7 @@ class _OrbitBottomNav extends StatelessWidget {
             children: [
               _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Home', index: 0, currentIndex: currentIndex, onTap: onTap),
               _NavItem(icon: Icons.movie_outlined, activeIcon: Icons.movie_rounded, label: 'Packages', index: 1, currentIndex: currentIndex, onTap: onTap),
-              _NavItem(icon: Icons.bolt_outlined, activeIcon: Icons.bolt_rounded, label: 'Activity', index: 2, currentIndex: currentIndex, onTap: onTap),
+              _NavItem(icon: Icons.video_library_outlined, activeIcon: Icons.video_library_rounded, label: 'My Shoots', index: 2, currentIndex: currentIndex, onTap: onTap),
               _NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profile', index: 3, currentIndex: currentIndex, onTap: onTap),
             ],
           ),

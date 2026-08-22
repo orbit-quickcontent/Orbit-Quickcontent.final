@@ -82,15 +82,210 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
     }
   }
 
-  void _onContinue() {
+  void _showScheduleModal() {
     final pkgId = _selectedPackageId ?? 'pkg_standard';
     final selectedPkg = _packages.cast<Map<String, dynamic>?>().firstWhere(
           (p) => p != null && p['id'] == pkgId,
           orElse: () => {'id': pkgId, 'tier': 'STANDARD'},
         );
-    OrbitMotion.lightTap();
-    analytics.trackBookingStarted(packageId: pkgId, tier: selectedPkg?['tier']?.toString());
-    context.push('/location-picker', extra: pkgId);
+
+    bool isAsap = true;
+    DateTime selectedDate = DateTime.now();
+    TimeOfDay selectedTime = TimeOfDay.now();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: OrbitColors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade700, borderRadius: BorderRadius.circular(2))),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'When do you need this?',
+                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Select immediate dispatch or reserve a top creator for later.',
+                style: TextStyle(color: OrbitColors.textSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: 20),
+
+              // Option 1: ASAP (Arrive in ~15 mins)
+              GestureDetector(
+                onTap: () => setModalState(() => isAsap = true),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isAsap ? OrbitColors.secondary.withValues(alpha: 0.15) : OrbitColors.surfaceElevated,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isAsap ? OrbitColors.secondary : OrbitColors.borderSubtle,
+                      width: isAsap ? 1.8 : 1.0,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isAsap ? OrbitColors.secondary : const Color(0xFF222733),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.bolt_rounded, color: isAsap ? Colors.black : Colors.white70, size: 20),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Text('ASAP (Arrive in ~15 mins)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(color: const Color(0xFF22C55E).withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
+                                  child: const Text('FASTEST', style: TextStyle(color: Color(0xFF22C55E), fontSize: 9, fontWeight: FontWeight.w900)),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            const Text('Closest verified creator will be dispatched instantly.', style: TextStyle(color: OrbitColors.textSecondary, fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        isAsap ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                        color: isAsap ? OrbitColors.secondary : Colors.grey,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Option 2: Schedule for Later
+              GestureDetector(
+                onTap: () async {
+                  setModalState(() => isAsap = false);
+                  final pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now().add(const Duration(days: 1)),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 30)),
+                  );
+                  if (pickedDate != null && mounted && ctx.mounted) {
+                    final pickedTime = await showTimePicker(
+                      context: ctx,
+                      initialTime: const TimeOfDay(hour: 14, minute: 0),
+                    );
+                    if (pickedTime != null && ctx.mounted) {
+                      setModalState(() {
+                        selectedDate = pickedDate;
+                        selectedTime = pickedTime;
+                        isAsap = false;
+                      });
+                    }
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: !isAsap ? OrbitColors.secondary.withValues(alpha: 0.15) : OrbitColors.surfaceElevated,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: !isAsap ? OrbitColors.secondary : OrbitColors.borderSubtle,
+                      width: !isAsap ? 1.8 : 1.0,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: !isAsap ? OrbitColors.secondary : const Color(0xFF222733),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.calendar_month_outlined, color: !isAsap ? Colors.black : Colors.white70, size: 20),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Schedule for Later', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                            const SizedBox(height: 2),
+                            Text(
+                              !isAsap
+                                  ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year} at ${selectedTime.format(context)}'
+                                  : 'Pick a specific date & shoot slot.',
+                              style: TextStyle(
+                                color: !isAsap ? OrbitColors.secondary : OrbitColors.textSecondary,
+                                fontSize: 12,
+                                fontWeight: !isAsap ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        !isAsap ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                        color: !isAsap ? OrbitColors.secondary : Colors.grey,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Confirm CTA
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: OrbitColors.secondary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    OrbitMotion.lightTap();
+                    analytics.trackBookingStarted(packageId: pkgId, tier: selectedPkg?['tier']?.toString());
+                    context.push('/location-picker', extra: pkgId);
+                  },
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Set Location & Proceed', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 15)),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_forward_rounded, color: Colors.black, size: 18),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _onContinue() {
+    _showScheduleModal();
   }
 
   @override
@@ -176,6 +371,15 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                             final pkg = _packages[index];
                             final isSelected = pkg['id'] == _selectedPackageId;
                             final isPopular = pkg['popular'] == true;
+                            final tier = (pkg['tier'] ?? '').toString().toUpperCase();
+
+                            // Micro-trust badge text
+                            String trustBadge = '⚡ Instant creator dispatch (~15 min arrival)';
+                            if (tier.contains('STANDARD')) {
+                              trustBadge = '🛡️ Free cancellation up to 30 mins before shoot';
+                            } else if (tier.contains('PREMIUM')) {
+                              trustBadge = '⭐ Satisfaction guarantee on final reel';
+                            }
 
                             return OrbitCard(
                               onTap: () {
@@ -234,7 +438,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                                   const SizedBox(height: 6),
                                   Text(pkg['focus'] ?? '', style: OrbitTypography.bodySmall.copyWith(color: OrbitColors.textPrimary)),
                                   if (pkg['features'] is List) ...[
-                                    const Divider(color: OrbitColors.borderSubtle, height: OrbitSpacing.space20),
+                                    const Divider(color: OrbitColors.borderSubtle, height: OrbitSpacing.space16),
                                     ...((pkg['features'] as List).take(3).map((f) => Padding(
                                           padding: const EdgeInsets.only(bottom: 4),
                                           child: Row(
@@ -246,6 +450,25 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                                           ),
                                         ))),
                                   ],
+                                  const SizedBox(height: 10),
+                                  // ── Micro-Trust Badge ──
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF131720),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: const Color(0xFF222733)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          trustBadge,
+                                          style: const TextStyle(color: OrbitColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ],
                               ),
                             );
@@ -257,7 +480,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
             Padding(
               padding: const EdgeInsets.all(OrbitSpacing.space20),
               child: OrbitPrimaryButton(
-                label: 'CONTINUE TO LOCATION',
+                label: 'CONTINUE TO SCHEDULE & LOCATION',
                 icon: Icons.arrow_forward_rounded,
                 onPressed: _onContinue,
               ),

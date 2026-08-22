@@ -62,7 +62,7 @@ const List<SampleReelItem> defaultSampleReels = [
   ),
   SampleReelItem(
     id: 'reel_4',
-    title: 'Luxury Penthouse Architecture',
+    title: 'Luxury Property & Architecture',
     category: 'Real Estate',
     duration: '0:60',
     views: '15.8K',
@@ -290,7 +290,7 @@ class _OrbitReelShowcaseCarouselState extends State<OrbitReelShowcaseCarousel> {
       onPointerDown: (_) => _pauseAutoScroll(),
       onPointerUp: (_) => _resumeAutoScrollAfterDelay(),
       child: SizedBox(
-        height: 205,
+        height: 225,
         child: ListView.builder(
           controller: _scrollController,
           scrollDirection: Axis.horizontal,
@@ -303,7 +303,7 @@ class _OrbitReelShowcaseCarouselState extends State<OrbitReelShowcaseCarousel> {
               child: GestureDetector(
                 onTap: () => _openReelModal(context, reel),
                 child: Container(
-                  width: 145,
+                  width: 160,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(18),
                     gradient: LinearGradient(
@@ -396,7 +396,7 @@ class _OrbitReelShowcaseCarouselState extends State<OrbitReelShowcaseCarousel> {
                               reel.category.toUpperCase(),
                               style: TextStyle(
                                 color: OrbitColors.secondary.withValues(alpha: 0.9),
-                                fontSize: 9,
+                                fontSize: 9.5,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 0.5,
                               ),
@@ -408,7 +408,7 @@ class _OrbitReelShowcaseCarouselState extends State<OrbitReelShowcaseCarousel> {
                               reel.title,
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 11,
+                                fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
                                 height: 1.15,
                               ),

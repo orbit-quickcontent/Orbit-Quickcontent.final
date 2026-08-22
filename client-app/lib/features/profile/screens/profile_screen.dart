@@ -73,35 +73,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              const Text(
-                                'GOOD AFTERNOON',
-                                style: TextStyle(
-                                  color: Color(0xFFBBC9CF),
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF6E208C),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: const Text(
-                                  'CREATOR',
-                                  style: TextStyle(
-                                    color: Color(0xFFE498FF),
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          const Text(
+                            'GOOD AFTERNOON',
+                            style: TextStyle(
+                              color: Color(0xFFBBC9CF),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.2,
+                            ),
                           ),
                           const SizedBox(height: 2),
                           Text(
@@ -231,42 +210,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: 8),
 
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00D2FF).withValues(alpha: 0.2),
+                        color: const Color(0xFF00D2FF).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(color: const Color(0xFF00D2FF).withValues(alpha: 0.3)),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.movie_outlined, color: Color(0xFF00D2FF), size: 14),
-                          SizedBox(width: 4),
+                          Icon(Icons.verified_user_outlined, color: Color(0xFF00D2FF), size: 14),
+                          SizedBox(width: 5),
                           Text(
-                            'CREATOR',
+                            'Client Membership',
                             style: TextStyle(
                               color: Color(0xFF00D2FF),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ],
                       ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.style_outlined, color: Color(0xFFBBC9CF), size: 14),
-                        SizedBox(width: 4),
-                        Text(
-                          'Creator Persona',
-                          style: TextStyle(color: Color(0xFFBBC9CF), fontSize: 12),
-                        ),
-                      ],
                     ),
 
                     const SizedBox(height: 16),

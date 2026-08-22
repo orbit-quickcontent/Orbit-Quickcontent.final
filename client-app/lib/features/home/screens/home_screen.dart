@@ -10,6 +10,7 @@ import '../../../shared/widgets/orbit_status.dart';
 import '../../../shared/widgets/orbit_loading.dart';
 import '../../../analytics/analytics_service.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../widgets/reel_showcase_carousel.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -448,32 +449,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Text(
-                                _getTimeGreeting(),
-                                style: const TextStyle(color: OrbitColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.8),
-                              ),
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF102830),
-                                  borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.4), width: 0.8),
-                                ),
-                                child: const Row(
-                                  children: [
-                                    Icon(Icons.movie_creation_rounded, size: 9, color: Color(0xFF00E5FF)),
-                                    SizedBox(width: 3),
-                                    Text(
-                                      'CREATOR',
-                                      style: TextStyle(color: Color(0xFF00E5FF), fontSize: 8.5, fontWeight: FontWeight.w800, letterSpacing: 0.6),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                          Text(
+                            _getTimeGreeting(),
+                            style: const TextStyle(color: OrbitColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.8),
                           ),
                           const SizedBox(height: 2),
                           Text(
@@ -576,7 +554,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               // ── 4 Quick Action Cards Grid (2x2) with Distinct Functions ──
               Row(
                 children: [
-                  // Card 1: BOOK NEW SHOOT
+                  // Card 1: EXPLORE STYLES (Replaces duplicate Book button)
                   Expanded(
                     child: _ActionCard(
                       iconWidget: Container(
@@ -586,11 +564,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           shape: BoxShape.circle,
                           color: Color(0xFF00E5FF),
                         ),
-                        child: const Icon(Icons.add_rounded, color: Colors.black, size: 22),
+                        child: const Icon(Icons.explore_outlined, color: Colors.black, size: 22),
                       ),
-                      title: 'BOOK\nNEW SHOOT',
-                      subtitle: 'INSTANT MATCHING',
-                      onTap: () => _onBookShootPressed(),
+                      title: 'EXPLORE\nSTYLES',
+                      subtitle: 'SAMPLE REELS',
+                      onTap: () => context.push('/packages'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -736,6 +714,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(height: 20),
               ],
+
+              // ── Inspiration & Sample Reels Showcase ───────────────────
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.auto_awesome_rounded, color: Color(0xFF00E5FF), size: 18),
+                      SizedBox(width: 6),
+                      Text(
+                        'Trending Reels & Styles',
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  GestureDetector(
+                    onTap: () => context.push('/packages'),
+                    child: const Row(
+                      children: [
+                        Text('Explore', style: TextStyle(color: Color(0xFF00E5FF), fontSize: 12, fontWeight: FontWeight.w700)),
+                        SizedBox(width: 2),
+                        Icon(Icons.chevron_right_rounded, color: Color(0xFF00E5FF), size: 16),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              OrbitReelShowcaseCarousel(
+                onBookNow: () => _onBookShootPressed(),
+              ),
+
+              const SizedBox(height: 24),
 
               // ── Featured Packages Section (Horizontal Cards) ──────────
               Row(

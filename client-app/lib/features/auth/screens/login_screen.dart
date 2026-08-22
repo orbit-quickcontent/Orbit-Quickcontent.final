@@ -618,29 +618,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Full Name (Display Name)
-                    Text(
-                      'YOUR NAME (DISPLAY NAME AT TOP)',
-                      style: OrbitTypography.labelSmall.copyWith(color: OrbitColors.secondary, letterSpacing: 1.2),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: _nameController,
-                      textCapitalization: TextCapitalization.words,
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                      decoration: const InputDecoration(
-                        hintText: 'e.g. Utkarsh Sharma',
-                        hintStyle: TextStyle(color: OrbitColors.textDisabled, fontSize: 14),
-                        prefixIcon: Icon(Icons.badge_outlined, color: OrbitColors.secondary, size: 18),
-                        filled: true,
-                        fillColor: OrbitColors.surfaceElevated,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        border: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
-                        enabledBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
-                        focusedBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.secondary)),
+                    // Full Name (Only on Create Account mode)
+                    if (_isSignUp) ...[
+                      Text(
+                        'FULL NAME *',
+                        style: OrbitTypography.labelSmall.copyWith(color: OrbitColors.secondary, letterSpacing: 1.2),
                       ),
-                    ),
-                    const SizedBox(height: OrbitSpacing.space16),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _nameController,
+                        textCapitalization: TextCapitalization.words,
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        decoration: const InputDecoration(
+                          hintText: 'e.g. Utkarsh Sharma',
+                          hintStyle: TextStyle(color: OrbitColors.textDisabled, fontSize: 14),
+                          prefixIcon: Icon(Icons.badge_outlined, color: OrbitColors.secondary, size: 18),
+                          filled: true,
+                          fillColor: OrbitColors.surfaceElevated,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          border: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                          enabledBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.borderSubtle)),
+                          focusedBorder: OutlineInputBorder(borderRadius: OrbitRadius.rounded12, borderSide: BorderSide(color: OrbitColors.secondary)),
+                        ),
+                      ),
+                      const SizedBox(height: OrbitSpacing.space16),
+                    ],
 
                     // Username / Email Address
                     Text(
