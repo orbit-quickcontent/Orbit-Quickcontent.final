@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../features/auth/screens/partner_landing_screen.dart';
 import '../features/auth/screens/partner_login_screen.dart';
 import '../features/auth/screens/partner_otp_screen.dart';
 import '../features/auth/screens/partner_onboarding_screen.dart';
@@ -24,15 +25,17 @@ final partnerRouterProvider = Provider<GoRouter>((ref) {
       final isAuthRoute = state.matchedLocation.startsWith('/login') || 
           state.matchedLocation.startsWith('/otp') ||
           state.matchedLocation == '/splash' ||
+          state.matchedLocation == '/landing' ||
           state.matchedLocation == '/permissions';
 
-      if (!isLoggedIn && !isAuthRoute) return '/permissions';
-      if (isLoggedIn && needsOnboarding && state.matchedLocation != '/onboarding' && state.matchedLocation != '/splash' && state.matchedLocation != '/permissions') return '/onboarding';
-      if (isLoggedIn && !needsOnboarding && isAuthRoute && state.matchedLocation != '/splash' && state.matchedLocation != '/permissions') return '/available-work';
+      if (!isLoggedIn && !isAuthRoute) return '/landing';
+      if (isLoggedIn && needsOnboarding && state.matchedLocation != '/onboarding' && state.matchedLocation != '/splash' && state.matchedLocation != '/permissions' && state.matchedLocation != '/landing') return '/onboarding';
+      if (isLoggedIn && !needsOnboarding && isAuthRoute && state.matchedLocation != '/splash' && state.matchedLocation != '/permissions' && state.matchedLocation != '/landing') return '/available-work';
       return null;
     },
     routes: [
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
+      GoRoute(path: '/landing', builder: (_, __) => const PartnerLandingScreen()),
       GoRoute(path: '/permissions', builder: (_, __) => const PermissionScreen()),
       GoRoute(path: '/login', builder: (_, __) => const PartnerLoginScreen()),
       GoRoute(path: '/otp', builder: (ctx, state) => PartnerOtpScreen(email: state.extra as String)),

@@ -21,11 +21,14 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _navigate() async {
     await Future.delayed(const Duration(milliseconds: 600));
     final prefs = await SharedPreferences.getInstance();
+    final hasSeenLanding = prefs.getBool('has_seen_landing') ?? false;
     final hasSeenPermissions = prefs.getBool('has_seen_permissions') ?? false;
     
     if (!mounted) return;
     
-    if (!hasSeenPermissions) {
+    if (!hasSeenLanding) {
+      context.go('/landing');
+    } else if (!hasSeenPermissions) {
       context.go('/permissions');
     } else {
       context.go('/login');
