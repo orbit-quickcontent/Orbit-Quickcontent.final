@@ -3,12 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api_client.dart';
 import '../../../core/theme/orbit_theme.dart';
-import '../../../shared/widgets/orbit_card.dart';
-import '../../../shared/widgets/orbit_status.dart';
-import '../../../shared/widgets/orbit_button.dart';
-import '../../../shared/widgets/orbit_loading.dart';
+import '../../../shared/widgets/orbit_map_workspace.dart';
 import '../../../analytics/analytics_service.dart';
-import '../../auth/providers/partner_auth_provider.dart';
 
 class AvailableWorkScreen extends ConsumerStatefulWidget {
   const AvailableWorkScreen({super.key});
@@ -19,29 +15,18 @@ class AvailableWorkScreen extends ConsumerStatefulWidget {
 
 class _AvailableWorkScreenState extends ConsumerState<AvailableWorkScreen>
     with SingleTickerProviderStateMixin {
-  List<Map<String, dynamic>> _availableJobs = [];
   Map<String, dynamic>? _activeJob;
-  bool _isLoading = true;
-  bool _isOnline = true;
-  int _todayEarnings = 0;
-  int _completedToday = 0;
-  late AnimationController _radarController;
+  bool _isOnline = false;
+  int _todayEarnings = 2450;
+  int _completedToday = 3;
+  final int _targetToday = 5;
+  final int _bonusAmount = 300;
 
   @override
   void initState() {
     super.initState();
-    partnerAnalytics.trackScreenView('partner_work_dashboard');
-    _radarController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
+    partnerAnalytics.trackScreenView('partner_home_map');
     _loadDashboardData();
-  }
-
-  @override
-  void dispose() {
-    _radarController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadDashboardData() async {
@@ -54,22 +39,23 @@ class _AvailableWorkScreenState extends ConsumerState<AvailableWorkScreen>
       final jobsRes = results[0];
       final earningsRes = results[1];
 
-      final jobs = List<Map<String, dynamic>>.from(jobsRes.data['jobs'] ?? []);
       final active = jobsRes.data['activeJob'] as Map<String, dynamic>?;
       final earningsData = earningsRes.data ?? {};
 
       if (mounted) {
         setState(() {
-          _availableJobs = jobs;
           _activeJob = active;
-          _todayEarnings = (earningsData['todayEarnings'] ?? 0) as int;
-          _completedToday = (earningsData['completedToday'] ?? 0) as int;
-          _isLoading = false;
+          final earned = earningsData['todayEarnings'];
+          if (earned != null && earned is int && earned > 0) {
+            _todayEarnings = earned;
+          }
+          final completed = earningsData['completedToday'];
+          if (completed != null && completed is int && completed > 0) {
+            _completedToday = completed;
+          }
         });
       }
-    } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    } catch (_) {}
   }
 
   Future<void> _toggleOnlineStatus() async {
@@ -85,457 +71,442 @@ class _AvailableWorkScreenState extends ConsumerState<AvailableWorkScreen>
     }
   }
 
+  void _showSafetyModal() {
+    OrbitMotion.lightTap();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF15181D),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => const Padding(
+        padding: EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.shield_rounded, color: Color(0xFF38BDF8), size: 24),
+                SizedBox(width: 10),
+                Text('Safety & Creator Toolkit', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            SizedBox(height: 16),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.emergency_outlined, color: Colors.redAccent),
+              title: Text('Emergency SOS Assistance', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+              subtitle: Text('Instantly alert ORBIT dispatch safety team', style: TextStyle(color: OrbitColors.textSecondary, fontSize: 12)),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.support_agent_outlined, color: Color(0xFF38BDF8)),
+              title: Text('24/7 Creator Partner Support', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+              subtitle: Text('Get instant help with client on-set or gear', style: TextStyle(color: OrbitColors.textSecondary, fontSize: 12)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showIncomingJobPreview() {
+    context.push('/incoming', extra: {
+      'id': 'booking_demo_882',
+      'earning': 500,
+      'distanceKm': 1.8,
+      'shootDurationMin': 25,
+      'locationName': 'The Loft Cafe',
+      'address': 'Baner High Street, Pune',
+      'reelsCount': 1,
+      'shootType': '1 Reel (30s vertical) • Color Grade',
+      'clientName': 'Arjun & Maya',
+      'pricingBreakdown': {
+        'shoot': 400,
+        'distance': 50,
+        'surge': 50,
+      },
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final auth = ref.watch(partnerAuthProvider);
-    final partnerName = auth.name?.isNotEmpty == true ? auth.name! : 'Partner';
-    final initials = partnerName.isNotEmpty
-        ? partnerName.split(' ').map((n) => n[0]).take(2).join('').toUpperCase()
-        : 'OP';
-
     return Scaffold(
-      backgroundColor: OrbitColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: RefreshIndicator(
-          onRefresh: _loadDashboardData,
-          color: OrbitColors.primary,
-          backgroundColor: OrbitColors.surfaceElevated,
-          child: ListView(
-            padding: const EdgeInsets.only(
-              left: OrbitSpacing.space16,
-              right: OrbitSpacing.space16,
-              top: OrbitSpacing.space12,
-              bottom: 100,
-            ),
-            children: [
-              // ── Top Operational Header ─────────────────────────────────────
-              Row(
+      backgroundColor: const Color(0xFF0B0D10),
+      body: Stack(
+        children: [
+          // ── 1. Fullscreen Dark Map Workspace ──────────────────────────────
+          OrbitMapWorkspace(
+            isOnline: _isOnline,
+            onMenuPressed: () => context.push('/profile'),
+            onSafetyPressed: _showSafetyModal,
+            onRecenterPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('GPS Centered at your live coordinates'), duration: Duration(seconds: 1)),
+              );
+            },
+          ),
+
+          // ── 2. Top Floating Operational Header ───────────────────────────
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: OrbitColors.surface,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: OrbitColors.borderSubtle),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
+                  // Left: Menu / Profile Button with Badge
+                  GestureDetector(
+                    onTap: () => context.push('/profile'),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF15181D),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFF252B33), width: 1.2),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 10),
+                        ],
+                      ),
+                      child: Stack(
+                        children: [
+                          const Center(child: Icon(Icons.menu_rounded, color: Colors.white, size: 22)),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: Container(
+                              width: 14,
+                              height: 14,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF38BDF8),
                                 shape: BoxShape.circle,
-                                color: _isOnline ? OrbitColors.success : OrbitColors.textDisabled,
-                                boxShadow: _isOnline
-                                    ? [
-                                        BoxShadow(
-                                          color: OrbitColors.success.withValues(alpha: 0.6),
-                                          blurRadius: 6,
-                                        ),
-                                      ]
-                                    : null,
+                              ),
+                              child: const Center(
+                                child: Text('5', style: TextStyle(color: Colors.black, fontSize: 8.5, fontWeight: FontWeight.w900)),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _isOnline ? 'ONLINE' : 'OFFLINE',
-                              style: OrbitTypography.labelSmall.copyWith(
-                                color: _isOnline ? OrbitColors.success : OrbitColors.textMuted,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.notifications_none_rounded, color: OrbitColors.textSecondary, size: 22),
-                        onPressed: () => context.push('/notifications'),
+
+                  // Center: Floating Today's Earnings Pill ($100.77 / ₹2,450)
+                  GestureDetector(
+                    onTap: () => context.push('/earnings'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF15181D),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: const Color(0xFF252B33), width: 1.2),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 12, offset: const Offset(0, 3)),
+                        ],
                       ),
-                      const SizedBox(width: 4),
-                      GestureDetector(
-                        onTap: () => context.go('/profile'),
-                        child: Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: OrbitColors.surfaceElevated,
-                            border: Border.all(
-                              color: _isOnline ? OrbitColors.success : OrbitColors.borderSubtle,
-                              width: 1.5,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            '₹',
+                            style: TextStyle(
+                              color: Color(0xFF22C55E),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
                             ),
                           ),
-                          child: Center(
-                            child: Text(
-                              initials,
-                              style: OrbitTypography.labelMedium.copyWith(
-                                color: _isOnline ? OrbitColors.success : OrbitColors.textSecondary,
-                                fontWeight: FontWeight.w700,
-                              ),
+                          const SizedBox(width: 2),
+                          Text(
+                            '$_todayEarnings',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.4,
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
+                  ),
+
+                  // Right: Search / Filter Icon
+                  GestureDetector(
+                    onTap: _showIncomingJobPreview,
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF15181D),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFF252B33), width: 1.2),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 10),
+                        ],
+                      ),
+                      child: const Center(child: Icon(Icons.search_rounded, color: Colors.white, size: 22)),
+                    ),
                   ),
                 ],
               ),
+            ),
+          ),
 
-              const SizedBox(height: OrbitSpacing.space16),
-
-              // ── 1. Earnings Summary (High Psychological Value) ─────────────
-              OrbitCard(
-                padding: const EdgeInsets.all(OrbitSpacing.space16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'TODAY\'S EARNINGS',
-                          style: OrbitTypography.labelSmall.copyWith(
-                            letterSpacing: 1.2,
-                            color: OrbitColors.textSecondary,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => context.go('/earnings'),
-                          child: Row(
-                            children: [
-                              Text(
-                                'View Wallet',
-                                style: OrbitTypography.labelSmall.copyWith(
-                                  color: OrbitColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(Icons.chevron_right_rounded, size: 16, color: OrbitColors.primary),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: OrbitSpacing.space8),
-                    Text(
-                      '₹$_todayEarnings',
-                      style: OrbitTypography.displayLarge.copyWith(
-                        fontSize: 34,
-                        fontWeight: FontWeight.w800,
-                        color: OrbitColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: OrbitSpacing.space12),
-                    const Divider(color: OrbitColors.borderSubtle, height: 1),
-                    const SizedBox(height: OrbitSpacing.space12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              const Icon(Icons.check_circle_outline_rounded, size: 16, color: OrbitColors.success),
-                              const SizedBox(width: 6),
-                              Text(
-                                '$_completedToday shoots done',
-                                style: OrbitTypography.bodySmall.copyWith(color: OrbitColors.textSecondary),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              const Icon(Icons.timer_outlined, size: 16, color: OrbitColors.info),
-                              const SizedBox(width: 6),
-                              Text(
-                                _isOnline ? 'Online now' : 'Paused',
-                                style: OrbitTypography.bodySmall.copyWith(color: OrbitColors.textSecondary),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: OrbitSpacing.space16),
-
-              // ── 2. Online / Offline Hero Toggle Switch ─────────────────────
-              GestureDetector(
+          // ── 3. Central GO / ONLINE Pulse Action Button ───────────────────
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 230,
+            child: Center(
+              child: GestureDetector(
                 onTap: _toggleOnlineStatus,
-                child: AnimatedContainer(
-                  duration: OrbitMotion.button,
-                  curve: OrbitMotion.standard,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Container(
+                  width: 78,
+                  height: 78,
                   decoration: BoxDecoration(
-                    color: _isOnline ? OrbitColors.surfaceElevated : OrbitColors.surface,
-                    borderRadius: BorderRadius.circular(14),
+                    shape: BoxShape.circle,
+                    color: _isOnline ? const Color(0xFF22C55E) : const Color(0xFF3B82F6),
                     border: Border.all(
-                      color: _isOnline ? OrbitColors.success.withValues(alpha: 0.4) : OrbitColors.borderSubtle,
-                      width: 1.5,
+                      color: Colors.white.withValues(alpha: 0.4),
+                      width: 3.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (_isOnline ? const Color(0xFF22C55E) : const Color(0xFF3B82F6)).withValues(alpha: 0.5),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      _isOnline ? 'ON' : 'GO',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.0,
+                      ),
                     ),
                   ),
-                  child: Row(
+                ),
+              ),
+            ),
+          ),
+
+          // ── 4. Bottom Operational Sheet & Incentive Challenges ────────────
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+              decoration: const BoxDecoration(
+                color: Color(0xFF15181D),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                border: Border(top: BorderSide(color: Color(0xFF252B33), width: 1.2)),
+                boxShadow: [
+                  BoxShadow(color: Colors.black54, blurRadius: 20, offset: Offset(0, -4)),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Status Strip & Tune Icon
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: _isOnline ? OrbitColors.success : OrbitColors.surfaceHighlight,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          _isOnline ? Icons.power_settings_new_rounded : Icons.power_off_rounded,
-                          color: _isOnline ? Colors.black : OrbitColors.textMuted,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _isOnline ? 'ONLINE' : 'OFFLINE',
-                              style: OrbitTypography.titleSmall.copyWith(
-                                color: _isOnline ? OrbitColors.success : OrbitColors.textPrimary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
+                      const Icon(Icons.tune_rounded, color: Colors.white70, size: 20),
+                      Row(
+                        children: [
+                          if (_isOnline) ...[
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFF22C55E),
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              _isOnline ? 'You are available for new bookings' : 'You are currently unavailable — Tap to go online',
-                              style: OrbitTypography.bodySmall.copyWith(fontSize: 12),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'This area is busy • High demand',
+                              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                          ] else ...[
+                            const Text(
+                              "You're offline",
+                              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const Icon(Icons.format_list_bulleted_rounded, color: Colors.white70, size: 20),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Active Shoot Card (If any) or Incentive Card
+                  if (_activeJob != null) ...[
+                    GestureDetector(
+                      onTap: () => context.push('/job/${_activeJob!['id']}'),
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E293B),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFF38BDF8), width: 1.2),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('ACTIVE SHOOT IN PROGRESS', style: TextStyle(color: Color(0xFF38BDF8), fontSize: 10, fontWeight: FontWeight.w800)),
+                                const SizedBox(height: 4),
+                                Text(_activeJob!['package']?['name'] ?? 'Reel Shoot', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(color: const Color(0xFF38BDF8), borderRadius: BorderRadius.circular(20)),
+                              child: const Text('Resume ➔', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12)),
                             ),
                           ],
                         ),
                       ),
-                      Switch.adaptive(
-                        value: _isOnline,
-                        onChanged: (_) => _toggleOnlineStatus(),
-                        activeThumbColor: OrbitColors.success,
-                        activeTrackColor: OrbitColors.success.withValues(alpha: 0.3),
-                        inactiveThumbColor: OrbitColors.textMuted,
-                        inactiveTrackColor: OrbitColors.surfaceHighlight,
+                    ),
+                  ] else ...[
+                    // Today's Incentive Challenge
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1C2027),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFF252B33)),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: OrbitSpacing.space20),
-
-              // ── 3. Active Job in Progress (Highest Operational Priority) ───
-              if (_activeJob != null) ...[
-                Text(
-                  'CURRENT ACTIVE JOB',
-                  style: OrbitTypography.labelSmall.copyWith(letterSpacing: 1.2),
-                ),
-                const SizedBox(height: OrbitSpacing.space8),
-                OrbitCard(
-                  backgroundColor: OrbitColors.surfaceElevated,
-                  border: Border.all(color: OrbitColors.primary.withValues(alpha: 0.5), width: 1.5),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: OrbitColors.primary,
-                                  shape: BoxShape.circle,
-                                ),
+                              const Row(
+                                children: [
+                                  Icon(Icons.workspace_premium_rounded, color: Colors.amber, size: 16),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    "TODAY'S CHALLENGE",
+                                    style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.6),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 8),
                               Text(
-                                _activeJob!['clientName'] ?? _activeJob!['packageName'] ?? 'Client Shoot',
-                                style: OrbitTypography.titleSmall.copyWith(fontWeight: FontWeight.w700),
+                                '$_completedToday / $_targetToday shoots',
+                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
-                          OrbitStatusPill.fromStatus(_activeJob!['status'] ?? 'ACCEPTED'),
-                        ],
-                      ),
-                      const SizedBox(height: OrbitSpacing.space12),
-                      Row(
-                        children: [
-                          const Icon(Icons.location_on_outlined, size: 16, color: OrbitColors.info),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              _activeJob!['address'] ?? 'Client Location',
-                              style: OrbitTypography.bodyMedium,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: (_completedToday / _targetToday).clamp(0.0, 1.0),
+                              backgroundColor: const Color(0xFF252B33),
+                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF22C55E)),
+                              minHeight: 6,
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: OrbitSpacing.space8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Estimated Payout: ₹${_activeJob!['payout'] ?? _activeJob!['partnerSalary'] ?? 500}',
-                            style: OrbitTypography.titleSmall.copyWith(color: OrbitColors.success, fontWeight: FontWeight.w700),
-                          ),
-                          Text(
-                            '~${_activeJob!['distanceKm'] ?? '2.4'} km away',
-                            style: OrbitTypography.bodySmall,
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Earn ₹$_bonusAmount bonus on completing $_targetToday shoots',
+                                style: const TextStyle(color: OrbitColors.textSecondary, fontSize: 11.5),
+                              ),
+                              const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 12),
+                            ],
                           ),
                         ],
                       ),
-                      const SizedBox(height: OrbitSpacing.space16),
-                      OrbitPrimaryButton(
-                        label: 'VIEW ACTIVE JOB',
-                        icon: Icons.navigation_rounded,
-                        onPressed: () => context.push('/job/${_activeJob!['id']}'),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: OrbitSpacing.space20),
-              ],
+                    ),
+                  ],
 
-              // ── 4. Radar Scanning or Available Job Requests ────────────────
-              Text(
-                'NEARBY REQUESTS',
-                style: OrbitTypography.labelSmall.copyWith(letterSpacing: 1.2),
+                  const SizedBox(height: 12),
+
+                  // ── 5. Streamlined Bottom Navigation Bar ───────────────────
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0B0D10),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFF252B33)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _NavItem(icon: Icons.map_outlined, activeIcon: Icons.map_rounded, label: 'Map', isSelected: true, onTap: () {}),
+                        _NavItem(icon: Icons.movie_creation_outlined, activeIcon: Icons.movie_creation_rounded, label: 'Jobs', isSelected: false, onTap: () => context.push('/work-history')),
+                        _NavItem(icon: Icons.account_balance_wallet_outlined, activeIcon: Icons.account_balance_wallet_rounded, label: 'Earnings', isSelected: false, onTap: () => context.push('/earnings')),
+                        _NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profile', isSelected: false, onTap: () => context.push('/profile')),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: OrbitSpacing.space8),
-
-              if (_isLoading) ...[
-                const OrbitLoadingCard(height: 90),
-                const SizedBox(height: 8),
-                const OrbitLoadingCard(height: 90),
-              ] else if (!_isOnline) ...[
-                OrbitCard(
-                  padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.wifi_off_rounded, size: 36, color: OrbitColors.textMuted),
-                      const SizedBox(height: 12),
-                      Text('You are currently offline', style: OrbitTypography.titleSmall),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Switch to Online above to receive instant nearby shoot bookings.',
-                        style: OrbitTypography.bodySmall,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ] else if (_availableJobs.isEmpty) ...[
-                // Subtle Operational Radar Animation
-                OrbitCard(
-                  padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
-                  child: Column(
-                    children: [
-                      RotationTransition(
-                        turns: _radarController,
-                        child: Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: OrbitColors.primary.withValues(alpha: 0.1),
-                            border: Border.all(color: OrbitColors.primary.withValues(alpha: 0.3)),
-                          ),
-                          child: const Icon(Icons.radar_rounded, size: 28, color: OrbitColors.primary),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text('You\'re all set', style: OrbitTypography.titleSmall),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Waiting for nearby shoot requests within 10 km...',
-                        style: OrbitTypography.bodySmall,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ] else ...[
-                ..._availableJobs.map((job) => Padding(
-                      padding: const EdgeInsets.only(bottom: OrbitSpacing.space12),
-                      child: OrbitCard(
-                        onTap: () => context.push('/incoming', extra: job),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    job['packageName'] ?? 'Shoot Request',
-                                    style: OrbitTypography.titleSmall.copyWith(fontWeight: FontWeight.w700),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Text(
-                                  '₹${job['earning'] ?? job['partnerSalary'] ?? 500}',
-                                  style: OrbitTypography.titleLarge.copyWith(
-                                    color: OrbitColors.success,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              job['clientArea'] ?? job['address'] ?? 'Nearby Area',
-                              style: OrbitTypography.bodySmall,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: OrbitSpacing.space12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Icon(Icons.directions_car_outlined, size: 14, color: OrbitColors.info),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '${job['distanceKm'] ?? '2.4'} km • ETA ~15 min',
-                                      style: OrbitTypography.labelSmall.copyWith(color: OrbitColors.textSecondary),
-                                    ),
-                                  ],
-                                ),
-                                const OrbitStatusPill(
-                                  label: 'NEW REQUEST',
-                                  color: OrbitColors.primary,
-                                  icon: Icons.flash_on_rounded,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    )),
-              ],
-            ],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _NavItem({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF15181D) : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSelected ? activeIcon : icon,
+              color: isSelected ? const Color(0xFF38BDF8) : Colors.grey.shade500,
+              size: 20,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey.shade500,
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       ),
     );

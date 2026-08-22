@@ -4,8 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import '../../../core/theme/orbit_theme.dart';
 import '../../../core/api_client.dart';
-import '../../../shared/widgets/orbit_button.dart';
-import '../../../shared/widgets/orbit_card.dart';
+import '../../../shared/widgets/orbit_map_workspace.dart';
 import '../../../analytics/analytics_service.dart';
 
 class IncomingBookingScreen extends StatefulWidget {
@@ -17,7 +16,7 @@ class IncomingBookingScreen extends StatefulWidget {
 }
 
 class _IncomingBookingScreenState extends State<IncomingBookingScreen> {
-  final ValueNotifier<int> _countdown = ValueNotifier<int>(20);
+  final ValueNotifier<int> _countdown = ValueNotifier<int>(15);
   Timer? _timer;
   bool _isResponding = false;
   late final DateTime _receivedAt;
@@ -32,7 +31,7 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen> {
     partnerAnalytics.trackRequestReceived(
       bookingId: booking['id']?.toString() ?? 'unknown',
       earning: (booking['earning'] ?? booking['partnerSalary'] ?? 500) as int,
-      distanceKm: ((booking['distanceKm'] ?? 2.5) as num).toDouble(),
+      distanceKm: ((booking['distanceKm'] ?? 1.8) as num).toDouble(),
     );
 
     _startTimer();
@@ -100,64 +99,77 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen> {
   @override
   Widget build(BuildContext context) {
     final booking = widget.dispatch['booking'] as Map<String, dynamic>? ?? widget.dispatch;
-    final pkg = booking['package'] as Map<String, dynamic>? ?? {};
-    final packageName = pkg['name'] ?? booking['packageName'] ?? 'Content Creator Shoot';
-    final payout = booking['earning'] ?? booking['partnerSalary'] ?? 499;
-    final distanceKm = booking['distanceKm'] ?? '2.4';
-    final clientArea = booking['address'] ?? booking['clientArea'] ?? 'Sector 62, Noida';
+    final totalEarning = (booking['earning'] ?? booking['partnerSalary'] ?? 500) as int;
+    final distanceKm = ((booking['distanceKm'] ?? 1.8) as num).toDouble();
+    final durationMin = (booking['shootDurationMin'] ?? 25) as int;
+    final locationName = booking['locationName']?.toString() ?? 'The Loft Cafe';
+    final address = booking['address']?.toString() ?? 'Baner High Street, Pune';
+    final clientName = booking['clientName']?.toString() ?? 'Arjun & Maya';
+    final shootType = booking['shootType']?.toString() ?? '1 Reel (30s vertical) • Color Grade';
+
+    final breakdown = booking['pricingBreakdown'] as Map<String, dynamic>? ?? {
+      'shoot': 400,
+      'distance': 50,
+      'surge': 50,
+    };
 
     return Scaffold(
-      backgroundColor: OrbitColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: OrbitSpacing.space20, vertical: OrbitSpacing.space16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // ── Header & Countdown ─────────────────────────────────────────
-              Row(
+      backgroundColor: const Color(0xFF0B0D10),
+      body: Stack(
+        children: [
+          // ── Background Live Map ───────────────────────────────────────────
+          const OrbitMapWorkspace(
+            isOnline: true,
+            isNavigating: true,
+          ),
+
+          // ── Top Decline Button & Countdown Pill ───────────────────────────
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: OrbitColors.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: OrbitColors.primary.withValues(alpha: 0.3)),
-                    ),
-                    child: Text(
-                      'NEW BOOKING REQUEST',
-                      style: OrbitTypography.labelSmall.copyWith(
-                        color: OrbitColors.primary,
-                        fontWeight: FontWeight.w800,
+                  GestureDetector(
+                    onTap: _isResponding ? null : () => _respond(accept: false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF15181D),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFF252B33)),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 8),
+                        ],
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.close, color: Colors.white, size: 16),
+                          SizedBox(width: 4),
+                          Text('Decline', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                        ],
                       ),
                     ),
                   ),
+
+                  // Circular Countdown Badge
                   ValueListenableBuilder<int>(
                     valueListenable: _countdown,
-                    builder: (context, count, _) {
-                      final isUrgent = count <= 5;
+                    builder: (context, val, _) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: isUrgent ? OrbitColors.danger.withValues(alpha: 0.15) : OrbitColors.surfaceElevated,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: isUrgent ? OrbitColors.danger : OrbitColors.borderSubtle),
+                          color: const Color(0xFF15181D),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFF38BDF8), width: 1.2),
                         ),
                         child: Row(
                           children: [
-                            Icon(
-                              Icons.timer_outlined,
-                              size: 14,
-                              color: isUrgent ? OrbitColors.danger : OrbitColors.textSecondary,
-                            ),
+                            const Icon(Icons.timer_outlined, color: Color(0xFF38BDF8), size: 15),
                             const SizedBox(width: 4),
                             Text(
-                              '${count}s',
-                              style: OrbitTypography.labelSmall.copyWith(
-                                color: isUrgent ? OrbitColors.danger : OrbitColors.textPrimary,
-                                fontWeight: FontWeight.w700,
-                              ),
+                              '${val}s',
+                              style: const TextStyle(color: Color(0xFF38BDF8), fontWeight: FontWeight.w900, fontSize: 13),
                             ),
                           ],
                         ),
@@ -166,124 +178,209 @@ class _IncomingBookingScreenState extends State<IncomingBookingScreen> {
                   ),
                 ],
               ),
+            ),
+          ),
 
-              const SizedBox(height: OrbitSpacing.space24),
-
-              // ── Big High-Scannability Payout Amount ────────────────────────
-              OrbitCard(
-                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-                backgroundColor: OrbitColors.surfaceElevated,
-                border: Border.all(color: OrbitColors.borderMedium),
-                child: Column(
-                  children: [
-                    Text(
-                      'GUARANTEED PAYOUT',
-                      style: OrbitTypography.labelSmall.copyWith(
-                        letterSpacing: 1.2,
-                        color: OrbitColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '₹$payout',
-                      style: OrbitTypography.displayLarge.copyWith(
-                        fontSize: 48,
-                        fontWeight: FontWeight.w800,
-                        color: OrbitColors.success,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      packageName,
-                      style: OrbitTypography.titleSmall.copyWith(color: OrbitColors.textPrimary),
-                    ),
-                  ],
-                ),
+          // ── Bottom Decision-Critical Request Sheet ─────────────────────────
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              decoration: const BoxDecoration(
+                color: Color(0xFF15181D),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                border: Border(top: BorderSide(color: Color(0xFF252B33), width: 1.2)),
+                boxShadow: [
+                  BoxShadow(color: Colors.black87, blurRadius: 24, offset: Offset(0, -6)),
+                ],
               ),
-
-              const SizedBox(height: OrbitSpacing.space16),
-
-              // ── Distance & Operational Route Details ───────────────────────
-              OrbitCard(
-                padding: const EdgeInsets.all(OrbitSpacing.space16),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: OrbitColors.info.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Client & Shoot Type Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E293B),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'NEW ORBIT SHOOT',
+                              style: TextStyle(color: Color(0xFF38BDF8), fontSize: 10.5, fontWeight: FontWeight.w900, letterSpacing: 0.8),
+                            ),
                           ),
-                          child: const Icon(Icons.location_on_rounded, size: 20, color: OrbitColors.info),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                          const SizedBox(width: 3),
+                          Text('4.9 ★ $clientName', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // ── UPFRONT PAYOUT & SURGE ──
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              const Text('₹', style: TextStyle(color: Color(0xFF22C55E), fontSize: 24, fontWeight: FontWeight.w900)),
                               Text(
-                                'CLIENT LOCATION',
-                                style: OrbitTypography.labelSmall.copyWith(fontSize: 10),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                clientArea,
-                                style: OrbitTypography.titleSmall.copyWith(fontWeight: FontWeight.w600),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                                '$totalEarning',
+                                style: const TextStyle(color: Colors.white, fontSize: 38, fontWeight: FontWeight.w900, height: 1.0),
                               ),
                             ],
                           ),
+                          const SizedBox(height: 3),
+                          const Text(
+                            '1.6x Peak Surge applied • 100% direct payout',
+                            style: TextStyle(color: Color(0xFF22C55E), fontSize: 11, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1C2027),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFF252B33)),
+                        ),
+                        child: Text(
+                          '${distanceKm}km • ~${durationMin}min',
+                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const Divider(color: Color(0xFF252B33), height: 24),
+
+                  // ── Location & Shoot Specs ──
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1C2027),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.location_on_outlined, color: Color(0xFF38BDF8), size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(locationName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                            const SizedBox(height: 2),
+                            Text(address, style: const TextStyle(color: OrbitColors.textSecondary, fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // Shoot Specs Tag
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1C2027),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.videocam_outlined, color: Colors.white70, size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            shootType,
+                            style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: OrbitSpacing.space12),
-                    const Divider(color: OrbitColors.borderSubtle, height: 1),
-                    const SizedBox(height: OrbitSpacing.space12),
-                    Row(
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Transparent Earnings Breakdown Row
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0B0D10),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFF252B33)),
+                    ),
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        Column(
-                          children: [
-                            Text('DISTANCE', style: OrbitTypography.labelSmall.copyWith(fontSize: 10)),
-                            const SizedBox(height: 2),
-                            Text('$distanceKm km', style: OrbitTypography.titleMedium.copyWith(fontWeight: FontWeight.w700)),
-                          ],
-                        ),
-                        Container(width: 1, height: 28, color: OrbitColors.borderSubtle),
-                        Column(
-                          children: [
-                            Text('ESTIMATED TIME', style: OrbitTypography.labelSmall.copyWith(fontSize: 10)),
-                            const SizedBox(height: 2),
-                            Text('15-20 min', style: OrbitTypography.titleMedium.copyWith(fontWeight: FontWeight.w700)),
-                          ],
-                        ),
+                        Text('Shoot: ₹${breakdown['shoot'] ?? 400}', style: const TextStyle(color: OrbitColors.textSecondary, fontSize: 11)),
+                        const Text('•', style: TextStyle(color: Colors.grey)),
+                        Text('Travel: ₹${breakdown['distance'] ?? 50}', style: const TextStyle(color: OrbitColors.textSecondary, fontSize: 11)),
+                        const Text('•', style: TextStyle(color: Colors.grey)),
+                        Text('Surge: ₹${breakdown['surge'] ?? 50}', style: const TextStyle(color: Color(0xFF22C55E), fontSize: 11, fontWeight: FontWeight.bold)),
                       ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
 
-              const Spacer(),
+                  const SizedBox(height: 18),
 
-              // ── Thumb-Zone Action Buttons (Dominant Accept + Secondary Decline) ──
-              OrbitAcceptButton(
-                label: 'ACCEPT BOOKING',
-                isLoading: _isResponding,
-                onPressed: _isResponding ? null : () => _respond(accept: true),
+                  // ── ACCEPT JOB DOMINANT CTA ──
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF22C55E),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 4,
+                      ),
+                      onPressed: _isResponding ? null : () => _respond(accept: true),
+                      child: _isResponding
+                          ? const CircularProgressIndicator(color: Colors.black)
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'ACCEPT JOB',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Icon(Icons.arrow_forward_rounded, color: Colors.black, size: 20),
+                              ],
+                            ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: OrbitSpacing.space12),
-              OrbitDangerButton(
-                label: 'DECLINE',
-                onPressed: _isResponding ? null : () => _respond(accept: false),
-              ),
-              const SizedBox(height: OrbitSpacing.space8),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
