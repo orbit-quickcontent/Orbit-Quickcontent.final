@@ -11,12 +11,19 @@ plugins {
 
 android {
     namespace = "com.orbit.partner"
-    compileSdk = 35
+    compileSdk = 36
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    configurations.all {
+        resolutionStrategy {
+            force("androidx.core:core:1.15.0")
+            force("androidx.core:core-ktx:1.15.0")
+        }
     }
 
     kotlinOptions {
