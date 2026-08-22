@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -18,15 +21,15 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = "17"
     }
 
     signingConfigs {
         create("release") {
             val keystorePropertiesFile = rootProject.file("key.properties")
             if (keystorePropertiesFile.exists()) {
-                val properties = java.util.Properties()
-                properties.load(java.io.FileInputStream(keystorePropertiesFile))
+                val properties = Properties()
+                properties.load(FileInputStream(keystorePropertiesFile))
                 val storeFilePath = properties.getProperty("storeFile")
                 if (storeFilePath != null) {
                     storeFile = file(storeFilePath)
