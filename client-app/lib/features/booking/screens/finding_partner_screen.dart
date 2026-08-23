@@ -2,15 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:socket_io_client/socket_io_client.dart' as io;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/theme.dart';
 import '../../../core/api_client.dart';
-
-const String _kSocketUrl = String.fromEnvironment(
-  'SOCKET_URL',
-  defaultValue: 'http://10.0.2.2:5000',
-);
 
 class FindingPartnerScreen extends StatefulWidget {
   final String bookingId;
@@ -21,46 +14,23 @@ class FindingPartnerScreen extends StatefulWidget {
 }
 
 class _FindingPartnerScreenState extends State<FindingPartnerScreen> {
-  io.Socket? _socket;
   String _statusMessage = 'Finding the best videographer near you...';
   Timer? _pollingTimer;
+  Timer? _eventPollingTimer;
+  String _lastEventSince = DateTime.now().subtract(const Duration(minutes: 5)).toUtc().toIso8601String();
 
   @override
   void initState() {
     super.initState();
-    _initSocket();
-    _pollStatus();
+    _pollBookingStatus();
+    _pollRealtimeEvents();
   }
 
   @override
   void dispose() {
-    _socket?.dispose();
     _pollingTimer?.cancel();
+    _eventPollingTimer?.cancel();
     super.dispose();
-  }
-
-  Future<void> _initSocket() async {
-    const storage = FlutterSecureStorage();
-    final token = await storage.read(key: 'orbit_access_token');
-
-    _socket = io.io(_kSocketUrl, io.OptionBuilder()
-      .setTransports(['websocket'])
-      .setAuth({'token': token})
-      .build());
-
-    _socket!.connect();
-    _socket!.emit('join:booking', widget.bookingId);
-
-    _socket!.on('booking:status-update', (data) {
-      if (!mounted) return;
-      final status = data['status'];
-      _handleStatusChange(status);
-    });
-
-    _socket!.on('dispatch:accepted', (data) {
-      if (!mounted) return;
-      setState(() => _statusMessage = 'Partner found! Getting ready...');
-    });
   }
 
   void _handleStatusChange(String? status) {
@@ -87,11 +57,44 @@ class _FindingPartnerScreenState extends State<FindingPartnerScreen> {
     }
   }
 
-  void _pollStatus() {
-    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
+  /// Poll booking status via direct GET /bookings/:id (fallback)
+  void _pollBookingStatus() {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
       try {
         final res = await apiClient.get('/bookings/${widget.bookingId}');
         _handleStatusChange(res.data['status']);
+      } catch (_) {}
+    });
+  }
+
+  /// Poll real-time events via GET /events/poll/booking/:id (primary)
+  void _pollRealtimeEvents() {
+    _eventPollingTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
+      try {
+        final res = await apiClient.get(
+          '/events/poll/booking/${widget.bookingId}',
+          params: {'since': _lastEventSince},
+        );
+        final data = res.data;
+        if (data == null) return;
+
+        final serverTime = data['serverTime'] as String?;
+        if (serverTime != null) _lastEventSince = serverTime;
+
+        final events = data['events'] as List? ?? [];
+        for (final evt in events) {
+          final event = evt as Map<String, dynamic>;
+          final eventType = event['event'] as String? ?? '';
+          final payload = event['payload'] as Map<String, dynamic>? ?? {};
+
+          if (eventType == 'booking:status-update') {
+            _handleStatusChange(payload['status'] as String?);
+          } else if (eventType == 'dispatch:accepted') {
+            if (mounted) {
+              setState(() => _statusMessage = 'Partner found! Getting ready...');
+            }
+          }
+        }
       } catch (_) {}
     });
   }

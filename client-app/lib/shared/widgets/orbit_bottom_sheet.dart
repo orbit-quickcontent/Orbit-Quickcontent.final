@@ -22,6 +22,7 @@ class OrbitBottomSheet extends StatelessWidget {
     OrbitMotion.lightTap();
     return showModalBottomSheet<T>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (ctx) => OrbitBottomSheet(title: title, child: child),

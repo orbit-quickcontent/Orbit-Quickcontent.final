@@ -65,6 +65,7 @@ dependencies:
   shared_preferences: ^2.3.2
   connectivity_plus: ^6.0.5
   permission_handler: ^11.3.1
+  google_sign_in: 6.2.2
 
 dev_dependencies:
   flutter_test:

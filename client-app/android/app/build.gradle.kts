@@ -31,6 +31,15 @@ android {
     }
 
     signingConfigs {
+        getByName("debug") {
+            val keystoreFile = file("orbit.keystore")
+            if (keystoreFile.exists()) {
+                storeFile = keystoreFile
+                storePassword = "orbit123"
+                keyAlias = "orbit"
+                keyPassword = "orbit123"
+            }
+        }
         create("release") {
             val keystorePropertiesFile = rootProject.file("key.properties")
             if (keystorePropertiesFile.exists()) {
@@ -43,6 +52,11 @@ android {
                     keyAlias = properties.getProperty("keyAlias")
                     keyPassword = properties.getProperty("keyPassword")
                 }
+            } else if (file("orbit.keystore").exists()) {
+                storeFile = file("orbit.keystore")
+                storePassword = "orbit123"
+                keyAlias = "orbit"
+                keyPassword = "orbit123"
             } else if (System.getenv("KEYSTORE_PATH") != null) {
                 storeFile = file(System.getenv("KEYSTORE_PATH"))
                 storePassword = System.getenv("KEYSTORE_PASSWORD")

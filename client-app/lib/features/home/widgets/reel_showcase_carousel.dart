@@ -150,17 +150,25 @@ class _OrbitReelShowcaseCarouselState extends State<OrbitReelShowcaseCarousel> {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: OrbitColors.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             Center(
               child: Container(
                 width: 44,
@@ -279,7 +287,9 @@ class _OrbitReelShowcaseCarouselState extends State<OrbitReelShowcaseCarousel> {
           ],
         ),
       ),
-    ).whenComplete(_resumeAutoScrollAfterDelay);
+    ),
+  ),
+).whenComplete(_resumeAutoScrollAfterDelay);
   }
 
   @override

@@ -8,7 +8,7 @@ class OrbitCard extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? backgroundColor;
   final Border? border;
-  final double borderRadius;
+  final BorderRadius? borderRadius;
 
   const OrbitCard({
     super.key,
@@ -17,7 +17,7 @@ class OrbitCard extends StatelessWidget {
     this.onTap,
     this.backgroundColor,
     this.border,
-    this.borderRadius = 14.0,
+    this.borderRadius,
   });
 
   @override
@@ -26,7 +26,7 @@ class OrbitCard extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: backgroundColor ?? OrbitColors.surface,
-        borderRadius: BorderRadius.circular(borderRadius),
+        borderRadius: borderRadius ?? OrbitRadii.largeBorder,
         border: border ?? Border.all(color: OrbitColors.borderSubtle, width: 1),
       ),
       child: child,
@@ -36,7 +36,7 @@ class OrbitCard extends StatelessWidget {
       return Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(borderRadius),
+          borderRadius: borderRadius ?? OrbitRadii.largeBorder,
           onTap: () {
             OrbitMotion.lightTap();
             onTap!();

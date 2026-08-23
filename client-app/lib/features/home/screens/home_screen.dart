@@ -6,8 +6,10 @@ import 'package:geocoding/geocoding.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/api_client.dart';
 import '../../../core/theme/orbit_theme.dart';
+import '../../../shared/widgets/orbit_card.dart';
 import '../../../shared/widgets/orbit_status.dart';
 import '../../../shared/widgets/orbit_loading.dart';
+import '../../../shared/widgets/orbit_empty_state.dart';
 import '../../../analytics/analytics_service.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../widgets/reel_showcase_carousel.dart';
@@ -20,13 +22,11 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  static const _storage = FlutterSecureStorage();
   List<Map<String, dynamic>> _recentBookings = [];
   Map<String, dynamic>? _activeBooking;
   bool _isLoading = true;
   String _currentLocation = 'Locating...';
-  List<Map<String, dynamic>> _packages = [];
-
-  // Brand Identity State
   String _brandName = 'My Brand';
   String _brandHandle = '@orbit_creator';
   String _selectedStyle = 'Cinematic & Dynamic';
@@ -36,22 +36,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     analytics.trackScreenView('home_screen');
     _detectLiveLocation();
+    _loadBrandDNA();
     _loadData();
-    _loadPackages();
-    _loadBrandIdentity();
   }
 
-  Future<void> _loadBrandIdentity() async {
+  Future<void> _loadBrandDNA() async {
     try {
-      const storage = FlutterSecureStorage();
-      final name = await storage.read(key: 'brand_name');
-      final handle = await storage.read(key: 'brand_handle');
-      final style = await storage.read(key: 'brand_style');
+      final name = await _storage.read(key: 'brand_name');
+      final handle = await _storage.read(key: 'brand_handle');
+      final style = await _storage.read(key: 'brand_style');
       if (mounted) {
         setState(() {
-          if (name != null) _brandName = name;
-          if (handle != null) _brandHandle = handle;
-          if (style != null) _selectedStyle = style;
+          if (name != null && name.isNotEmpty) _brandName = name;
+          if (handle != null && handle.isNotEmpty) _brandHandle = handle;
+          if (style != null && style.isNotEmpty) _selectedStyle = style;
         });
       }
     } catch (_) {}
@@ -96,59 +94,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  Future<void> _loadPackages() async {
-    try {
-      final res = await apiClient.get('/packages');
-      final pkgs = List<Map<String, dynamic>>.from(res.data ?? []);
-      if (mounted && pkgs.isNotEmpty) {
-        setState(() => _packages = pkgs);
-      } else {
-        _setFallbackPackages();
-      }
-    } catch (_) {
-      _setFallbackPackages();
-    }
-  }
-
-  void _setFallbackPackages() {
-    if (mounted) {
-      setState(() {
-        _packages = [
-          {
-            'id': 'pkg_standard',
-            'name': 'Personalized',
-            'tier': 'STANDARD',
-            'priceDisplay': 1999,
-            'focus': '3 Master Reels + B-Roll',
-            'deliveryTime': '60-120 mins delivery',
-            'features': ['3 Short-form Reels', 'Motion Captions', 'Cinematic B-Roll', '4K Export'],
-            'popular': true,
-          },
-          {
-            'id': 'pkg_premium',
-            'name': 'Professional',
-            'tier': 'PREMIUM',
-            'priceDisplay': 4999,
-            'focus': '6 Master Reels + Brand Kit',
-            'deliveryTime': '60-120 mins delivery',
-            'features': ['6 Master Reels', 'Sound Design & VO', 'Custom Brand Kit', 'Raw Footage'],
-            'popular': false,
-          },
-          {
-            'id': 'pkg_quick',
-            'name': 'Quick Impact',
-            'tier': 'QUICK',
-            'priceDisplay': 999,
-            'focus': '1 High-Impact 9:16 Reel',
-            'deliveryTime': '30-60 mins delivery',
-            'features': ['1 Edited Reel (30s)', 'Trending Audio', 'Pro Color Grade', 'Fast Export'],
-            'popular': false,
-          },
-        ];
-      });
-    }
-  }
-
   Future<void> _loadData() async {
     try {
       final res = await apiClient.get('/bookings', params: {'limit': '5'});
@@ -169,13 +114,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  String _getTimeGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'GOOD MORNING';
-    if (hour < 17) return 'GOOD AFTERNOON';
-    return 'GOOD EVENING';
-  }
-
   void _onBookShootPressed({String? packageId}) {
     OrbitMotion.lightTap();
     analytics.trackButtonClick('book_shoot_cta', screen: 'home_screen');
@@ -193,51 +131,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } else {
       showModalBottomSheet(
         context: context,
+        useRootNavigator: true,
         backgroundColor: OrbitColors.surface,
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-        builder: (ctx) => Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: OrbitColors.borderMedium, borderRadius: BorderRadius.circular(2))),
-              const SizedBox(height: 20),
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: OrbitColors.secondary.withValues(alpha: 0.15),
+        builder: (ctx) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(width: 40, height: 4, decoration: BoxDecoration(color: OrbitColors.borderMedium, borderRadius: BorderRadius.circular(2))),
+                const SizedBox(height: 20),
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: OrbitColors.secondary.withValues(alpha: 0.15),
+                  ),
+                  child: const Icon(Icons.videocam_outlined, color: OrbitColors.secondary, size: 30),
                 ),
-                child: const Icon(Icons.videocam_outlined, color: OrbitColors.secondary, size: 30),
-              ),
-              const SizedBox(height: 16),
-              const Text('No Active Shoots in Progress', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 6),
-              const Text('Book a verified creator to arrive in 15 minutes.', style: TextStyle(color: OrbitColors.textSecondary, fontSize: 13), textAlign: TextAlign.center),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: OrbitColors.secondary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    context.push('/packages');
-                  },
-                  child: const Text('Book a Shoot Now', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                const Text('No Active Shoots in Progress', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 6),
+                const Text('Book a verified creator to arrive in 15 minutes.', style: TextStyle(color: OrbitColors.textSecondary, fontSize: 13), textAlign: TextAlign.center),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: OrbitColors.secondary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      context.push('/packages');
+                    },
+                    child: const Text('Book a Shoot Now', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
     }
-  }
-
-  void _onRecentProjectsPressed() {
-    OrbitMotion.lightTap();
-    context.push('/history');
   }
 
   void _openBrandIdentityModal() {
@@ -248,130 +187,158 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: OrbitColors.surface,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 16,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(width: 40, height: 4, decoration: BoxDecoration(color: OrbitColors.borderMedium, borderRadius: BorderRadius.circular(2))),
-              ),
-              const SizedBox(height: 16),
-              Row(
+        builder: (ctx, setModalState) => SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 16,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: Colors.pink.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.star_rounded, color: Colors.pinkAccent, size: 20),
+                  Center(
+                    child: Container(width: 40, height: 4, decoration: BoxDecoration(color: OrbitColors.borderMedium, borderRadius: BorderRadius.circular(2))),
                   ),
-                  const SizedBox(width: 10),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 16),
+                  Row(
                     children: [
-                      Text('Brand Identity & DNA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-                      Text('Editors & creators use this DNA for your reels', style: TextStyle(color: OrbitColors.textSecondary, fontSize: 12)),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              const Text('BRAND / CREATOR NAME', style: TextStyle(color: OrbitColors.secondary, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: nameCtrl,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'e.g. Orbit Studios',
-                  filled: true,
-                  fillColor: OrbitColors.surfaceElevated,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
-                ),
-              ),
-              const SizedBox(height: 14),
-              const Text('INSTAGRAM / TIKTOK HANDLE', style: TextStyle(color: OrbitColors.secondary, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: handleCtrl,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'e.g. @orbit_app',
-                  filled: true,
-                  fillColor: OrbitColors.surfaceElevated,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
-                ),
-              ),
-              const SizedBox(height: 14),
-              const Text('PREFERRED EDITING STYLE DNA', style: TextStyle(color: OrbitColors.secondary, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: ['Cinematic & Dynamic', 'Fast-Paced Streetwear', 'Minimalist Aesthetic', 'Luxury & Real Estate'].map((style) {
-                  final isSel = tempStyle == style;
-                  return GestureDetector(
-                    onTap: () => setModalState(() => tempStyle = style),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSel ? OrbitColors.secondary.withValues(alpha: 0.2) : OrbitColors.surfaceElevated,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: isSel ? OrbitColors.secondary : OrbitColors.borderSubtle),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: Colors.pink.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
+                        child: const Icon(Icons.star_rounded, color: Colors.pinkAccent, size: 20),
                       ),
-                      child: Text(
-                        style,
-                        style: TextStyle(
-                          color: isSel ? OrbitColors.secondary : Colors.white70,
-                          fontSize: 12,
-                          fontWeight: isSel ? FontWeight.bold : FontWeight.w500,
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Brand Identity & DNA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                            Text('Editors & creators use this DNA for your reels', style: TextStyle(color: OrbitColors.textSecondary, fontSize: 12)),
+                          ],
                         ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const Text('BRAND / CREATOR NAME', style: TextStyle(color: OrbitColors.secondary, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: nameCtrl,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'e.g. Orbit Studios',
+                      hintStyle: const TextStyle(color: Color(0xFF64748B)),
+                      filled: true,
+                      fillColor: OrbitColors.surfaceElevated,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: OrbitColors.secondary, width: 1.5)),
                     ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: OrbitColors.secondary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                  onPressed: () async {
-                    final bName = nameCtrl.text.trim();
-                    final bHandle = handleCtrl.text.trim();
-                    final messenger = ScaffoldMessenger.of(context);
-                    final nav = Navigator.of(ctx);
+                  ),
+                  const SizedBox(height: 14),
+                  const Text('INSTAGRAM / TIKTOK HANDLE', style: TextStyle(color: OrbitColors.secondary, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: handleCtrl,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'e.g. @orbit_app',
+                      hintStyle: const TextStyle(color: Color(0xFF64748B)),
+                      filled: true,
+                      fillColor: OrbitColors.surfaceElevated,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: OrbitColors.secondary, width: 1.5)),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text('PREFERRED EDITING STYLE DNA', style: TextStyle(color: OrbitColors.secondary, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: ['Cinematic & Dynamic', 'Fast-Paced Streetwear', 'Minimalist Aesthetic', 'Luxury & Real Estate'].map((style) {
+                      final isSel = tempStyle == style;
+                      return GestureDetector(
+                        onTap: () => setModalState(() => tempStyle = style),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSel ? OrbitColors.secondary.withValues(alpha: 0.2) : OrbitColors.surfaceElevated,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: isSel ? OrbitColors.secondary : OrbitColors.borderSubtle, width: isSel ? 1.5 : 1.0),
+                          ),
+                          child: Text(
+                            style,
+                            style: TextStyle(
+                              color: isSel ? OrbitColors.secondary : Colors.white70,
+                              fontSize: 12,
+                              fontWeight: isSel ? FontWeight.bold : FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: OrbitColors.secondary,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 0,
+                      ),
+                      onPressed: () async {
+                        final bName = nameCtrl.text.trim().isNotEmpty ? nameCtrl.text.trim() : 'My Brand';
+                        final bHandle = handleCtrl.text.trim().isNotEmpty ? handleCtrl.text.trim() : '@orbit_creator';
+                        final messenger = ScaffoldMessenger.of(context);
+                        final nav = Navigator.of(ctx);
 
-                    const storage = FlutterSecureStorage();
-                    await storage.write(key: 'brand_name', value: bName);
-                    await storage.write(key: 'brand_handle', value: bHandle);
-                    await storage.write(key: 'brand_style', value: tempStyle);
+                        await _storage.write(key: 'brand_name', value: bName);
+                        await _storage.write(key: 'brand_handle', value: bHandle);
+                        await _storage.write(key: 'brand_style', value: tempStyle);
 
-                    if (mounted) {
-                      setState(() {
-                        _brandName = bName;
-                        _brandHandle = bHandle;
-                        _selectedStyle = tempStyle;
-                      });
-                    }
-                    nav.pop();
-                    messenger.showSnackBar(
-                      const SnackBar(content: Text('Brand DNA saved! Creators will follow these preferences.'), backgroundColor: OrbitColors.success),
-                    );
-                  },
-                  child: const Text('Save Brand DNA', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                ),
+                        if (mounted) {
+                          setState(() {
+                            _brandName = bName;
+                            _brandHandle = bHandle;
+                            _selectedStyle = tempStyle;
+                          });
+                        }
+                        nav.pop();
+                        messenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('Brand DNA saved! Creators and editors will follow these preferences.'),
+                            backgroundColor: OrbitColors.success,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Save Brand DNA', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 15)),
+                          SizedBox(width: 8),
+                          Icon(Icons.check_circle_outline_rounded, color: Colors.black, size: 18),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -381,14 +348,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authStateProvider);
-    final userName = user.name?.isNotEmpty == true ? user.name! : 'Test User';
+    final userName = user.name?.isNotEmpty == true ? user.name! : 'Utkarsh';
     final userInitials = userName.isNotEmpty
         ? userName.split(' ').map((n) => n[0]).take(2).join('').toUpperCase()
-        : 'TU';
+        : 'U';
 
-    final hasActive = _activeBooking != null;
-    final activeCount = hasActive ? 1 : 0;
-    final deliveredCount = _recentBookings.length;
+    final activeCount = _activeBooking != null ? 1 : 0;
 
     return Scaffold(
       backgroundColor: OrbitColors.background,
@@ -396,202 +361,246 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         bottom: false,
         child: RefreshIndicator(
           onRefresh: () async {
-            await Future.wait([_loadData(), _detectLiveLocation()]);
+            await Future.wait([_loadData(), _detectLiveLocation(), _loadBrandDNA()]);
           },
           color: OrbitColors.secondary,
           backgroundColor: OrbitColors.surfaceElevated,
           child: ListView(
             padding: const EdgeInsets.only(
-              left: 18,
-              right: 18,
-              top: 14,
-              bottom: 100,
+              left: OrbitSpacing.space20,
+              right: OrbitSpacing.space20,
+              top: OrbitSpacing.space16,
+              bottom: 110, // Space for bottom nav
             ),
             children: [
-              // ── Top Bar Header (TU Avatar + Good Afternoon + Search / Bell) ──
+              // ── Header (Live User & Live GPS Address) ─────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Stack(
-                        children: [
-                          Container(
+                  Expanded(
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => context.push('/profile'),
+                          child: Container(
                             width: 44,
                             height: 44,
                             decoration: const BoxDecoration(
-                              color: Color(0xFF1E2229),
+                              gradient: OrbitColors.primaryGradient,
                               shape: BoxShape.circle,
                             ),
                             child: Center(
                               child: Text(
                                 userInitials,
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15),
+                                style: OrbitTypography.titleSmall.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              width: 10,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: const Color(0xFF00E5FF),
-                                border: Border.all(color: OrbitColors.background, width: 2),
+                        ),
+                        const SizedBox(width: OrbitSpacing.space12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Hi, $userName',
+                                style: OrbitTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
+                              const SizedBox(height: 2),
+                              GestureDetector(
+                                onTap: () => context.push('/location-picker', extra: 'pkg_standard'),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.location_on, size: 14, color: OrbitColors.secondary),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        _currentLocation,
+                                        style: OrbitTypography.bodySmall.copyWith(color: OrbitColors.textSecondary),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 2),
+                                    const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: OrbitColors.textMuted),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _getTimeGreeting(),
-                            style: const TextStyle(color: OrbitColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.8),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Hi, $userName',
-                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
+                  // ── Top Header Actions: Book Now Button & Notification ──
                   Row(
                     children: [
-                      IconButton(
-                        visualDensity: VisualDensity.compact,
-                        icon: const Icon(Icons.search_rounded, color: Colors.white70, size: 22),
-                        onPressed: () => context.push('/packages'),
-                      ),
-                      Stack(
-                        children: [
-                          IconButton(
-                            visualDensity: VisualDensity.compact,
-                            icon: const Icon(Icons.notifications_none_rounded, color: Colors.white70, size: 22),
-                            onPressed: () => context.push('/notifications'),
-                          ),
-                          Positioned(
-                            top: 10,
-                            right: 10,
-                            child: Container(
-                              width: 7,
-                              height: 7,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF00E5FF),
-                                shape: BoxShape.circle,
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: OrbitColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: OrbitColors.primary.withValues(alpha: 0.4),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () => _onBookShootPressed(),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.flash_on_rounded, color: Colors.white, size: 16),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'BOOK NOW',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 12,
+                                      letterSpacing: 0.8,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                        ],
+                        ),
                       ),
+                      const SizedBox(width: 6),
                       IconButton(
-                        visualDensity: VisualDensity.compact,
-                        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white70, size: 22),
-                        onPressed: () => context.push('/profile'),
+                        icon: const Icon(Icons.notifications_none_rounded, color: OrbitColors.textPrimary, size: 24),
+                        onPressed: () => context.push('/notifications'),
                       ),
                     ],
                   ),
                 ],
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: OrbitSpacing.space20),
 
-              // ── Headline: "Shoot In Progress." (ORBIT V1.0.4 — PREMIUM ACCESS) ──
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Shoot',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 42,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -1.0,
-                        height: 1.05,
-                      ),
-                    ),
-                    Text(
-                      hasActive ? 'In Progress.' : 'On Demand.',
-                      style: TextStyle(
-                        fontSize: 38,
-                        fontWeight: FontWeight.w400,
-                        fontStyle: FontStyle.italic,
-                        color: const Color(0xFF29B6F6),
-                        letterSpacing: -0.5,
-                        height: 1.05,
-                        shadows: [
-                          Shadow(
-                            color: const Color(0xFF29B6F6).withValues(alpha: 0.4),
-                            blurRadius: 16,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'ORBIT V1.0.4 — PREMIUM ACCESS',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.35),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 2.0,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ── 4 Quick Action Cards Grid (2x2) with Distinct Functions ──
-              Row(
+              // ── Shoot On Demand Title Header ───────────────────────────
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Card 1: EXPLORE STYLES (Replaces duplicate Book button)
-                  Expanded(
-                    child: _ActionCard(
-                      iconWidget: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFF00E5FF),
-                        ),
-                        child: const Icon(Icons.explore_outlined, color: Colors.black, size: 22),
-                      ),
-                      title: 'EXPLORE\nSTYLES',
-                      subtitle: 'SAMPLE REELS',
-                      onTap: () => context.push('/packages'),
+                  const Text(
+                    'Shoot',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      height: 1.05,
+                      letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  // Card 2: TRACK ORDER
+                  ShaderMask(
+                    blendMode: BlendMode.srcIn,
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [Color(0xFF38BDF8), Color(0xFF7C5CFF)],
+                    ).createShader(bounds),
+                    child: const Text(
+                      'On Demand.',
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.w900,
+                        height: 1.1,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'ORBIT V1.0.4 — PREMIUM ACCESS',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: OrbitSpacing.space20),
+
+              // ── Active Booking Alert (If any) ─────────────────────────
+              if (_activeBooking != null) ...[
+                OrbitCard(
+                  backgroundColor: OrbitColors.primary.withValues(alpha: 0.12),
+                  border: Border.all(color: OrbitColors.primary.withValues(alpha: 0.4), width: 1),
+                  onTap: () => context.push('/booking/${_activeBooking!['id']}'),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                          color: OrbitColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.videocam_rounded, size: 20, color: Colors.white),
+                      ),
+                      const SizedBox(width: OrbitSpacing.space12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Active Shoot in Progress', style: OrbitTypography.titleSmall),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Tap to track videographer & shoot status',
+                              style: OrbitTypography.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right, color: OrbitColors.secondary),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: OrbitSpacing.space16),
+              ],
+
+              // ── 2x2 Quick Action Cards ─────────────────────────────────
+              Row(
+                children: [
                   Expanded(
                     child: _ActionCard(
                       iconWidget: Container(
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFBA68C8), Color(0xFF8E24AA)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                          color: const Color(0xFF00E5FF).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Center(
-                          child: Text(
-                            'DNA',
-                            style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic),
-                          ),
+                        child: const Icon(Icons.explore_outlined, color: Color(0xFF00E5FF), size: 20),
+                      ),
+                      title: 'EXPLORE\nSTYLES',
+                      subtitle: 'SAMPLE REELS',
+                      onTap: () => _onBookShootPressed(),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _ActionCard(
+                      iconWidget: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF7C5CFF).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        child: const Icon(Icons.videocam_outlined, color: Color(0xFF9B82FF), size: 20),
                       ),
                       title: 'TRACK\nORDER',
                       subtitle: '$activeCount ACTIVE',
@@ -603,353 +612,104 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  // Card 3: RECENT PROJECTS
                   Expanded(
                     child: _ActionCard(
                       iconWidget: Container(
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: const Color(0xFF232830),
+                          color: Colors.white.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(Icons.article_outlined, color: Colors.white70, size: 20),
                       ),
-                      title: 'RECENT\nPROJECTS',
-                      subtitle: '$deliveredCount DELIVERED',
-                      onTap: _onRecentProjectsPressed,
+                      title: 'RECENT\nSHOOTS',
+                      subtitle: '${_recentBookings.length} COMPLETED',
+                      onTap: () => context.push('/history'),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Card 4: BRAND IDENTITY
                   Expanded(
                     child: _ActionCard(
                       iconWidget: Container(
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: const Color(0xFF232830),
+                          color: Colors.pink.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.star_outline_rounded, color: Colors.white70, size: 20),
+                        child: const Icon(Icons.star_rounded, color: Colors.pinkAccent, size: 20),
                       ),
                       title: 'BRAND\nIDENTITY',
-                      subtitle: 'ASSETS & DNA',
+                      subtitle: _brandName.toUpperCase(),
                       onTap: _openBrandIdentityModal,
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: OrbitSpacing.space24),
 
-              // ── Live Shoot Tracking Banner (If Active Shoot exists) ──
-              if (hasActive) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF131720),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFF1E3A5F), width: 1.2),
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF0F1522), Color(0xFF131A28)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'LIVE SHOOT TRACKING',
-                              style: TextStyle(color: Color(0xFF00E5FF), fontSize: 9.5, fontWeight: FontWeight.w800, letterSpacing: 1.0),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${_activeBooking!['package']?['name'] ?? 'Personalized'} in progress',
-                              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 3),
-                            Row(
-                              children: [
-                                const Icon(Icons.location_on_outlined, size: 12, color: OrbitColors.textSecondary),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    _activeBooking!['address'] ?? _currentLocation,
-                                    style: const TextStyle(color: OrbitColors.textSecondary, fontSize: 11),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: () => context.push('/booking/${_activeBooking!['id']}'),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF00E5FF),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Row(
-                            children: [
-                              Text('Track', style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w800)),
-                              SizedBox(width: 4),
-                              Icon(Icons.arrow_forward_rounded, size: 14, color: Colors.black),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-
-              // ── Inspiration & Sample Reels Showcase ───────────────────
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.auto_awesome_rounded, color: Color(0xFF00E5FF), size: 18),
-                      SizedBox(width: 6),
-                      Text(
-                        'Trending Reels & Styles',
-                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  GestureDetector(
-                    onTap: () => context.push('/packages'),
-                    child: const Row(
-                      children: [
-                        Text('Explore', style: TextStyle(color: Color(0xFF00E5FF), fontSize: 12, fontWeight: FontWeight.w700)),
-                        SizedBox(width: 2),
-                        Icon(Icons.chevron_right_rounded, color: Color(0xFF00E5FF), size: 16),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
+              // ── Sample Video Reels Showcase ───────────────────────────
               OrbitReelShowcaseCarousel(
                 onBookNow: () => _onBookShootPressed(),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: OrbitSpacing.space24),
 
-              // ── Featured Packages Section (Horizontal Cards) ──────────
+              // ── Recent Activity / Zero State ──────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.bolt_rounded, color: Color(0xFF00E5FF), size: 18),
-                      SizedBox(width: 6),
-                      Text(
-                        'Featured Packages',
-                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  GestureDetector(
-                    onTap: () => context.push('/packages'),
-                    child: const Row(
-                      children: [
-                        Text('View All', style: TextStyle(color: Color(0xFF00E5FF), fontSize: 12, fontWeight: FontWeight.w700)),
-                        SizedBox(width: 2),
-                        Icon(Icons.chevron_right_rounded, color: Color(0xFF00E5FF), size: 16),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Horizontal Packages Carousel
-              SizedBox(
-                height: 170,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: _packages.length,
-                  itemBuilder: (ctx, idx) {
-                    final pkg = _packages[idx];
-                    final pkgId = pkg['id']?.toString() ?? 'pkg_standard';
-                    final isPopular = pkg['popular'] == true;
-
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: GestureDetector(
-                        onTap: () => _onBookShootPressed(packageId: pkgId),
-                        child: Container(
-                          width: 200,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF14171E),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: isPopular ? const Color(0xFF00E5FF).withValues(alpha: 0.5) : const Color(0xFF222733),
-                              width: 1.2,
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      pkg['name'] ?? 'Package',
-                                      style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF222733),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: const Icon(Icons.calendar_today_outlined, size: 14, color: Colors.white70),
-                                  ),
-                                ],
-                              ),
-                              Text(
-                                pkg['deliveryTime'] ?? '60-120 mins delivery',
-                                style: const TextStyle(color: OrbitColors.textSecondary, fontSize: 11),
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    '₹${pkg['priceDisplay'] ?? 1999}',
-                                    style: const TextStyle(
-                                      color: Color(0xFF00E5FF),
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF00E5FF).withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Text(
-                                      'Book',
-                                      style: TextStyle(color: Color(0xFF00E5FF), fontSize: 11, fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ── Recent Shoots Timeline Section ────────────────────────
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Recent Shoots', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text('Recent Shoots', style: OrbitTypography.headingMedium),
                   if (_recentBookings.isNotEmpty)
-                    GestureDetector(
-                      onTap: () => context.push('/history'),
-                      child: const Text('History', style: TextStyle(color: Color(0xFF00E5FF), fontSize: 12, fontWeight: FontWeight.w700)),
+                    TextButton(
+                      onPressed: () => context.push('/history'),
+                      child: Text('History', style: OrbitTypography.labelMedium.copyWith(color: OrbitColors.secondary)),
                     ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: OrbitSpacing.space8),
 
               if (_isLoading) ...[
-                const OrbitLoadingCard(height: 70),
+                const OrbitLoadingCard(height: 80),
               ] else if (_recentBookings.isEmpty) ...[
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF14171E),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFF222733)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF222733),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(Icons.movie_outlined, color: Color(0xFF00E5FF), size: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('No recent shoots', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                            SizedBox(height: 2),
-                            Text('Book your first shoot to start creating reels.', style: TextStyle(color: OrbitColors.textSecondary, fontSize: 11)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                OrbitEmptyState(
+                  icon: Icons.movie_outlined,
+                  title: 'No past shoots yet',
+                  description: 'Experience seamless on-demand video production with certified creators.',
+                  ctaLabel: 'Book your first shoot',
+                  onCtaPressed: () => _onBookShootPressed(),
                 ),
               ] else ...[
                 ..._recentBookings.map((b) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF14171E),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFF222733)),
-                        ),
+                      padding: const EdgeInsets.only(bottom: OrbitSpacing.space12),
+                      child: OrbitCard(
+                        onTap: () => context.push('/booking/${b['id']}'),
                         child: Row(
                           children: [
                             Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF222733),
-                                borderRadius: BorderRadius.circular(10),
+                              width: 44,
+                              height: 44,
+                              decoration: const BoxDecoration(
+                                color: OrbitColors.surfaceHighlight,
+                                borderRadius: OrbitRadius.rounded12,
                               ),
-                              child: const Icon(Icons.videocam_outlined, color: Color(0xFF00E5FF), size: 20),
+                              child: const Icon(Icons.videocam_outlined, color: OrbitColors.secondary, size: 22),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: OrbitSpacing.space12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     b['package']?['name'] ?? 'Video Shoot',
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                    style: OrbitTypography.titleSmall,
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
                                     b['address'] ?? 'Confirmed Location',
-                                    style: const TextStyle(color: OrbitColors.textSecondary, fontSize: 11),
+                                    style: OrbitTypography.bodySmall,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -970,7 +730,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-/// 2x2 Premium Action Card
+/// 2x2 Action Card Widget
 class _ActionCard extends StatelessWidget {
   final Widget iconWidget;
   final String title;
@@ -987,14 +747,17 @@ class _ActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        OrbitMotion.lightTap();
+        onTap();
+      },
       child: Container(
-        height: 142,
+        height: 130,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF14171E),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF222733), width: 1),
+          color: OrbitColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: OrbitColors.borderSubtle, width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1019,10 +782,12 @@ class _ActionCard extends StatelessWidget {
                   subtitle,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.35),
-                    fontSize: 8.5,
+                    fontSize: 9,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.6,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

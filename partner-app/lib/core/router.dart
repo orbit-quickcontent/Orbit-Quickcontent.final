@@ -22,15 +22,21 @@ final partnerRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isLoggedIn = auth.isLoggedIn;
       final needsOnboarding = auth.needsOnboarding;
-      final isAuthRoute = state.matchedLocation.startsWith('/login') || 
-          state.matchedLocation.startsWith('/otp') ||
-          state.matchedLocation == '/splash' ||
-          state.matchedLocation == '/landing' ||
-          state.matchedLocation == '/permissions';
+      final loc = state.matchedLocation;
+      final isAuthRoute = loc.startsWith('/login') || 
+          loc.startsWith('/otp') ||
+          loc == '/splash' ||
+          loc == '/landing' ||
+          loc == '/permissions';
 
+      // Not logged in -> send to landing (which is the auth hub)
       if (!isLoggedIn && !isAuthRoute) return '/landing';
-      if (isLoggedIn && needsOnboarding && state.matchedLocation != '/onboarding' && state.matchedLocation != '/splash' && state.matchedLocation != '/permissions' && state.matchedLocation != '/landing') return '/onboarding';
-      if (isLoggedIn && !needsOnboarding && isAuthRoute && state.matchedLocation != '/splash' && state.matchedLocation != '/permissions' && state.matchedLocation != '/landing') return '/available-work';
+      // /login redirects to /landing (landing is the single auth entry point)
+      if (!isLoggedIn && loc == '/login') return '/landing';
+      // Logged in but needs onboarding -> send to onboarding
+      if (isLoggedIn && needsOnboarding && loc != '/onboarding' && !isAuthRoute) return '/onboarding';
+      // Logged in and done onboarding -> skip auth screens
+      if (isLoggedIn && !needsOnboarding && isAuthRoute && loc != '/splash') return '/work';
       return null;
     },
     routes: [

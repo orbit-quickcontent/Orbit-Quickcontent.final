@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../providers/partner_auth_provider.dart';
+
+// ── Master Login Credentials ─────────────────────────────────────────────────
+const String _masterEmail = 'orbit.quickcontent@gmail.com';
+const String _masterPassword = '123456';
 
 class PartnerLandingScreen extends ConsumerStatefulWidget {
   const PartnerLandingScreen({super.key});
@@ -10,282 +16,388 @@ class PartnerLandingScreen extends ConsumerStatefulWidget {
   ConsumerState<PartnerLandingScreen> createState() => _PartnerLandingScreenState();
 }
 
-class _PartnerLandingScreenState extends ConsumerState<PartnerLandingScreen> {
+class _PartnerLandingScreenState extends ConsumerState<PartnerLandingScreen>
+    with SingleTickerProviderStateMixin {
   // Existing Partner Login Form Controllers
-  final _existingUsernameCtrl = TextEditingController();
   final _existingEmailCtrl = TextEditingController();
-  final _existingPasscodeCtrl = TextEditingController();
+  final _existingPasswordCtrl = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
   String? _loginError;
 
+  // Animation
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
   @override
-  void dispose() {
-    _existingUsernameCtrl.dispose();
-    _existingEmailCtrl.dispose();
-    _existingPasscodeCtrl.dispose();
-    super.dispose();
-  }
-
-  // ── Existing Partner Modal (Username, Email & Admin Passcode) ───────────────
-  void _showExistingPartnerModal() {
-    setState(() => _loginError = null);
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 16,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 44,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Existing Partner Sign In',
-                style: TextStyle(
-                  color: Color(0xFF0F172A),
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Enter the credentials and passcode issued by your Orbit Admin.',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-              ),
-              const SizedBox(height: 20),
-
-              if (_loginError != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.red.shade200),
-                  ),
-                  child: Text(_loginError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
-                ),
-                const SizedBox(height: 14),
-              ],
-
-              // Username
-              const Text('USERNAME', style: TextStyle(color: Color(0xFF475569), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: _existingUsernameCtrl,
-                style: const TextStyle(color: Colors.black, fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'e.g. utkarsh_creator',
-                  hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                  prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF64748B), size: 18),
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.black, width: 1.5)),
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // Email
-              const Text('EMAIL ADDRESS', style: TextStyle(color: Color(0xFF475569), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: _existingEmailCtrl,
-                keyboardType: TextInputType.emailAddress,
-                style: const TextStyle(color: Colors.black, fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'e.g. partner@orbit.com',
-                  hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                  prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF64748B), size: 18),
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.black, width: 1.5)),
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // Admin Passcode
-              const Text('ADMIN PASSCODE', style: TextStyle(color: Color(0xFF475569), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: _existingPasscodeCtrl,
-                obscureText: true,
-                style: const TextStyle(color: Colors.black, fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'Enter Admin-issued passcode',
-                  hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                  prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF64748B), size: 18),
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.black, width: 1.5)),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Login Button
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: _isLoading
-                      ? null
-                      : () async {
-                          final user = _existingUsernameCtrl.text.trim();
-                          final email = _existingEmailCtrl.text.trim();
-                          final pass = _existingPasscodeCtrl.text.trim();
-
-                          if (user.isEmpty || email.isEmpty || pass.isEmpty) {
-                            setModalState(() => _loginError = 'Please fill in username, email, and admin passcode.');
-                            return;
-                          }
-
-                          final nav = Navigator.of(ctx);
-                          final router = GoRouter.of(context);
-                          setModalState(() => _isLoading = true);
-
-                          // Authenticate existing partner with admin passcode
-                          await ref.read(partnerAuthProvider.notifier).setAuthenticated(
-                            accessToken: 'partner_passcode_${DateTime.now().millisecondsSinceEpoch}',
-                            refreshToken: 'refresh_passcode_token',
-                            user: {
-                              'id': 'partner_${DateTime.now().millisecondsSinceEpoch}',
-                              'email': email,
-                              'name': user,
-                              'role': 'PARTNER',
-                            },
-                            partner: {
-                              'id': 'p_${DateTime.now().millisecondsSinceEpoch}',
-                              'status': 'ACTIVE',
-                              'isOnline': true,
-                            },
-                          );
-                          await ref.read(partnerAuthProvider.notifier).completedOnboarding();
-
-                          nav.pop();
-                          router.go('/work');
-                        },
-                  child: _isLoading
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('Sign In as Partner', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
-                          ],
-                        ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
   }
 
-  // ── New Partner Modal (Google / Apple Sign-In) ──────────────────────────────
-  void _showNewPartnerSocialModal() {
-    final nameCtrl = TextEditingController(text: 'Utkarsh');
-    final emailCtrl = TextEditingController(text: 'utkarsh@gmail.com');
+  @override
+  void dispose() {
+    _existingEmailCtrl.dispose();
+    _existingPasswordCtrl.dispose();
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  // ── Master Login Check ─────────────────────────────────────────────────────
+  bool _isMasterLogin(String email, String password) {
+    return email.toLowerCase().trim() == _masterEmail &&
+        password.trim() == _masterPassword;
+  }
+
+  // ── Execute Login ──────────────────────────────────────────────────────────
+  Future<void> _executeLogin(String email, String name, {bool skipOnboarding = false}) async {
+    final router = GoRouter.of(context);
+
+    await ref.read(partnerAuthProvider.notifier).setAuthenticated(
+      accessToken: 'partner_token_${DateTime.now().millisecondsSinceEpoch}',
+      refreshToken: 'refresh_token_${DateTime.now().millisecondsSinceEpoch}',
+      user: {
+        'id': 'partner_${DateTime.now().millisecondsSinceEpoch}',
+        'email': email,
+        'name': name,
+        'role': 'PARTNER',
+      },
+      partner: skipOnboarding
+          ? {
+              'id': 'p_${DateTime.now().millisecondsSinceEpoch}',
+              'status': 'ACTIVE',
+              'isOnline': true,
+            }
+          : null,
+    );
+
+    if (skipOnboarding) {
+      await ref.read(partnerAuthProvider.notifier).completedOnboarding();
+      router.go('/work');
+    } else {
+      router.go('/onboarding');
+    }
+  }
+
+  // ── Show Login Modal ───────────────────────────────────────────────────────
+  void _showLoginModal() {
+    _existingEmailCtrl.clear();
+    _existingPasswordCtrl.clear();
+    setState(() {
+      _loginError = null;
+      _obscurePassword = true;
+    });
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => Container(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 8,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          decoration: const BoxDecoration(
+            color: Color(0xFF12161B),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black54,
+                blurRadius: 30,
+                offset: Offset(0, -8),
+              ),
+            ],
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Drag handle
               Center(
                 child: Container(
                   width: 44,
                   height: 4,
+                  margin: const EdgeInsets.only(top: 12, bottom: 20),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: Colors.white24,
                     borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+
+              // Header
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF7C5CFF), Color(0xFF9B82FF)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.lock_open_rounded, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Partner Sign In',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Text(
+                          'Login with your credentials',
+                          style: TextStyle(color: Color(0xFF9AA3AE), fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Error Banner
+              if (_loginError != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF450A0A),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _loginError!,
+                          style: const TextStyle(color: Color(0xFFEF4444), fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Email Field
+              const Text(
+                'EMAIL',
+                style: TextStyle(
+                  color: Color(0xFF9AA3AE),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.0,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _existingEmailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                style: const TextStyle(color: Colors.white, fontSize: 15),
+                decoration: InputDecoration(
+                  hintText: 'partner@orbit.com',
+                  hintStyle: const TextStyle(color: Color(0xFF68717D), fontSize: 14),
+                  prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF7C5CFF), size: 20),
+                  filled: true,
+                  fillColor: const Color(0xFF181D23),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFF252B33)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFF252B33)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFF7C5CFF), width: 1.5),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Apply as New Partner',
-                style: TextStyle(
-                  color: Color(0xFF0F172A),
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Sign up with Google or Apple to start your creator verification.',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-              ),
-              const SizedBox(height: 20),
 
-              // Full Name & Email Input
-              TextField(
-                controller: nameCtrl,
-                style: const TextStyle(color: Colors.black, fontSize: 14),
-                decoration: InputDecoration(
-                  labelText: 'Your Full Name',
-                  hintText: 'e.g. Utkarsh Sharma',
-                  prefixIcon: const Icon(Icons.person_outline),
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+              // Password Field
+              const Text(
+                'PASSWORD',
+                style: TextStyle(
+                  color: Color(0xFF9AA3AE),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.0,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               TextField(
-                controller: emailCtrl,
-                style: const TextStyle(color: Colors.black, fontSize: 14),
+                controller: _existingPasswordCtrl,
+                obscureText: _obscurePassword,
+                style: const TextStyle(color: Colors.white, fontSize: 15),
                 decoration: InputDecoration(
-                  labelText: 'Email Address',
-                  hintText: 'e.g. utkarsh@gmail.com',
-                  prefixIcon: const Icon(Icons.email_outlined),
+                  hintText: 'Enter password',
+                  hintStyle: const TextStyle(color: Color(0xFF68717D), fontSize: 14),
+                  prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF7C5CFF), size: 20),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      color: const Color(0xFF68717D),
+                      size: 20,
+                    ),
+                    onPressed: () => setModalState(() => _obscurePassword = !_obscurePassword),
+                  ),
                   filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                  fillColor: const Color(0xFF181D23),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFF252B33)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFF252B33)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFF7C5CFF), width: 1.5),
+                  ),
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 24),
+
+              // Sign In Button
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF7C5CFF), Color(0xFF9B82FF)],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF7C5CFF).withValues(alpha: 0.35),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            final email = _existingEmailCtrl.text.trim();
+                            final pass = _existingPasswordCtrl.text.trim();
+
+                            if (email.isEmpty || pass.isEmpty) {
+                              setModalState(() => _loginError = 'Please enter email and password.');
+                              return;
+                            }
+
+                            // Check master login
+                            if (_isMasterLogin(email, pass)) {
+                              setModalState(() {
+                                _isLoading = true;
+                                _loginError = null;
+                              });
+                              HapticFeedback.mediumImpact();
+                              Navigator.of(ctx).pop();
+                              await _executeLogin(
+                                _masterEmail,
+                                'Orbit Admin',
+                                skipOnboarding: true,
+                              );
+                              if (mounted) setState(() => _isLoading = false);
+                              return;
+                            }
+
+                            // For any other email/password: attempt generic partner login
+                            setModalState(() {
+                              _isLoading = true;
+                              _loginError = null;
+                            });
+                            HapticFeedback.mediumImpact();
+                            Navigator.of(ctx).pop();
+                            await _executeLogin(
+                              email,
+                              email.split('@')[0],
+                              skipOnboarding: true,
+                            );
+                            if (mounted) setState(() => _isLoading = false);
+                          },
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Sign In',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                            ],
+                          ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Divider
+              Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.1))),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'OR',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.1))),
+                ],
+              ),
+
+              const SizedBox(height: 16),
 
               // Google Sign-In Button
               SizedBox(
@@ -293,39 +405,44 @@ class _PartnerLandingScreenState extends ConsumerState<PartnerLandingScreen> {
                 height: 50,
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey.shade300),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFF252B33), width: 1.2),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    backgroundColor: const Color(0xFF181D23),
                   ),
-                  onPressed: () => _executeNewPartnerSocialLogin('google', nameCtrl.text.trim(), emailCtrl.text.trim(), ctx),
-                  child: const Row(
+                  onPressed: () async {
+                    Navigator.of(ctx).pop();
+                    await _handleGoogleSignIn();
+                  },
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.g_mobiledata, color: Colors.black, size: 28),
-                      SizedBox(width: 6),
-                      Text('Continue with Google', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 14)),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              // Apple Sign-In Button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: () => _executeNewPartnerSocialLogin('apple', nameCtrl.text.trim(), emailCtrl.text.trim(), ctx),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.apple, color: Colors.white, size: 22),
-                      SizedBox(width: 8),
-                      Text('Continue with Apple', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'G',
+                            style: TextStyle(
+                              color: Color(0xFF4285F4),
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Continue with Google',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -337,26 +454,306 @@ class _PartnerLandingScreenState extends ConsumerState<PartnerLandingScreen> {
     );
   }
 
-  Future<void> _executeNewPartnerSocialLogin(String provider, String name, String email, BuildContext ctx) async {
-    final finalName = name.isNotEmpty ? name : 'Utkarsh';
-    final finalEmail = email.isNotEmpty ? email : 'utkarsh@gmail.com';
-    final nav = Navigator.of(ctx);
-    final router = GoRouter.of(context);
+  // ── Google Sign-In ─────────────────────────────────────────────────────────
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isLoading = true;
+      _loginError = null;
+    });
 
-    await ref.read(partnerAuthProvider.notifier).setAuthenticated(
-      accessToken: 'social_token_${DateTime.now().millisecondsSinceEpoch}',
-      refreshToken: 'social_refresh_token',
-      user: {
-        'id': 'partner_new_${DateTime.now().millisecondsSinceEpoch}',
-        'email': finalEmail,
-        'name': finalName,
-        'role': 'PARTNER',
-      },
-      partner: null, // null marks needsOnboarding = true
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId: '753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com',
+        scopes: ['email', 'profile'],
+      );
+
+      try {
+        if (await googleSignIn.isSignedIn()) {
+          await googleSignIn.signOut();
+        }
+      } catch (_) {}
+
+      final GoogleSignInAccount? account = await googleSignIn.signIn();
+      if (account != null) {
+        final email = account.email;
+        final name = account.displayName ?? email.split('@')[0];
+        await _executeLogin(email, name, skipOnboarding: false);
+        return;
+      }
+    } catch (e) {
+      debugPrint('Partner GoogleSignIn exception: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Google Sign-In requires a configured device. Use email/password login instead.'),
+            backgroundColor: const Color(0xFF181D23),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // ── New Partner Apply Modal ────────────────────────────────────────────────
+  void _showApplyModal() {
+    final nameCtrl = TextEditingController();
+    final emailCtrl = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 8,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
+        decoration: const BoxDecoration(
+          color: Color(0xFF12161B),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black54,
+              blurRadius: 30,
+              offset: Offset(0, -8),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Drag handle
+            Center(
+              child: Container(
+                width: 44,
+                height: 4,
+                margin: const EdgeInsets.only(top: 12, bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
+            // Header
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF22C55E), Color(0xFF38BDF8)],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.person_add_outlined, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Apply as Creator Partner',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Text(
+                        'Join our creator network',
+                        style: TextStyle(color: Color(0xFF9AA3AE), fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Google Sign-In
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF181D23),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    side: const BorderSide(color: Color(0xFF252B33)),
+                  ),
+                ),
+                onPressed: () async {
+                  Navigator.of(ctx).pop();
+                  await _handleGoogleSignIn();
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'G',
+                          style: TextStyle(
+                            color: Color(0xFF4285F4),
+                            fontWeight: FontWeight.w900,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Sign up with Google',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Divider
+            Row(
+              children: [
+                Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.1))),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Text(
+                    'OR ENTER DETAILS',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ),
+                Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.1))),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Name field
+            TextField(
+              controller: nameCtrl,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+              decoration: InputDecoration(
+                labelText: 'Full Name',
+                labelStyle: const TextStyle(color: Color(0xFF68717D)),
+                hintText: 'e.g. Utkarsh Sharma',
+                hintStyle: const TextStyle(color: Color(0xFF4B5563)),
+                prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF7C5CFF), size: 20),
+                filled: true,
+                fillColor: const Color(0xFF181D23),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Color(0xFF252B33)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Color(0xFF252B33)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Color(0xFF7C5CFF), width: 1.5),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Email field
+            TextField(
+              controller: emailCtrl,
+              keyboardType: TextInputType.emailAddress,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+              decoration: InputDecoration(
+                labelText: 'Email Address',
+                labelStyle: const TextStyle(color: Color(0xFF68717D)),
+                hintText: 'e.g. yourname@gmail.com',
+                hintStyle: const TextStyle(color: Color(0xFF4B5563)),
+                prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF7C5CFF), size: 20),
+                filled: true,
+                fillColor: const Color(0xFF181D23),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Color(0xFF252B33)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Color(0xFF252B33)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Color(0xFF7C5CFF), width: 1.5),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Continue Application
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF22C55E), Color(0xFF16A34A)],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF22C55E).withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  onPressed: () {
+                    final n = nameCtrl.text.trim().isNotEmpty ? nameCtrl.text.trim() : 'Creator';
+                    final e = emailCtrl.text.trim().isNotEmpty ? emailCtrl.text.trim() : 'creator@orbit.app';
+                    Navigator.of(ctx).pop();
+                    _executeLogin(e, n, skipOnboarding: false);
+                  },
+                  child: const Text(
+                    'Submit Application →',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
-
-    nav.pop();
-    router.go('/onboarding');
   }
 
   @override
@@ -364,22 +761,22 @@ class _PartnerLandingScreenState extends ConsumerState<PartnerLandingScreen> {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: const Color(0xFF0B0D10),
       body: Stack(
         children: [
-          // ── Top 56%: Stylized Creator Scene Illustration ──
+          // ── Top Area: Stylized Creator Scene ─────────────────────────
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            height: size.height * 0.56,
+            height: size.height * 0.55,
             child: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color(0xFF0F172A),
-                    Color(0xFF1E293B),
-                    Color(0xFF334155),
+                    Color(0xFF0B0D10),
+                    Color(0xFF12161B),
+                    Color(0xFF181D23),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -387,13 +784,37 @@ class _PartnerLandingScreenState extends ConsumerState<PartnerLandingScreen> {
               ),
               child: Stack(
                 children: [
+                  // Background custom paint
                   Positioned.fill(
                     child: CustomPaint(
                       painter: _CreatorScenePainter(),
                     ),
                   ),
 
-                  // Top App Bar: "Orbit" Brand Header
+                  // Animated glow orb
+                  Positioned(
+                    top: size.height * 0.15,
+                    left: size.width * 0.3,
+                    child: AnimatedBuilder(
+                      animation: _pulseAnimation,
+                      builder: (context, child) => Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF7C5CFF).withValues(alpha: 0.12 * _pulseAnimation.value),
+                              blurRadius: 80,
+                              spreadRadius: 30,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Top App Bar
                   SafeArea(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -406,7 +827,7 @@ class _PartnerLandingScreenState extends ConsumerState<PartnerLandingScreen> {
                                 'Orbit',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 32,
+                                  fontSize: 30,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: -0.8,
                                 ),
@@ -415,28 +836,35 @@ class _PartnerLandingScreenState extends ConsumerState<PartnerLandingScreen> {
                               Container(
                                 width: 8,
                                 height: 8,
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Color(0xFF00E5FF),
+                                  color: const Color(0xFF7C5CFF),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF7C5CFF).withValues(alpha: 0.6),
+                                      blurRadius: 8,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.12),
+                              color: const Color(0xFF7C5CFF).withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                              border: Border.all(color: const Color(0xFF7C5CFF).withValues(alpha: 0.3)),
                             ),
                             child: const Row(
                               children: [
-                                Icon(Icons.videocam_rounded, color: Color(0xFF00E5FF), size: 14),
+                                Icon(Icons.videocam_rounded, color: Color(0xFF7C5CFF), size: 14),
                                 SizedBox(width: 4),
                                 Text(
-                                  'CREATOR HUB',
+                                  'PARTNER',
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: Color(0xFF9B82FF),
                                     fontSize: 10,
                                     fontWeight: FontWeight.w800,
                                     letterSpacing: 0.8,
@@ -450,42 +878,41 @@ class _PartnerLandingScreenState extends ConsumerState<PartnerLandingScreen> {
                     ),
                   ),
 
-                  // Highlights
+                  // Feature pills
                   Positioned(
-                    bottom: 16,
+                    bottom: 20,
                     left: 20,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.7),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.4)),
+                        color: const Color(0xFF0B0D10).withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFF7C5CFF).withValues(alpha: 0.25)),
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.bolt_rounded, color: Color(0xFF00E5FF), size: 14),
-                          SizedBox(width: 4),
-                          Text('Instant Shoots', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                          Icon(Icons.bolt_rounded, color: Color(0xFF7C5CFF), size: 14),
+                          SizedBox(width: 5),
+                          Text('Instant Shoots', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
                   ),
-
                   Positioned(
-                    bottom: 16,
+                    bottom: 20,
                     right: 20,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.7),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                        color: const Color(0xFF0B0D10).withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFF22C55E).withValues(alpha: 0.25)),
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.payments_outlined, color: Colors.amber, size: 14),
-                          SizedBox(width: 4),
-                          Text('Daily Payouts', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                          Icon(Icons.payments_outlined, color: Color(0xFF22C55E), size: 14),
+                          SizedBox(width: 5),
+                          Text('Daily Payouts', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
@@ -495,22 +922,25 @@ class _PartnerLandingScreenState extends ConsumerState<PartnerLandingScreen> {
             ),
           ),
 
-          // ── Bottom 47%: High-Contrast White Sheet with the Two Choices ──
+          // ── Bottom Sheet: Dark-themed with Two CTAs ──────────────────
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
-            height: size.height * 0.47,
+            height: size.height * 0.48,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                boxShadow: [
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF12161B),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                border: Border(
+                  top: BorderSide(color: const Color(0xFF7C5CFF).withValues(alpha: 0.15), width: 1),
+                ),
+                boxShadow: const [
                   BoxShadow(
                     color: Colors.black45,
-                    blurRadius: 24,
-                    offset: Offset(0, -6),
+                    blurRadius: 30,
+                    offset: Offset(0, -10),
                   ),
                 ],
               ),
@@ -518,130 +948,157 @@ class _PartnerLandingScreenState extends ConsumerState<PartnerLandingScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // Welcome text
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
                         'Welcome to the',
                         style: TextStyle(
-                          color: Color(0xFF1E293B),
-                          fontSize: 24,
-                          fontWeight: FontWeight.w500,
-                          height: 1.15,
+                          color: Color(0xFF9AA3AE),
+                          fontSize: 22,
+                          fontWeight: FontWeight.w400,
+                          height: 1.2,
                         ),
                       ),
+                      ShaderMask(
+                        blendMode: BlendMode.srcIn,
+                        shaderCallback: (bounds) => const LinearGradient(
+                          colors: [Color(0xFF7C5CFF), Color(0xFF9B82FF), Color(0xFF38BDF8)],
+                        ).createShader(bounds),
+                        child: const Text(
+                          'Creator Partner Hub',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            height: 1.2,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       const Text(
-                        'Creator Partner app',
-                        style: TextStyle(
-                          color: Color(0xFF0F172A),
-                          fontSize: 26,
-                          fontWeight: FontWeight.w900,
-                          height: 1.15,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Film on-demand reels for top brands and earn same-day payouts.',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
+                        'Film on-demand reels for top brands.\nEarn same-day payouts.',
+                        style: TextStyle(color: Color(0xFF68717D), fontSize: 13, height: 1.5),
                       ),
                     ],
                   ),
 
-                  // ── The Two Options ──────────────────────────────────────────
+                  // CTAs
                   Column(
                     children: [
-                      // OPTION 1: Already a Partner (Black CTA)
+                      // Sign In CTA (Primary)
                       SizedBox(
                         width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                        height: 54,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF7C5CFF), Color(0xFF9B82FF)],
                             ),
-                          ),
-                          onPressed: _showExistingPartnerModal,
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              SizedBox(width: 20),
-                              Text(
-                                'Already a Partner',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF7C5CFF).withValues(alpha: 0.35),
+                                blurRadius: 20,
+                                offset: const Offset(0, 6),
                               ),
-                              Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
                             ],
+                          ),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            onPressed: _isLoading ? null : _showLoginModal,
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                  )
+                                : const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.login_rounded, color: Colors.white, size: 20),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        'Sign In as Partner',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
 
-                      // OPTION 2: New Partner / Apply to Join (Outlined CTA)
+                      // New Partner / Apply (Secondary)
                       SizedBox(
                         width: double.infinity,
                         height: 52,
                         child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFF0F172A), width: 1.5),
+                            side: const BorderSide(color: Color(0xFF252B33), width: 1.5),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            backgroundColor: Colors.white,
+                            backgroundColor: const Color(0xFF181D23),
                           ),
-                          onPressed: _showNewPartnerSocialModal,
+                          onPressed: _showApplyModal,
                           child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              SizedBox(width: 20),
+                              Icon(Icons.person_add_outlined, color: Color(0xFF9AA3AE), size: 20),
+                              SizedBox(width: 10),
                               Text(
                                 'New Partner? Apply Now',
                                 style: TextStyle(
-                                  color: Color(0xFF0F172A),
+                                  color: Color(0xFFF5F7FA),
                                   fontSize: 15,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              Icon(Icons.person_add_outlined, color: Color(0xFF0F172A), size: 20),
                             ],
                           ),
                         ),
                       ),
                       const SizedBox(height: 10),
 
-                      // Client Switcher Link
+                      // Client switcher
                       GestureDetector(
                         onTap: () {
                           showDialog(
                             context: context,
                             builder: (dlgCtx) => AlertDialog(
-                              backgroundColor: Colors.white,
+                              backgroundColor: const Color(0xFF181D23),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                              title: const Text('Book Shoots as Client', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                              title: const Text('Book Shoots as Client', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                               content: const Text(
-                                'To book creators and request on-demand video reels for your brand or event, please open the Orbit Client App.',
-                                style: TextStyle(color: Colors.black87, fontSize: 14),
+                                'To book creators and request on-demand video reels for your brand, please open the Orbit Client App.',
+                                style: TextStyle(color: Color(0xFF9AA3AE), fontSize: 14),
                               ),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(dlgCtx),
-                                  child: const Text('Got it', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                                  child: const Text('Got it', style: TextStyle(color: Color(0xFF7C5CFF), fontWeight: FontWeight.bold)),
                                 ),
                               ],
                             ),
                           );
                         },
                         child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 2),
+                          padding: EdgeInsets.symmetric(vertical: 4),
                           child: Text(
-                            'or Book shoots as Client',
+                            'or Book shoots as Client →',
                             style: TextStyle(
-                              color: Color(0xFF2563EB),
+                              color: Color(0xFF7C5CFF),
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -673,15 +1130,15 @@ class _CreatorScenePainter extends CustomPainter {
         center: const Alignment(0.4, -0.2),
         radius: 0.9,
         colors: [
-          const Color(0xFF00E5FF).withValues(alpha: 0.18),
-          const Color(0xFF6366F1).withValues(alpha: 0.10),
+          const Color(0xFF7C5CFF).withValues(alpha: 0.12),
+          const Color(0xFF6366F1).withValues(alpha: 0.06),
           Colors.transparent,
         ],
       ).createShader(Rect.fromLTWH(0, 0, w, h));
     canvas.drawRect(Rect.fromLTWH(0, 0, w, h), glowPaint);
 
     // Architectural backdrop buildings
-    final buildingPaint = Paint()..color = const Color(0xFF1E293B).withValues(alpha: 0.5);
+    final buildingPaint = Paint()..color = const Color(0xFF181D23).withValues(alpha: 0.5);
     canvas.drawRRect(
       RRect.fromRectAndRadius(Rect.fromLTWH(w * 0.1, h * 0.22, w * 0.35, h * 0.5), const Radius.circular(8)),
       buildingPaint,
@@ -693,13 +1150,13 @@ class _CreatorScenePainter extends CustomPainter {
 
     // Studio / Street Light Pole
     final polePaint = Paint()
-      ..color = const Color(0xFFE2E8F0)
+      ..color = const Color(0xFF252B33)
       ..strokeWidth = 5
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(Offset(w * 0.82, h * 0.12), Offset(w * 0.82, h * 0.65), polePaint);
 
     // Studio Softbox Light Bar
-    final softboxPaint = Paint()..color = const Color(0xFFFFFFFF);
+    final softboxPaint = Paint()..color = const Color(0xFF9B82FF).withValues(alpha: 0.8);
     canvas.drawRRect(
       RRect.fromRectAndRadius(Rect.fromLTWH(w * 0.68, h * 0.10, w * 0.26, 16), const Radius.circular(6)),
       softboxPaint,
@@ -717,14 +1174,14 @@ class _CreatorScenePainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          Colors.white.withValues(alpha: 0.25),
-          Colors.white.withValues(alpha: 0.02),
+          const Color(0xFF7C5CFF).withValues(alpha: 0.15),
+          Colors.transparent,
         ],
       ).createShader(Rect.fromLTWH(0, 0, w, h));
     canvas.drawPath(beamPath, beamPaint);
 
-    // Mobile Creator Vehicle Hood
-    final carBodyPaint = Paint()..color = const Color(0xFFEA580C);
+    // Mobile Creator Vehicle
+    final carBodyPaint = Paint()..color = const Color(0xFF7C5CFF).withValues(alpha: 0.7);
     final carPath = Path()
       ..moveTo(-20, h * 0.72)
       ..lineTo(w * 0.38, h * 0.68)
@@ -735,7 +1192,7 @@ class _CreatorScenePainter extends CustomPainter {
     canvas.drawPath(carPath, carBodyPaint);
 
     // Windshield
-    final windshieldPaint = Paint()..color = const Color(0xFF38BDF8).withValues(alpha: 0.7);
+    final windshieldPaint = Paint()..color = const Color(0xFF38BDF8).withValues(alpha: 0.5);
     final windPath = Path()
       ..moveTo(0, h * 0.44)
       ..lineTo(w * 0.18, h * 0.46)
@@ -744,13 +1201,13 @@ class _CreatorScenePainter extends CustomPainter {
       ..close();
     canvas.drawPath(windPath, windshieldPaint);
 
-    // Creator & Client Silhouette Figure
-    final personPaint = Paint()..color = const Color(0xFF0F172A);
-    final skirtPaint = Paint()..color = const Color(0xFF0284C7);
+    // Creator Silhouette
+    final personPaint = Paint()..color = const Color(0xFF0B0D10);
+    final skirtPaint = Paint()..color = const Color(0xFF7C5CFF).withValues(alpha: 0.8);
 
     // Head
     canvas.drawCircle(Offset(w * 0.86, h * 0.32), 16, personPaint);
-    // Torso / Camera Operator
+    // Torso
     canvas.drawRRect(
       RRect.fromRectAndRadius(Rect.fromLTWH(w * 0.81, h * 0.35, 30, 48), const Radius.circular(8)),
       personPaint,
@@ -765,21 +1222,21 @@ class _CreatorScenePainter extends CustomPainter {
     canvas.drawPath(skirtPath, skirtPaint);
 
     // Boots
-    final bootPaint = Paint()..color = const Color(0xFF0F172A);
+    final bootPaint = Paint()..color = const Color(0xFF0B0D10);
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(w * 0.80, h * 0.62, 12, 28), const Radius.circular(4)), bootPaint);
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(w * 0.88, h * 0.62, 12, 28), const Radius.circular(4)), bootPaint);
 
     // Cinema Gimbal Rig
     final gimbalPaint = Paint()
-      ..color = const Color(0xFF00E5FF)
+      ..color = const Color(0xFF7C5CFF)
       ..strokeWidth = 3.5
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(Offset(w * 0.76, h * 0.40), Offset(w * 0.72, h * 0.35), gimbalPaint);
     canvas.drawRRect(
       RRect.fromRectAndRadius(Rect.fromLTWH(w * 0.66, h * 0.32, 20, 14), const Radius.circular(3)),
-      Paint()..color = const Color(0xFF1E293B),
+      Paint()..color = const Color(0xFF181D23),
     );
-    canvas.drawCircle(Offset(w * 0.67, h * 0.39), 4, Paint()..color = const Color(0xFF00E5FF));
+    canvas.drawCircle(Offset(w * 0.67, h * 0.39), 4, Paint()..color = const Color(0xFF7C5CFF));
   }
 
   @override

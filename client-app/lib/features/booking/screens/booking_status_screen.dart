@@ -1,7 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:socket_io_client/socket_io_client.dart' as io;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/theme/orbit_theme.dart';
 import '../../../core/api_client.dart';
 import '../../../shared/widgets/orbit_button.dart';
@@ -10,8 +9,6 @@ import '../../../shared/widgets/orbit_status.dart';
 import '../../../shared/widgets/orbit_timeline.dart';
 import '../../../shared/widgets/orbit_loading.dart';
 import '../../../analytics/analytics_service.dart';
-
-const String _kSocketUrl = String.fromEnvironment('SOCKET_URL', defaultValue: 'http://10.0.2.2:5000');
 
 class BookingStatusScreen extends StatefulWidget {
   final String bookingId;
@@ -26,19 +23,20 @@ class _BookingStatusScreenState extends State<BookingStatusScreen> {
   bool _isLoading = true;
   int _userRating = 5;
   bool _ratingSubmitted = false;
-  io.Socket? _socket;
+  Timer? _eventPollingTimer;
+  String _lastEventSince = DateTime.now().subtract(const Duration(minutes: 5)).toUtc().toIso8601String();
 
   @override
   void initState() {
     super.initState();
     analytics.trackScreenView('booking_status_screen');
     _loadBooking();
-    _initSocket();
+    _startEventPolling();
   }
 
   @override
   void dispose() {
-    _socket?.dispose();
+    _eventPollingTimer?.cancel();
     super.dispose();
   }
 
@@ -60,20 +58,26 @@ class _BookingStatusScreenState extends State<BookingStatusScreen> {
     }
   }
 
-  Future<void> _initSocket() async {
-    try {
-      const storage = FlutterSecureStorage();
-      final token = await storage.read(key: 'orbit_access_token');
+  void _startEventPolling() {
+    _eventPollingTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
+      try {
+        final res = await apiClient.get(
+          '/events/poll/booking/${widget.bookingId}',
+          params: {'since': _lastEventSince},
+        );
+        final data = res.data;
+        if (data == null) return;
 
-      _socket = io.io(
-        _kSocketUrl,
-        io.OptionBuilder().setTransports(['websocket']).setAuth({'token': token}).build(),
-      );
+        final serverTime = data['serverTime'] as String?;
+        if (serverTime != null) _lastEventSince = serverTime;
 
-      _socket!.connect();
-      _socket!.emit('join:booking', widget.bookingId);
-      _socket!.on('booking:status-update', (_) => _loadBooking());
-    } catch (_) {}
+        final events = data['events'] as List? ?? [];
+        if (events.isNotEmpty) {
+          // Reload booking data when any event arrives
+          _loadBooking();
+        }
+      } catch (_) {}
+    });
   }
 
   void _onDownloadReel() {

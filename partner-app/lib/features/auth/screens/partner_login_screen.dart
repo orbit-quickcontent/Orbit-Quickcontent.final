@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../../core/api_client.dart';
 import '../../../core/theme/orbit_theme.dart';
 import '../providers/partner_auth_provider.dart';
 import '../../../analytics/analytics_service.dart';
+
+// ── Master Login Credentials ─────────────────────────────────────────────────
+const String _masterEmail = 'orbit.quickcontent@gmail.com';
+const String _masterPassword = '123456';
 
 class PartnerLoginScreen extends ConsumerStatefulWidget {
   const PartnerLoginScreen({super.key});
@@ -37,6 +43,12 @@ class _PartnerLoginScreenState extends ConsumerState<PartnerLoginScreen> {
   bool _isValidEmail(String email) =>
       RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(email);
 
+  // ── Master Login Check ─────────────────────────────────────────────────────
+  bool _isMasterLogin(String email, String password) {
+    return email.toLowerCase().trim() == _masterEmail &&
+        password.trim() == _masterPassword;
+  }
+
   Future<void> _submitPasswordAuth() async {
     final email = _emailController.text.trim().toLowerCase();
     final password = _passwordController.text.trim();
@@ -62,6 +74,33 @@ class _PartnerLoginScreenState extends ConsumerState<PartnerLoginScreen> {
       _error = null;
     });
 
+    // ── Master login: skip onboarding, go straight to work dashboard ──
+    if (_isMasterLogin(email, password)) {
+      HapticFeedback.mediumImpact();
+      await ref.read(partnerAuthProvider.notifier).setAuthenticated(
+        accessToken: 'master_token_${DateTime.now().millisecondsSinceEpoch}',
+        refreshToken: 'master_refresh_token',
+        user: {
+          'id': 'partner_master_admin',
+          'email': _masterEmail,
+          'name': 'Orbit Admin',
+          'role': 'PARTNER',
+        },
+        partner: {
+          'id': 'p_master_admin',
+          'status': 'ACTIVE',
+          'isOnline': true,
+        },
+      );
+      await ref.read(partnerAuthProvider.notifier).completedOnboarding();
+      analytics.trackButtonClick('master_login_success', screen: 'partner_login');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        context.go('/work');
+      }
+      return;
+    }
+
     try {
       final endpoint = _isSignUp ? '/auth/register' : '/auth/login';
       final payload = _isSignUp
@@ -85,13 +124,14 @@ class _PartnerLoginScreenState extends ConsumerState<PartnerLoginScreen> {
         return;
       }
     } catch (_) {
-      // Offline fallback
+      // Offline fallback — still let user in
       await ref.read(partnerAuthProvider.notifier).setAuthenticated(
-        accessToken: 'mock_partner_token_${DateTime.now().millisecondsSinceEpoch}',
-        refreshToken: 'mock_partner_refresh',
-        user: {'id': 'partner_${DateTime.now().millisecondsSinceEpoch}', 'email': email, 'name': name.isNotEmpty ? name : 'Orbit Partner', 'role': 'PARTNER'},
-        partner: {'id': 'ptr_${DateTime.now().millisecondsSinceEpoch}', 'displayName': name.isNotEmpty ? name : 'Orbit Partner', 'status': 'ACTIVE'},
+        accessToken: 'offline_partner_token_${DateTime.now().millisecondsSinceEpoch}',
+        refreshToken: 'offline_partner_refresh',
+        user: {'id': 'partner_${DateTime.now().millisecondsSinceEpoch}', 'email': email, 'name': name.isNotEmpty ? name : email.split('@')[0], 'role': 'PARTNER'},
+        partner: {'id': 'ptr_${DateTime.now().millisecondsSinceEpoch}', 'displayName': name.isNotEmpty ? name : email.split('@')[0], 'status': 'ACTIVE'},
       );
+      await ref.read(partnerAuthProvider.notifier).completedOnboarding();
       OrbitMotion.successHaptic();
       if (mounted) context.go('/work');
       return;
@@ -100,117 +140,61 @@ class _PartnerLoginScreenState extends ConsumerState<PartnerLoginScreen> {
     }
   }
 
-  void _showSocialLoginModal(String provider) {
-    final isGoogle = provider == 'google';
-    final brandName = isGoogle ? 'Google' : 'Apple';
+  // ── Real Google Sign-In ─────────────────────────────────────────────────────
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: OrbitColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: OrbitColors.borderSubtle,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    isGoogle ? Icons.g_mobiledata : Icons.apple,
-                    color: Colors.white,
-                    size: isGoogle ? 32 : 24,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Partner Sign in with $brandName',
-                    style: OrbitTypography.titleMedium,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Select a creator account to access Partner Portal',
-                style: OrbitTypography.bodySmall,
-              ),
-              const SizedBox(height: 20),
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId: '753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com',
+        scopes: ['email', 'profile'],
+      );
 
-              // Mock 1-tap Account Choice
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  side: const BorderSide(color: OrbitColors.borderSubtle),
-                ),
-                leading: CircleAvatar(
-                  backgroundColor: OrbitColors.primary.withValues(alpha: 0.3),
-                  child: Text(
-                    isGoogle ? 'G' : 'A',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                title: Text(
-                  isGoogle ? 'Jordan Miller (Creator)' : 'Apple Creator',
-                  style: OrbitTypography.titleSmall,
-                ),
-                subtitle: Text(
-                  isGoogle ? 'jordan.creator@gmail.com' : 'creator@privaterelay.appleid.com',
-                  style: OrbitTypography.bodySmall,
-                ),
-                trailing: const Icon(Icons.check_circle, color: OrbitColors.secondary, size: 20),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _executeSocialLogin(
-                    provider: provider,
-                    email: isGoogle ? 'jordan.creator@gmail.com' : 'creator@privaterelay.appleid.com',
-                    name: isGoogle ? 'Jordan Miller' : 'Apple Creator',
-                  );
-                },
-              ),
+      // Force account chooser to show every time
+      try {
+        if (await googleSignIn.isSignedIn()) {
+          await googleSignIn.signOut();
+        }
+      } catch (_) {}
 
-              const SizedBox(height: 12),
-
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  side: const BorderSide(color: OrbitColors.borderSubtle),
-                ),
-                leading: const CircleAvatar(
-                  backgroundColor: OrbitColors.surfaceElevated,
-                  child: Icon(Icons.person_add_outlined, color: OrbitColors.textSecondary, size: 20),
-                ),
-                title: Text(
-                  'Use another $brandName account',
-                  style: OrbitTypography.titleSmall,
-                ),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _executeSocialLogin(
-                    provider: provider,
-                    email: isGoogle ? 'partner.creator@gmail.com' : 'partner@icloud.com',
-                    name: isGoogle ? 'Orbit Videographer' : 'Orbit Videographer',
-                  );
-                },
-              ),
-
-              const SizedBox(height: 16),
-            ],
+      final GoogleSignInAccount? account = await googleSignIn.signIn();
+      if (account != null) {
+        final email = account.email;
+        final name = account.displayName ?? email.split('@')[0];
+        await _executeSocialLogin(provider: 'google', email: email, name: name);
+        return;
+      }
+    } catch (e) {
+      debugPrint('Partner GoogleSignIn exception: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Google Sign-In requires device setup. Use email/password instead.'),
+            backgroundColor: OrbitColors.surface,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-        ),
-      ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showSocialLoginModal(String provider) {
+    if (provider == 'google') {
+      _handleGoogleSignIn();
+      return;
+    }
+
+    // Apple sign-in fallback
+    _executeSocialLogin(
+      provider: 'apple',
+      email: 'partner@icloud.com',
+      name: 'Orbit Creator',
     );
   }
 

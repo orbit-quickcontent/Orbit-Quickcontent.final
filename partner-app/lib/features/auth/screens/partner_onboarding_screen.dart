@@ -39,7 +39,7 @@ class _PartnerOnboardingScreenState extends ConsumerState<PartnerOnboardingScree
   void _showCityPicker() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFF12161B),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(24),
@@ -47,7 +47,7 @@ class _PartnerOnboardingScreenState extends ConsumerState<PartnerOnboardingScree
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Select Your Primary Base City', style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Select Your Primary Base City', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             ...[
               {'city': 'Nagpur', 'state': 'All of MH'},
@@ -56,10 +56,10 @@ class _PartnerOnboardingScreenState extends ConsumerState<PartnerOnboardingScree
               {'city': 'Bengaluru', 'state': 'All of Karnataka'},
             ].map((loc) => ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.location_on_outlined, color: Colors.black87),
-                  title: Text(loc['city']!, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
-                  subtitle: Text(loc['state']!, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                  trailing: _selectedCity == loc['city'] ? const Icon(Icons.check_circle, color: Color(0xFF10B981)) : null,
+                  leading: const Icon(Icons.location_on_outlined, color: Color(0xFF9AA3AE)),
+                  title: Text(loc['city']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                  subtitle: Text(loc['state']!, style: const TextStyle(color: Color(0xFF68717D), fontSize: 12)),
+                  trailing: _selectedCity == loc['city'] ? const Icon(Icons.check_circle, color: Color(0xFF22C55E)) : null,
                   onTap: () {
                     setState(() {
                       _selectedCity = loc['city']!;
@@ -82,7 +82,7 @@ class _PartnerOnboardingScreenState extends ConsumerState<PartnerOnboardingScree
   }) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFF12161B),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => Padding(
@@ -97,12 +97,12 @@ class _PartnerOnboardingScreenState extends ConsumerState<PartnerOnboardingScree
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Center(
-              child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+              child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
             ),
             const SizedBox(height: 16),
-            Text(title, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(title, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-            Text(subtitle, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+            Text(subtitle, style: const TextStyle(color: Color(0xFF9AA3AE), fontSize: 13)),
             const SizedBox(height: 20),
             content,
             const SizedBox(height: 24),
@@ -110,7 +110,7 @@ class _PartnerOnboardingScreenState extends ConsumerState<PartnerOnboardingScree
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7C5CFF), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 onPressed: () {
                   onSave();
                   Navigator.pop(ctx);
@@ -127,7 +127,7 @@ class _PartnerOnboardingScreenState extends ConsumerState<PartnerOnboardingScree
   void _showBottomReviewSheet(String userName) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFF12161B),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => Padding(
@@ -143,12 +143,12 @@ class _PartnerOnboardingScreenState extends ConsumerState<PartnerOnboardingScree
                 IconButton(
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  icon: const Icon(Icons.close, color: Colors.black, size: 24),
+                  icon: const Icon(Icons.close, color: Colors.white, size: 24),
                   onPressed: () => Navigator.pop(ctx),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Help', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+                  child: const Text('Help', style: TextStyle(color: Color(0xFF7C5CFF), fontWeight: FontWeight.w600)),
                 ),
               ],
             ),
@@ -157,7 +157,7 @@ class _PartnerOnboardingScreenState extends ConsumerState<PartnerOnboardingScree
             Text(
               'Welcome back, ${userName.toLowerCase()}',
               style: const TextStyle(
-                color: Color(0xFF0F172A),
+                color: Colors.white,
                 fontSize: 24,
                 fontWeight: FontWeight.w900,
               ),
@@ -165,7 +165,7 @@ class _PartnerOnboardingScreenState extends ConsumerState<PartnerOnboardingScree
             const SizedBox(height: 6),
             Text(
               'You have completed $_completedStepsCount step${_completedStepsCount > 1 ? 's' : ''} and there are only $_remainingStepsCount more steps left to start earning.',
-              style: TextStyle(color: Colors.grey.shade700, fontSize: 13, height: 1.35),
+              style: const TextStyle(color: Color(0xFF9AA3AE), fontSize: 13, height: 1.35),
             ),
             const SizedBox(height: 16),
 

@@ -1,12 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-import 'package:socket_io_client/socket_io_client.dart' as io;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/theme.dart';
 import '../../../core/api_client.dart';
-
-const String _kSocketUrl = String.fromEnvironment('SOCKET_URL', defaultValue: 'http://10.0.2.2:5000');
 
 class LiveTrackingScreen extends StatefulWidget {
   final String bookingId;
@@ -18,7 +14,7 @@ class LiveTrackingScreen extends StatefulWidget {
 
 class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   MapLibreMapController? _mapController;
-  io.Socket? _socket;
+  Timer? _locationPollTimer;
   LatLng? _partnerLocation;
   LatLng? _clientLocation;
   double? _etaMinutes;
@@ -30,12 +26,12 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   void initState() {
     super.initState();
     _loadBooking();
-    _initSocket();
+    _startLocationPolling();
   }
 
   @override
   void dispose() {
-    _socket?.dispose();
+    _locationPollTimer?.cancel();
     super.dispose();
   }
 
@@ -45,34 +41,45 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
       final booking = res.data;
       setState(() {
         _clientLocation = LatLng(booking['latitude'] ?? 28.6, booking['longitude'] ?? 77.2);
-        _partnerName = booking['partner']?['user']?['name'] ?? 'Your Partner';
+        _partnerName = booking['partner']?['user']?['name'] ?? booking['partner']?['displayName'] ?? 'Your Partner';
       });
+
+      // Update partner location from booking data if available
+      final partnerLat = booking['partner']?['latitude'];
+      final partnerLng = booking['partner']?['longitude'];
+      if (partnerLat != null && partnerLng != null) {
+        final loc = LatLng((partnerLat as num).toDouble(), (partnerLng as num).toDouble());
+        setState(() => _partnerLocation = loc);
+        await _updatePartnerMarker(loc);
+        if (_clientLocation != null) {
+          await _drawRoute(loc, _clientLocation!);
+        }
+      }
     } catch (_) {}
   }
 
-  Future<void> _initSocket() async {
-    const storage = FlutterSecureStorage();
-    final token = await storage.read(key: 'orbit_access_token');
+  void _startLocationPolling() {
+    _locationPollTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
+      try {
+        final res = await apiClient.get('/bookings/${widget.bookingId}');
+        final booking = res.data;
+        if (!mounted || booking == null) return;
 
-    _socket = io.io(_kSocketUrl, io.OptionBuilder()
-      .setTransports(['websocket'])
-      .setAuth({'token': token})
-      .build());
+        final partnerLat = booking['partner']?['latitude'];
+        final partnerLng = booking['partner']?['longitude'];
 
-    _socket!.connect();
-    _socket!.emit('join:booking', widget.bookingId);
-
-    _socket!.on('partner:location', (data) async {
-      if (!mounted) return;
-      final newLocation = LatLng(data['latitude'] as double, data['longitude'] as double);
-      setState(() {
-        _partnerLocation = newLocation;
-        _etaMinutes = data['etaMinutes'] as double?;
-      });
-      await _updatePartnerMarker(newLocation);
-      if (_clientLocation != null) {
-        await _drawRoute(newLocation, _clientLocation!);
-      }
+        if (partnerLat != null && partnerLng != null) {
+          final newLocation = LatLng((partnerLat as num).toDouble(), (partnerLng as num).toDouble());
+          setState(() {
+            _partnerLocation = newLocation;
+            _partnerName = booking['partner']?['displayName'] ?? _partnerName;
+          });
+          await _updatePartnerMarker(newLocation);
+          if (_clientLocation != null) {
+            await _drawRoute(newLocation, _clientLocation!);
+          }
+        }
+      } catch (_) {}
     });
   }
 

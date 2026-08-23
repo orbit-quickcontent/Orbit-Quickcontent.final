@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api_client.dart';
 import '../../../core/theme/orbit_theme.dart';
 import '../../../shared/widgets/orbit_map_workspace.dart';
 import '../../../analytics/analytics_service.dart';
+import '../../../services/realtime_service.dart';
+import '../../../features/auth/providers/partner_auth_provider.dart';
 
 class AvailableWorkScreen extends ConsumerStatefulWidget {
   const AvailableWorkScreen({super.key});
@@ -27,6 +30,198 @@ class _AvailableWorkScreenState extends ConsumerState<AvailableWorkScreen>
     super.initState();
     partnerAnalytics.trackScreenView('partner_home_map');
     _loadDashboardData();
+    _startRealtimePolling();
+  }
+
+  @override
+  void dispose() {
+    partnerRealtime.stop();
+    partnerRealtime.clearCallbacks();
+    super.dispose();
+  }
+
+  void _startRealtimePolling() {
+    final auth = ref.read(partnerAuthProvider);
+    final partnerId = auth.partnerId;
+    if (partnerId == null || partnerId.isEmpty) {
+      // Fallback: use default partner for testing
+      partnerRealtime.start('partner_default_1');
+    } else {
+      partnerRealtime.start(partnerId);
+    }
+
+    partnerRealtime.onDispatchNew((payload) {
+      if (!mounted) return;
+      _showIncomingBookingPopup(payload);
+    });
+
+    partnerRealtime.onBookingStatusUpdate((payload) {
+      if (!mounted) return;
+      // Refresh dashboard data when booking status changes
+      _loadDashboardData();
+    });
+  }
+
+  void _showIncomingBookingPopup(Map<String, dynamic> offer) {
+    HapticFeedback.heavyImpact();
+    final bookingId = offer['bookingId'] ?? '';
+    final packageName = offer['packageName'] ?? 'Shoot Package';
+    final clientArea = offer['clientArea'] ?? 'Nearby Location';
+    final distanceKm = offer['distanceKm'] ?? 0;
+    final earning = offer['earning'] ?? 0;
+    final etaMinutes = offer['etaMinutes'] ?? 0;
+
+    showModalBottomSheet(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF15181D),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFF22D55E).withValues(alpha: 0.4), width: 1.5),
+          boxShadow: [
+            BoxShadow(color: const Color(0xFF22D55E).withValues(alpha: 0.15), blurRadius: 30, spreadRadius: 5),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Pulsing indicator
+              Container(
+                width: 48, height: 4,
+                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+              ),
+              const SizedBox(height: 16),
+              // Header
+              Row(
+                children: [
+                  Container(
+                    width: 48, height: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF22D55E).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.videocam_rounded, color: Color(0xFF22D55E), size: 28),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('🎬 NEW BOOKING REQUEST', style: TextStyle(color: Color(0xFF22D55E), fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+                        const SizedBox(height: 2),
+                        Text(packageName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(color: const Color(0xFF22D55E), borderRadius: BorderRadius.circular(10)),
+                    child: Text('₹$earning', style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w900)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              // Details
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Column(
+                  children: [
+                    _buildOfferDetail(Icons.location_on_outlined, 'Location', clientArea.toString()),
+                    const SizedBox(height: 10),
+                    _buildOfferDetail(Icons.route_outlined, 'Distance', '${distanceKm}km away · ~$etaMinutes min'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        _declineBooking(bookingId);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.white24),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: const Text('DECLINE', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700, fontSize: 15)),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        _acceptBooking(bookingId);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF22D55E),
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 0,
+                      ),
+                      child: const Text('ACCEPT BOOKING', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOfferDetail(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white38, size: 18),
+        const SizedBox(width: 10),
+        Text('$label: ', style: const TextStyle(color: Colors.white38, fontSize: 13)),
+        Expanded(child: Text(value, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600))),
+      ],
+    );
+  }
+
+  Future<void> _acceptBooking(String bookingId) async {
+    try {
+      await partnerApiClient.post('/bookings/$bookingId/accept');
+      HapticFeedback.heavyImpact();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('✅ Booking accepted! Navigate to client.'), backgroundColor: Color(0xFF22D55E)),
+        );
+        _loadDashboardData();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to accept: $e'), backgroundColor: Colors.redAccent),
+        );
+      }
+    }
+  }
+
+  Future<void> _declineBooking(String bookingId) async {
+    try {
+      await partnerApiClient.post('/bookings/$bookingId/decline');
+    } catch (_) {}
   }
 
   Future<void> _loadDashboardData() async {
@@ -34,17 +229,21 @@ class _AvailableWorkScreenState extends ConsumerState<AvailableWorkScreen>
       final results = await Future.wait([
         partnerApiClient.get('/partner/available-jobs'),
         partnerApiClient.get('/partner/earnings/summary'),
+        partnerApiClient.get('/partner/profile'),
       ]);
 
       final jobsRes = results[0];
       final earningsRes = results[1];
+      final profileRes = results[2];
 
       final active = jobsRes.data['activeJob'] as Map<String, dynamic>?;
       final earningsData = earningsRes.data ?? {};
+      final profileData = profileRes.data ?? {};
 
       if (mounted) {
         setState(() {
           _activeJob = active;
+          _isOnline = profileData['isOnline'] == true;
           final earned = earningsData['todayEarnings'];
           if (earned != null && earned is int && earned > 0) {
             _todayEarnings = earned;
@@ -66,7 +265,8 @@ class _AvailableWorkScreenState extends ConsumerState<AvailableWorkScreen>
 
     try {
       await partnerApiClient.patch('/partner/status', data: {'isOnline': nextState});
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Toggle failed: $e');
       if (mounted) setState(() => _isOnline = !nextState);
     }
   }

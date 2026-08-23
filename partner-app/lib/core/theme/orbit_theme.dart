@@ -6,6 +6,8 @@ export 'orbit_colors.dart';
 export 'orbit_typography.dart';
 export 'orbit_spacing.dart';
 export 'orbit_motion.dart';
+export 'orbit_radii.dart';
+export 'orbit_shadows.dart';
 
 /// ORBIT Central Theme for Partner App
 class OrbitTheme {

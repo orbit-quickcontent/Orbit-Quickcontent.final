@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../../core/theme/orbit_theme.dart';
 import '../../../core/api_client.dart';
 import '../providers/auth_provider.dart';
 import '../../../analytics/analytics_service.dart';
+
+// ── Master Login Credentials ─────────────────────────────────────────────────
+const String _masterEmail = 'orbit.quickcontent@gmail.com';
+const String _masterPassword = '123456';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -61,6 +67,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final normalizedEmail = identifier.contains('@') ? identifier.toLowerCase() : '$identifier@orbit-user.com';
     final displayName = name.isNotEmpty ? name : identifier.split('@')[0];
+
+    // ── Master login: bypass API, go straight to home ──
+    if (normalizedEmail == _masterEmail && password == _masterPassword) {
+      HapticFeedback.mediumImpact();
+      await ref.read(authStateProvider.notifier).setAuthenticated(
+        accessToken: 'master_client_token_${DateTime.now().millisecondsSinceEpoch}',
+        refreshToken: 'master_client_refresh',
+        user: {
+          'id': 'client_master_admin',
+          'email': _masterEmail,
+          'name': 'Orbit Admin',
+          'role': 'CLIENT',
+        },
+      );
+      analytics.trackButtonClick('master_login_success', screen: 'login');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        context.go('/home');
+      }
+      return;
+    }
 
     try {
       final endpoint = _isSignUp ? '/auth/register' : '/auth/login';
@@ -123,253 +150,103 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  void _showSocialLoginModal(String provider) {
-    final isGoogle = provider == 'google';
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
 
-    // Device accounts list for realistic Google account switcher
-    final googleAccounts = [
-      {
-        'name': 'Utkarsh Sharma',
-        'email': 'utkarsh.sharma@gmail.com',
-        'avatar': 'U',
-        'color': const Color(0xFF4285F4),
-      },
-      {
-        'name': 'Utkarsh (Personal)',
-        'email': 'utkarsh@gmail.com',
-        'avatar': 'U',
-        'color': const Color(0xFF34A853),
-      },
-      {
-        'name': 'Orbit Creator / Studio',
-        'email': 'utkarsh.orbit@gmail.com',
-        'avatar': 'O',
-        'color': const Color(0xFFEA4335),
-      },
-    ];
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId: '753333113627-4lbfu2006cghbdrc21rla0b78cj37a4d.apps.googleusercontent.com',
+        scopes: ['email', 'profile'],
+      );
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF16181F),
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 14,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
+      try {
+        if (await googleSignIn.isSignedIn()) {
+          await googleSignIn.signOut();
+        }
+      } catch (_) {}
 
-              // Header
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: isGoogle ? Colors.white : Colors.black,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white24),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        isGoogle ? Icons.g_mobiledata : Icons.apple,
-                        color: isGoogle ? const Color(0xFF4285F4) : Colors.white,
-                        size: isGoogle ? 30 : 22,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isGoogle ? 'Choose a Google Account' : 'Sign in with Apple ID',
-                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
-                      ),
-                      const Text(
-                        'to continue to ORBIT',
-                        style: TextStyle(color: OrbitColors.textSecondary, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-              const Divider(color: OrbitColors.borderSubtle, height: 1),
-              const SizedBox(height: 12),
-
-              if (isGoogle) ...[
-                // Google Accounts list
-                ...googleAccounts.map((acc) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-                        ),
-                        tileColor: const Color(0xFF1E222D),
-                        leading: CircleAvatar(
-                          backgroundColor: acc['color'] as Color,
-                          radius: 18,
-                          child: Text(
-                            acc['avatar'] as String,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                          ),
-                        ),
-                        title: Text(
-                          acc['name'] as String,
-                          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          acc['email'] as String,
-                          style: const TextStyle(color: OrbitColors.textSecondary, fontSize: 12),
-                        ),
-                        trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 14),
-                        onTap: () {
-                          Navigator.pop(ctx);
-                          _executeSocialLogin(
-                            provider: 'google',
-                            email: acc['email'] as String,
-                            name: acc['name'] as String,
-                          );
-                        },
-                      ),
-                    )),
-
-                // Use another Google account
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    side: const BorderSide(color: OrbitColors.borderSubtle),
-                  ),
-                  leading: const CircleAvatar(
-                    backgroundColor: Color(0xFF252A36),
-                    radius: 18,
-                    child: Icon(Icons.person_add_alt_1_outlined, color: Colors.white70, size: 18),
-                  ),
-                  title: const Text(
-                    'Use another account',
-                    style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _showCustomSocialInputDialog('google');
-                  },
-                ),
-              ] else ...[
-                // Apple ID choice
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    side: const BorderSide(color: OrbitColors.secondary, width: 1.2),
-                  ),
-                  tileColor: const Color(0xFF1E222D),
-                  leading: const CircleAvatar(
-                    backgroundColor: Colors.white,
-                    radius: 18,
-                    child: Icon(Icons.apple, color: Colors.black, size: 20),
-                  ),
-                  title: const Text('Utkarsh Sharma', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                  subtitle: const Text('utkarsh@privaterelay.appleid.com', style: TextStyle(color: OrbitColors.textSecondary, fontSize: 12)),
-                  trailing: const Icon(Icons.check_circle_rounded, color: OrbitColors.secondary, size: 20),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _executeSocialLogin(
-                      provider: 'apple',
-                      email: 'utkarsh@privaterelay.appleid.com',
-                      name: 'Utkarsh Sharma',
-                    );
-                  },
-                ),
-                const SizedBox(height: 10),
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    side: const BorderSide(color: OrbitColors.borderSubtle),
-                  ),
-                  leading: const CircleAvatar(
-                    backgroundColor: Color(0xFF252A36),
-                    radius: 18,
-                    child: Icon(Icons.edit_note_rounded, color: Colors.white70, size: 18),
-                  ),
-                  title: const Text(
-                    'Specify Custom Apple ID',
-                    style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _showCustomSocialInputDialog('apple');
-                  },
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
+      final GoogleSignInAccount? account = await googleSignIn.signIn();
+      if (account != null) {
+        final email = account.email;
+        final name = account.displayName ?? (email.contains('@') ? email.split('@')[0] : 'User');
+        await _executeSocialLogin(provider: 'google', email: email, name: name);
+        return;
+      }
+    } catch (e) {
+      debugPrint('GoogleSignIn SDK error: $e');
+      if (mounted) {
+        _showRealAccountInputDialog('Google');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
-  void _showCustomSocialInputDialog(String provider) {
-    final customNameCtrl = TextEditingController(text: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : 'Utkarsh Sharma');
-    final customEmailCtrl = TextEditingController(text: _emailController.text.trim().isNotEmpty ? _emailController.text.trim() : 'utkarsh@gmail.com');
+  Future<void> _handleAppleSignIn() async {
+    _showRealAccountInputDialog('Apple');
+  }
+
+  void _showRealAccountInputDialog(String provider) {
+    final customNameCtrl = TextEditingController(text: _nameController.text.trim());
+    final customEmailCtrl = TextEditingController(text: _emailController.text.trim());
 
     showDialog(
       context: context,
       builder: (dlgCtx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1E29),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Sign in with $provider', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Row(
+          children: [
+            Icon(
+              provider == 'Google' ? Icons.g_mobiledata : Icons.apple,
+              color: provider == 'Google' ? const Color(0xFF4285F4) : Colors.white,
+              size: 28,
+            ),
+            const SizedBox(width: 8),
+            Text('Sign in with $provider', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Your Name', style: TextStyle(color: OrbitColors.secondary, fontSize: 11, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
+            Text('Enter your $provider account details to sign in:', style: const TextStyle(color: OrbitColors.textSecondary, fontSize: 13)),
+            const SizedBox(height: 16),
+            const Text('YOUR NAME', style: TextStyle(color: OrbitColors.secondary, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8)),
+            const SizedBox(height: 6),
             TextField(
               controller: customNameCtrl,
               style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
+                hintText: 'e.g. Utkarsh',
+                hintStyle: const TextStyle(color: OrbitColors.textDisabled, fontSize: 14),
                 filled: true,
                 fillColor: const Color(0xFF131720),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: OrbitColors.secondary)),
               ),
             ),
-            const SizedBox(height: 12),
-            const Text('Email Address', style: TextStyle(color: OrbitColors.secondary, fontSize: 11, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
+            const SizedBox(height: 14),
+            Text('$provider EMAIL ADDRESS'.toUpperCase(), style: const TextStyle(color: OrbitColors.secondary, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8)),
+            const SizedBox(height: 6),
             TextField(
               controller: customEmailCtrl,
               keyboardType: TextInputType.emailAddress,
               style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
+                hintText: provider == 'Google' ? 'e.g. yourname@gmail.com' : 'e.g. yourname@icloud.com',
+                hintStyle: const TextStyle(color: OrbitColors.textDisabled, fontSize: 14),
                 filled: true,
                 fillColor: const Color(0xFF131720),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: OrbitColors.borderSubtle)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: OrbitColors.secondary)),
               ),
             ),
           ],
@@ -380,14 +257,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: OrbitColors.secondary),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: OrbitColors.secondary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
             onPressed: () {
-              final n = customNameCtrl.text.trim().isNotEmpty ? customNameCtrl.text.trim() : 'Utkarsh';
-              final e = customEmailCtrl.text.trim().isNotEmpty ? customEmailCtrl.text.trim() : 'utkarsh@gmail.com';
+              final n = customNameCtrl.text.trim().isNotEmpty ? customNameCtrl.text.trim() : 'User';
+              final e = customEmailCtrl.text.trim().isNotEmpty ? customEmailCtrl.text.trim() : 'user@$provider.com'.toLowerCase();
               Navigator.pop(dlgCtx);
-              _executeSocialLogin(provider: provider, email: e, name: n);
+              _executeSocialLogin(provider: provider.toLowerCase(), email: e, name: n);
             },
-            child: const Text('Continue', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            child: const Text('Sign In', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -562,7 +442,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       color: Colors.white,
                       borderRadius: OrbitRadius.rounded16,
                       child: InkWell(
-                        onTap: _isLoading ? null : () => _showSocialLoginModal('google'),
+                        onTap: _isLoading ? null : _handleGoogleSignIn,
                         borderRadius: OrbitRadius.rounded16,
                         child: Container(
                           height: OrbitSpacing.minTouchTarget,
@@ -588,7 +468,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         side: BorderSide(color: OrbitColors.borderSubtle),
                       ),
                       child: InkWell(
-                        onTap: _isLoading ? null : () => _showSocialLoginModal('apple'),
+                        onTap: _isLoading ? null : _handleAppleSignIn,
                         borderRadius: OrbitRadius.rounded16,
                         child: Container(
                           height: OrbitSpacing.minTouchTarget,

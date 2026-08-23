@@ -35,7 +35,7 @@ class OrbitPrimaryButton extends StatelessWidget {
         constraints: const BoxConstraints(minWidth: double.infinity, minHeight: OrbitSpacing.minTouchTarget),
         decoration: BoxDecoration(
           color: isEnabled ? (backgroundColor ?? OrbitColors.primary) : OrbitColors.surfaceHighlight,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: OrbitRadii.largeBorder,
           boxShadow: isEnabled
               ? [
                   BoxShadow(
@@ -49,7 +49,7 @@ class OrbitPrimaryButton extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: OrbitRadii.largeBorder,
             onTap: isEnabled
                 ? () {
                     OrbitMotion.lightTap();
@@ -153,13 +153,13 @@ class OrbitSecondaryButton extends StatelessWidget {
         constraints: const BoxConstraints(minWidth: double.infinity, minHeight: OrbitSpacing.minTouchTarget),
         decoration: BoxDecoration(
           color: OrbitColors.surfaceElevated,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: OrbitRadii.largeBorder,
           border: Border.all(color: OrbitColors.borderSubtle, width: 1),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: OrbitRadii.largeBorder,
             onTap: isEnabled
                 ? () {
                     OrbitMotion.lightTap();
@@ -218,13 +218,13 @@ class OrbitDangerButton extends StatelessWidget {
         constraints: const BoxConstraints(minWidth: double.infinity, minHeight: OrbitSpacing.minTouchTarget),
         decoration: BoxDecoration(
           color: OrbitColors.danger.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: OrbitRadii.largeBorder,
           border: Border.all(color: OrbitColors.danger.withValues(alpha: 0.25), width: 1),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: OrbitRadii.largeBorder,
             onTap: onPressed != null
                 ? () {
                     OrbitMotion.lightTap();
