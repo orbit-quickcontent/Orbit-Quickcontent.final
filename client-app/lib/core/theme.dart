@@ -7,19 +7,19 @@ export 'theme/orbit_theme.dart';
 class OrbitClientTheme {
   OrbitClientTheme._();
 
-  // ── Core Palette (Total Pitch Black OLED Theme) ──────────────────────────
-  static const Color background = Color(0xFF000000);
-  static const Color surfaceContainerLowest = Color(0xFF000000);
-  static const Color surfaceContainerLow = Color(0xFF060606);
-  static const Color surface = Color(0xFF0D0D0D);
-  static const Color surfaceHigh = Color(0xFF141414);
-  static const Color surfaceHighest = Color(0xFF1C1C1C);
-  static const Color surfaceBright = Color(0xFF262626);
+  // ── Core Palette (Sleek Matte Obsidian & Charcoal Theme) ─────────────────
+  static const Color background = Color(0xFF0E1015);
+  static const Color surfaceContainerLowest = Color(0xFF090A0D);
+  static const Color surfaceContainerLow = Color(0xFF13151B);
+  static const Color surface = Color(0xFF16181F);
+  static const Color surfaceHigh = Color(0xFF1B1E26);
+  static const Color surfaceHighest = Color(0xFF232733);
+  static const Color surfaceBright = Color(0xFF2C3242);
 
   // ── Primary (Cyan/Blue) ─────────────────────────────────────────────────────
   static const Color primary = Color(0xFFA5E7FF);      // #a5e7ff
   static const Color primaryContainer = Color(0xFF00D2FF); // #00d2ff
-  static const Color primaryFixed = Color(0xFF47D6FF);   // surface-tint / accent
+  static const Color primaryFixed = Color(0xFF00D2FF);   // surface-tint / accent
   static const Color onPrimary = Color(0xFF003543);
   static const Color onPrimaryContainer = Color(0xFF00566A);
 
@@ -34,7 +34,7 @@ class OrbitClientTheme {
   static const Color onSurfaceVariant = Color(0xFFBBC9CF);
   static const Color onBackground = onSurface;
   static const Color outline = Color(0xFF859399);
-  static const Color outlineVariant = Color(0xFF3C494E);
+  static const Color outlineVariant = Color(0xFF222632);
   static const Color border = outlineVariant;
 
   // ── Semantic ────────────────────────────────────────────────────────────────

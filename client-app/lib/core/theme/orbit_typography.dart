@@ -8,7 +8,7 @@ class OrbitTypography {
   OrbitTypography._();
 
   // Display (32 - 40)
-  static TextStyle displayLarge = GoogleFonts.inter(
+  static TextStyle displayLarge = GoogleFonts.plusJakartaSans(
     fontSize: 36,
     fontWeight: FontWeight.w800,
     letterSpacing: -0.8,
@@ -16,7 +16,7 @@ class OrbitTypography {
     height: 1.15,
   );
 
-  static TextStyle displayMedium = GoogleFonts.inter(
+  static TextStyle displayMedium = GoogleFonts.plusJakartaSans(
     fontSize: 32,
     fontWeight: FontWeight.w700,
     letterSpacing: -0.6,
@@ -25,7 +25,7 @@ class OrbitTypography {
   );
 
   // Heading (24 - 28)
-  static TextStyle headingLarge = GoogleFonts.inter(
+  static TextStyle headingLarge = GoogleFonts.plusJakartaSans(
     fontSize: 26,
     fontWeight: FontWeight.w700,
     letterSpacing: -0.4,
@@ -33,7 +33,7 @@ class OrbitTypography {
     height: 1.25,
   );
 
-  static TextStyle headingMedium = GoogleFonts.inter(
+  static TextStyle headingMedium = GoogleFonts.plusJakartaSans(
     fontSize: 22,
     fontWeight: FontWeight.w700,
     letterSpacing: -0.2,
@@ -42,7 +42,7 @@ class OrbitTypography {
   );
 
   // Title (18 - 20)
-  static TextStyle titleLarge = GoogleFonts.inter(
+  static TextStyle titleLarge = GoogleFonts.plusJakartaSans(
     fontSize: 20,
     fontWeight: FontWeight.w600,
     letterSpacing: -0.1,
@@ -50,14 +50,14 @@ class OrbitTypography {
     height: 1.35,
   );
 
-  static TextStyle titleMedium = GoogleFonts.inter(
+  static TextStyle titleMedium = GoogleFonts.plusJakartaSans(
     fontSize: 18,
     fontWeight: FontWeight.w600,
     color: OrbitColors.textPrimary,
     height: 1.35,
   );
 
-  static TextStyle titleSmall = GoogleFonts.inter(
+  static TextStyle titleSmall = GoogleFonts.plusJakartaSans(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: OrbitColors.textPrimary,
@@ -65,21 +65,21 @@ class OrbitTypography {
   );
 
   // Body (14 - 16)
-  static TextStyle bodyLarge = GoogleFonts.inter(
+  static TextStyle bodyLarge = GoogleFonts.plusJakartaSans(
     fontSize: 16,
     fontWeight: FontWeight.w400,
     color: OrbitColors.textSecondary,
     height: 1.5,
   );
 
-  static TextStyle bodyMedium = GoogleFonts.inter(
+  static TextStyle bodyMedium = GoogleFonts.plusJakartaSans(
     fontSize: 14,
     fontWeight: FontWeight.w400,
     color: OrbitColors.textSecondary,
     height: 1.45,
   );
 
-  static TextStyle bodySmall = GoogleFonts.inter(
+  static TextStyle bodySmall = GoogleFonts.plusJakartaSans(
     fontSize: 13,
     fontWeight: FontWeight.w400,
     color: OrbitColors.textMuted,
@@ -87,21 +87,21 @@ class OrbitTypography {
   );
 
   // Caption / Label (11 - 13)
-  static TextStyle labelLarge = GoogleFonts.inter(
+  static TextStyle labelLarge = GoogleFonts.plusJakartaSans(
     fontSize: 14,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.2,
     color: OrbitColors.textPrimary,
   );
 
-  static TextStyle labelMedium = GoogleFonts.inter(
+  static TextStyle labelMedium = GoogleFonts.plusJakartaSans(
     fontSize: 12,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.5,
     color: OrbitColors.textSecondary,
   );
 
-  static TextStyle labelSmall = GoogleFonts.inter(
+  static TextStyle labelSmall = GoogleFonts.plusJakartaSans(
     fontSize: 11,
     fontWeight: FontWeight.w700,
     letterSpacing: 1.2,

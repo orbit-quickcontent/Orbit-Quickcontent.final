@@ -10,6 +10,8 @@ class OrbitMapWorkspace extends StatefulWidget {
   final VoidCallback? onRecenterPressed;
   final VoidCallback? onNearbyClientsPressed;
   final List<DemandZone>? demandZones;
+  final List<Map<String, dynamic>>? clientPins;
+  final void Function(Map<String, dynamic>)? onClientPinTap;
 
   const OrbitMapWorkspace({
     super.key,
@@ -22,6 +24,8 @@ class OrbitMapWorkspace extends StatefulWidget {
     this.onRecenterPressed,
     this.onNearbyClientsPressed,
     this.demandZones,
+    this.clientPins,
+    this.onClientPinTap,
   });
 
   @override
@@ -71,6 +75,7 @@ class _OrbitMapWorkspaceState extends State<OrbitMapWorkspace> with SingleTicker
                   offset: _mapOffset,
                   scale: _mapScale,
                   demandZones: widget.demandZones ?? _defaultDemandZones,
+                  clientPins: widget.clientPins,
                 ),
               );
             },
@@ -233,29 +238,22 @@ const List<DemandZone> _defaultDemandZones = [
   DemandZone(
     label: '1-2 min',
     surge: '+₹200 Surge',
-    xRatio: 0.32,
-    yRatio: 0.30,
+    xRatio: 0.24,
+    yRatio: 0.18,
     color: Color(0xFFE11D48),
   ),
   DemandZone(
     label: '1-4 min',
     surge: '+₹150 High',
     xRatio: 0.76,
-    yRatio: 0.34,
+    yRatio: 0.18,
     color: Color(0xFFEA580C),
   ),
   DemandZone(
-    label: '1-4 min',
-    surge: 'Active Shoots',
-    xRatio: 0.42,
-    yRatio: 0.40,
-    color: Color(0xFFF59E0B),
-  ),
-  DemandZone(
-    label: '1-5 min',
-    surge: 'Studio Zone',
-    xRatio: 0.80,
-    yRatio: 0.48,
+    label: '1-3 min',
+    surge: '+₹100 Active',
+    xRatio: 0.50,
+    yRatio: 0.74,
     color: Color(0xFFF59E0B),
   ),
 ];
@@ -268,6 +266,7 @@ class _DarkMapPainter extends CustomPainter {
   final Offset offset;
   final double scale;
   final List<DemandZone> demandZones;
+  final List<Map<String, dynamic>>? clientPins;
 
   _DarkMapPainter({
     required this.pulseValue,
@@ -276,6 +275,7 @@ class _DarkMapPainter extends CustomPainter {
     required this.offset,
     required this.scale,
     required this.demandZones,
+    this.clientPins,
   });
 
   @override
@@ -283,104 +283,158 @@ class _DarkMapPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // 1. Dark Base Map Land
-    final bgPaint = Paint()..color = const Color(0xFF0D1117);
+    // 1. Dark Base Canvas
+    final bgPaint = Paint()..color = const Color(0xFF090B0F);
     canvas.drawRect(Rect.fromLTWH(0, 0, w, h), bgPaint);
 
-    // 2. City Blocks & Landuse geometry
-    final blockPaint = Paint()..color = const Color(0xFF131822);
-    for (double x = -100 + (offset.dx % 120); x < w + 120; x += 120) {
-      for (double y = -100 + (offset.dy % 140); y < h + 140; y += 140) {
+    // 2. Waterway / River Body (Smooth curved ribbon across the city)
+    final riverPath = Path()
+      ..moveTo(0, h * 0.42 + offset.dy * 0.7)
+      ..cubicTo(
+        w * 0.35 + offset.dx * 0.7,
+        h * 0.38 + offset.dy * 0.7,
+        w * 0.65 + offset.dx * 0.7,
+        h * 0.46 + offset.dy * 0.7,
+        w,
+        h * 0.40 + offset.dy * 0.7,
+      );
+    final riverPaint = Paint()
+      ..color = const Color(0xFF0F172A)
+      ..strokeWidth = 32
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(riverPath, riverPaint);
+
+    // 3. City Blocks & Neighborhood Geometry (Smoothly drifting with pan)
+    final blockPaint = Paint()..color = const Color(0xFF11141C);
+    const double blockW = 100;
+    const double blockH = 110;
+    const double spacing = 18;
+
+    final double startX = (offset.dx % (blockW + spacing)) - (blockW + spacing);
+    final double startY = (offset.dy % (blockH + spacing)) - (blockH + spacing);
+
+    for (double x = startX; x < w + blockW; x += blockW + spacing) {
+      for (double y = startY; y < h + blockH; y += blockH + spacing) {
         canvas.drawRRect(
-          RRect.fromRectAndRadius(Rect.fromLTWH(x + 10, y + 10, 100, 120), const Radius.circular(10)),
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(x, y, blockW, blockH),
+            const Radius.circular(10),
+          ),
           blockPaint,
         );
       }
     }
 
-    // 3. Grid Road Network
-    final roadPaint = Paint()
-      ..color = const Color(0xFF1C2430)
-      ..strokeWidth = 6
+    // 4. Secondary Street Grid
+    final streetPaint = Paint()
+      ..color = const Color(0xFF181D28)
+      ..strokeWidth = 3.0
       ..style = PaintingStyle.stroke;
 
-    final minorRoadPaint = Paint()
-      ..color = const Color(0xFF171E28)
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke;
-
-    for (double y = 0; y < h; y += 70) {
-      canvas.drawLine(Offset(0, y + (offset.dy % 70)), Offset(w, y + (offset.dy % 70)), minorRoadPaint);
+    for (double y = startY; y < h + blockH; y += blockH + spacing) {
+      canvas.drawLine(Offset(0, y - spacing / 2), Offset(w, y - spacing / 2), streetPaint);
     }
-    for (double x = 0; x < w; x += 60) {
-      canvas.drawLine(Offset(x + (offset.dx % 60), 0), Offset(x + (offset.dx % 60), h), minorRoadPaint);
+    for (double x = startX; x < w + blockW; x += blockW + spacing) {
+      canvas.drawLine(Offset(x - spacing / 2, 0), Offset(x - spacing / 2, h), streetPaint);
     }
 
-    // Diagonal Arterials
-    final arterialPath = Path()
-      ..moveTo(0, h * 0.2 + offset.dy)
-      ..lineTo(w * 0.45 + offset.dx, h * 0.5 + offset.dy)
-      ..lineTo(w, h * 0.85 + offset.dy);
-    canvas.drawPath(arterialPath, roadPaint);
+    // 5. Major Expressways / Avenues (Subtle highway glow)
+    final highwayGlow = Paint()
+      ..color = const Color(0xFF222938)
+      ..strokeWidth = 6.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
 
-    final arterialPath2 = Path()
-      ..moveTo(w, h * 0.15 + offset.dy)
-      ..lineTo(w * 0.45 + offset.dx, h * 0.5 + offset.dy)
-      ..lineTo(0, h * 0.75 + offset.dy);
-    canvas.drawPath(arterialPath2, roadPaint);
+    final highwaySolid = Paint()
+      ..color = const Color(0xFF2A3447)
+      ..strokeWidth = 3.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
 
-    // 4. Demand Heatmap Rings (When Online)
+    // Horizontal Expressway
+    final hWay = Path()
+      ..moveTo(0, h * 0.28 + offset.dy)
+      ..lineTo(w, h * 0.28 + offset.dy);
+    canvas.drawPath(hWay, highwayGlow);
+    canvas.drawPath(hWay, highwaySolid);
+
+    // Vertical Main Boulevard
+    final vWay = Path()
+      ..moveTo(w * 0.5 + offset.dx, 0)
+      ..lineTo(w * 0.5 + offset.dx, h);
+    canvas.drawPath(vWay, highwayGlow);
+    canvas.drawPath(vWay, highwaySolid);
+
+    // 6. Demand Surge Zones (Clean, glowing, non-overlapping heat bubbles)
     if (isOnline) {
       for (final zone in demandZones) {
         final zx = (w * zone.xRatio) + offset.dx;
         final zy = (h * zone.yRatio) + offset.dy;
 
-        // Gradient glow circle
+        // Radial glow
         final heatPaint = Paint()
           ..shader = RadialGradient(
             colors: [
-              zone.color.withValues(alpha: 0.28),
+              zone.color.withValues(alpha: 0.25),
               zone.color.withValues(alpha: 0.08),
               Colors.transparent,
             ],
-          ).createShader(Rect.fromCircle(center: Offset(zx, zy), radius: 55));
-        canvas.drawCircle(Offset(zx, zy), 55, heatPaint);
+          ).createShader(Rect.fromCircle(center: Offset(zx, zy), radius: 60));
+        canvas.drawCircle(Offset(zx, zy), 60, heatPaint);
 
-        // Surge Badge
+        // Surge Badge Capsule
         final badgeRRect = RRect.fromRectAndRadius(
-          Rect.fromCenter(center: Offset(zx, zy), width: 78, height: 24),
-          const Radius.circular(12),
+          Rect.fromCenter(center: Offset(zx, zy), width: 84, height: 26),
+          const Radius.circular(13),
         );
+
+        // Badge shadow
+        canvas.drawRRect(
+          badgeRRect,
+          Paint()
+            ..color = Colors.black.withValues(alpha: 0.4)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+        );
+
+        // Badge body
         canvas.drawRRect(badgeRRect, Paint()..color = zone.color);
         canvas.drawRRect(
           badgeRRect,
           Paint()
-            ..color = Colors.white.withValues(alpha: 0.3)
+            ..color = Colors.white.withValues(alpha: 0.35)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 1,
+            ..strokeWidth = 1.0,
         );
 
-        // Badge Text
+        // Badge text
         final textPainter = TextPainter(
           text: TextSpan(
-            text: '︽ ${zone.label}',
-            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900),
+            text: '⚡ ${zone.label}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.3,
+            ),
           ),
           textDirection: TextDirection.ltr,
         )..layout();
-        textPainter.paint(canvas, Offset(zx - (textPainter.width / 2), zy - (textPainter.height / 2)));
+        textPainter.paint(
+          canvas,
+          Offset(zx - (textPainter.width / 2), zy - (textPainter.height / 2)),
+        );
       }
     }
 
-    // 5. Active Route Polyline (When Navigating)
+    // 7. Active Navigation Route Polyline (When Navigating)
     if (isNavigating) {
       final routePath = Path()
-        ..moveTo(w * 0.5 + offset.dx, h * 0.52 + offset.dy)
-        ..lineTo(w * 0.5 + offset.dx, h * 0.38 + offset.dy)
-        ..lineTo(w * 0.70 + offset.dx, h * 0.38 + offset.dy)
-        ..lineTo(w * 0.70 + offset.dx, h * 0.22 + offset.dy);
+        ..moveTo(w * 0.5 + offset.dx, h * 0.50 + offset.dy)
+        ..lineTo(w * 0.5 + offset.dx, h * 0.36 + offset.dy)
+        ..lineTo(w * 0.72 + offset.dx, h * 0.36 + offset.dy)
+        ..lineTo(w * 0.72 + offset.dx, h * 0.24 + offset.dy);
 
-      // Route Glow Outline
       final routeGlow = Paint()
         ..color = const Color(0xFF38BDF8).withValues(alpha: 0.35)
         ..strokeWidth = 12
@@ -389,99 +443,168 @@ class _DarkMapPainter extends CustomPainter {
         ..style = PaintingStyle.stroke;
       canvas.drawPath(routePath, routeGlow);
 
-      // Route Solid Line
       final routeSolid = Paint()
         ..color = const Color(0xFF00E5FF)
-        ..strokeWidth = 6
+        ..strokeWidth = 5.5
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round
         ..style = PaintingStyle.stroke;
       canvas.drawPath(routePath, routeSolid);
 
-      // Destination Pin
-      final destX = w * 0.70 + offset.dx;
-      final destY = h * 0.22 + offset.dy;
+      final destX = w * 0.72 + offset.dx;
+      final destY = h * 0.24 + offset.dy;
       canvas.drawCircle(Offset(destX, destY), 10, Paint()..color = const Color(0xFFEF4444));
       canvas.drawCircle(Offset(destX, destY), 4, Paint()..color = Colors.white);
     }
 
-    // 6. Nearby Client Location Pins on the Map
-    final clientLocations = [
-      {'name': 'The Loft Cafe', 'x': w * 0.35, 'y': h * 0.40, 'pkg': '₹1,999'},
-      {'name': 'Aura Salon', 'x': w * 0.65, 'y': h * 0.44, 'pkg': '₹4,999'},
-      {'name': 'CrossFit Studio', 'x': w * 0.25, 'y': h * 0.62, 'pkg': '₹999'},
-      {'name': 'Urban Brewery', 'x': w * 0.72, 'y': h * 0.60, 'pkg': '₹2,999'},
+    // 8. Nearby Client Shoot Requests (Non-overlapping, beautiful glass pins)
+    final clientLocations = clientPins ?? [
+      {'name': 'The Loft Cafe', 'x': w * 0.20, 'y': h * 0.34, 'pkg': '₹1,999'},
+      {'name': 'Aura Salon', 'x': w * 0.80, 'y': h * 0.34, 'pkg': '₹4,999'},
+      {'name': 'CrossFit Studio', 'x': w * 0.18, 'y': h * 0.62, 'pkg': '₹999'},
+      {'name': 'Urban Brewery', 'x': w * 0.80, 'y': h * 0.62, 'pkg': '₹2,999'},
     ];
 
     for (final cl in clientLocations) {
       final cx = (cl['x'] as double) + offset.dx;
       final cy = (cl['y'] as double) + offset.dy;
 
-      // Glowing base circle
+      // Glow halo
       canvas.drawCircle(
         Offset(cx, cy),
-        8,
-        Paint()..color = const Color(0xFF38BDF8).withValues(alpha: 0.3),
+        12,
+        Paint()..color = const Color(0xFF00D2FF).withValues(alpha: 0.2),
       );
-      // Center pin
+
+      // Cyan Pin Marker Dot
       canvas.drawCircle(
         Offset(cx, cy),
-        5,
-        Paint()..color = const Color(0xFF38BDF8),
+        5.5,
+        Paint()..color = const Color(0xFF00D2FF),
       );
       canvas.drawCircle(
         Offset(cx, cy),
-        2,
+        2.5,
         Paint()..color = Colors.white,
       );
 
-      // Client Pill Tag
+      // Glass Card Pill for Client Shoot Request
+      final textSpan = TextSpan(
+        children: [
+          TextSpan(
+            text: '${cl['name']}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const TextSpan(
+            text: '  ',
+          ),
+          TextSpan(
+            text: '${cl['pkg']}',
+            style: const TextStyle(
+              color: Color(0xFF00D2FF),
+              fontSize: 9.5,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      );
+
       final textPainter = TextPainter(
-        text: TextSpan(
-          text: '${cl['name']} (${cl['pkg']})',
-          style: const TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.bold, backgroundColor: Color(0xCC15181D)),
-        ),
+        text: textSpan,
         textDirection: TextDirection.ltr,
       )..layout();
-      textPainter.paint(canvas, Offset(cx - (textPainter.width / 2), cy + 8));
+
+      final pillWidth = textPainter.width + 16;
+      const pillHeight = 22.0;
+      final pillRect = RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(cx, cy + 20),
+          width: pillWidth,
+          height: pillHeight,
+        ),
+        const Radius.circular(11),
+      );
+
+      // Pill Background & Border
+      canvas.drawRRect(
+        pillRect,
+        Paint()..color = const Color(0xFF141720).withValues(alpha: 0.92),
+      );
+      canvas.drawRRect(
+        pillRect,
+        Paint()
+          ..color = const Color(0xFF00D2FF).withValues(alpha: 0.4)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0,
+      );
+
+      // Draw text inside pill
+      textPainter.paint(
+        canvas,
+        Offset(cx - (textPainter.width / 2), cy + 20 - (textPainter.height / 2)),
+      );
     }
 
-    // 7. User / Partner Location Indicator & Pulse
+    // 9. Partner / User Live Location Beacon & Radar Pulse
     final userX = (w * 0.5) + offset.dx;
-    final userY = (h * 0.52) + offset.dy;
+    final userY = (h * 0.50) + offset.dy;
 
     if (isOnline) {
-      // Expanding Radar Pulse Circle
-      final pulseRadius = 24.0 + (pulseValue * 32.0);
+      // Expanding Radar Pulse Wave 1
+      final pulseRadius = 24.0 + (pulseValue * 36.0);
       final pulseAlpha = (1.0 - pulseValue).clamp(0.0, 1.0) * 0.45;
       final pulsePaint = Paint()
-        ..color = const Color(0xFF00E5FF).withValues(alpha: pulseAlpha)
+        ..color = const Color(0xFF00D2FF).withValues(alpha: pulseAlpha)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.5;
+        ..strokeWidth = 2.0;
       canvas.drawCircle(Offset(userX, userY), pulseRadius, pulsePaint);
+
+      // Secondary Inner Pulse Wave
+      final innerPulseVal = (pulseValue + 0.5) % 1.0;
+      final innerRadius = 18.0 + (innerPulseVal * 28.0);
+      final innerAlpha = (1.0 - innerPulseVal).clamp(0.0, 1.0) * 0.35;
+      canvas.drawCircle(
+        Offset(userX, userY),
+        innerRadius,
+        Paint()
+          ..color = const Color(0xFF00D2FF).withValues(alpha: innerAlpha)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
     }
 
-    // White backing circle
+    // Outer Glow Ring
     canvas.drawCircle(
       Offset(userX, userY),
-      14,
+      16,
+      Paint()..color = const Color(0xFF00D2FF).withValues(alpha: 0.25),
+    );
+
+    // White Core Base
+    canvas.drawCircle(
+      Offset(userX, userY),
+      12,
       Paint()..color = Colors.white,
     );
 
-    // Blue Center Dot with Heading Arrow
+    // Cyan Directional Indicator Dot
     canvas.drawCircle(
       Offset(userX, userY),
-      10,
-      Paint()..color = const Color(0xFF00E5FF),
+      8,
+      Paint()..color = const Color(0xFF00D2FF),
     );
 
-    // Heading Pointer
+    // Top Heading Indicator Arrow
     final arrowPath = Path()
       ..moveTo(userX, userY - 14)
-      ..lineTo(userX - 6, userY - 5)
-      ..lineTo(userX + 6, userY - 5)
+      ..lineTo(userX - 5, userY - 6)
+      ..lineTo(userX + 5, userY - 6)
       ..close();
-    canvas.drawPath(arrowPath, Paint()..color = const Color(0xFF00E5FF));
+    canvas.drawPath(arrowPath, Paint()..color = const Color(0xFF00D2FF));
   }
 
   @override
